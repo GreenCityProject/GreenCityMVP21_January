@@ -5,6 +5,7 @@ import greencity.dto.search.SearchNewsDto;
 import greencity.dto.search.SearchResponseDto;
 import greencity.service.LanguageService;
 import greencity.service.SearchService;
+
 import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -19,6 +20,7 @@ import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.validation.Validator;
 
 import java.util.List;
 import java.util.Locale;
@@ -38,11 +40,13 @@ class SearchControllerTest {
     @Mock
     private LanguageService languageService;
 
-//    @Mock
-//    private LanguageController languageController;
+    @Mock
+    private LanguageController languageController;
 
     @InjectMocks
     private SearchController searchController;
+    @Mock
+    private Validator validator;
 
     private MockMvc mockMvc;
 
@@ -50,9 +54,10 @@ class SearchControllerTest {
     void setup() {
         this.mockMvc = MockMvcBuilders.standaloneSetup(searchController)
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
+                .setValidator(validator)
                 .build();
 
-        when(languageService.findAllLanguageCodes()).thenReturn(List.of("en", "uk"));
+//        when(languageService.findAllLanguageCodes()).thenReturn(List.of("en", "uk"));
     }
 
     @Test
@@ -85,15 +90,18 @@ class SearchControllerTest {
     void searchEcoNewsTest() throws Exception {
         String searchQuery = "Eco news title";
         Locale locale = Locale.ENGLISH;
-        Pageable pageable = PageRequest.of(0, 5);
         PageableDto<SearchNewsDto> expectedResponse = new PageableDto<>(List.of(), 0, 0, 1);
 
-        when(searchService.searchAllNews(pageable, searchQuery, locale.getLanguage())).thenReturn(expectedResponse);
+        when(searchService.searchAllNews(any(Pageable.class), eq(searchQuery), eq(locale.getLanguage())))
+                .thenReturn(expectedResponse);
 
         mockMvc.perform(get("/search/econews")
                         .param("searchQuery", searchQuery)
                         .param("locale", locale.getLanguage())
                         .contentType(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk());
+
+        verify(searchService).searchAllNews(any(Pageable.class), eq(searchQuery), eq(locale.getLanguage()));
     }
+
 }
