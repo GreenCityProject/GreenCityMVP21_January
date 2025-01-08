@@ -1,7 +1,9 @@
 package greencity.controller;
 
+import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import greencity.dto.habit.HabitAssignCustomPropertiesDto;
 import greencity.dto.habit.HabitAssignManagementDto;
 import greencity.dto.user.UserVO;
 import greencity.service.HabitAssignService;
@@ -12,13 +14,17 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
-import org.springframework.security.core.context.SecurityContextHolder;
-import org.springframework.security.test.context.support.WithMockUser;
+import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
+
+import java.util.List;
+
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
+
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -60,5 +66,35 @@ public class HabitAssignControllerTest {
                     Assertions.assertEquals(expectedDto.getId(), actualDto.getId());
                 });
         verify(habitAssignService, times(1)).assignDefaultHabitForUser(eq(habitId), any(UserVO.class));
+    }
+
+    @Test
+    void assignCustomTest() throws Exception {
+        long habitId = 1L;
+        HabitAssignManagementDto expectedDto = new HabitAssignManagementDto();
+        expectedDto.setId(7L);
+
+        when(habitAssignService.assignCustomHabitForUser(eq(habitId), any(UserVO.class), any(HabitAssignCustomPropertiesDto.class)))
+                .thenReturn(List.of(expectedDto));
+
+        HabitAssignCustomPropertiesDto requestDto = new HabitAssignCustomPropertiesDto();
+
+        mockMvc.perform(post("/habit/assign/" + habitId + "/custom")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(requestDto)))
+                .andExpect(status().isCreated())
+                .andExpect(result -> {
+                    String resultDtoString = result.getResponse().getContentAsString();
+                    XmlMapper mapper = new XmlMapper();
+                    mapper.registerModule(new JavaTimeModule());
+                    List<HabitAssignManagementDto> resultDto = mapper.readValue(resultDtoString, new TypeReference<List<HabitAssignManagementDto>>() {
+                    });
+                    Assertions.assertNotNull(resultDto);
+                    Assertions.assertEquals(1, resultDto.size());
+                    Assertions.assertEquals(7L, resultDto.get(0).getId());
+                });
+
+        verify(habitAssignService, times(1))
+                .assignCustomHabitForUser(eq(habitId), any(UserVO.class), any(HabitAssignCustomPropertiesDto.class));
     }
 }
