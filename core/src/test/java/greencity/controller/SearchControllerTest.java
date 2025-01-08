@@ -56,8 +56,6 @@ class SearchControllerTest {
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .setValidator(validator)
                 .build();
-
-//        when(languageService.findAllLanguageCodes()).thenReturn(List.of("en", "uk"));
     }
 
     @Test
