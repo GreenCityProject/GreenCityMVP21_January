@@ -3,12 +3,14 @@ package greencity.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import greencity.converters.UserArgumentResolver;
 import greencity.dto.habit.HabitAssignCustomPropertiesDto;
 import greencity.dto.habit.HabitAssignManagementDto;
 import greencity.dto.habit.HabitAssignUserDurationDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.HabitAssignStatus;
 import greencity.service.HabitAssignService;
+import greencity.service.UserService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
@@ -16,13 +18,18 @@ import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
+import org.modelmapper.ModelMapper;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
+import java.security.Principal;
 import java.util.List;
 
+import static greencity.ModelUtils.getPrincipal;
+import static greencity.ModelUtils.getUserVO;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
@@ -36,28 +43,41 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 public class HabitAssignControllerTest {
     @Mock
     private HabitAssignService habitAssignService;
+    @Mock
+    private UserService userService;
+    @Mock
+    private ModelMapper modelMapper;
 
     @InjectMocks
     private HabitAssignController habitAssignController;
 
     private MockMvc mockMvc;
+    private Principal principal = getPrincipal();
 
     @BeforeEach
     void setUp() {
         mockMvc = MockMvcBuilders.standaloneSetup(habitAssignController)
+                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver(),
+                        new UserArgumentResolver(userService, modelMapper))
                 .build();
     }
 
     @Test
     void assignDefaultTest() throws Exception {
         long habitId = 1L;
+
         HabitAssignManagementDto expectedDto = new HabitAssignManagementDto();
         expectedDto.setId(7L);
+
+        UserVO mockUser = getUserVO();
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
 
         when(habitAssignService.assignDefaultHabitForUser(eq(habitId), any(UserVO.class)))
                 .thenReturn(expectedDto);
 
         mockMvc.perform(post("/habit/assign/" + habitId)
+                        .principal(principal)
                         .param("habitId", String.valueOf(habitId)))
                 .andExpect(status().isCreated())
                 .andExpect(result -> {
@@ -75,8 +95,13 @@ public class HabitAssignControllerTest {
     @Test
     void assignCustomTest() throws Exception {
         long habitId = 1L;
+
         HabitAssignManagementDto expectedDto = new HabitAssignManagementDto();
         expectedDto.setId(7L);
+
+        UserVO mockUser = getUserVO();
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
 
         when(habitAssignService.assignCustomHabitForUser(eq(habitId), any(UserVO.class), any(HabitAssignCustomPropertiesDto.class)))
                 .thenReturn(List.of(expectedDto));
@@ -84,6 +109,7 @@ public class HabitAssignControllerTest {
         HabitAssignCustomPropertiesDto requestDto = new HabitAssignCustomPropertiesDto();
 
         mockMvc.perform(post("/habit/assign/" + habitId + "/custom")
+                        .principal(principal)
                         .contentType(MediaType.APPLICATION_JSON)
                         .content(new ObjectMapper().writeValueAsString(requestDto)))
                 .andExpect(status().isCreated())
@@ -105,6 +131,9 @@ public class HabitAssignControllerTest {
     @Test
     void updateHabitAssignDurationTest() throws Exception {
         long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
 
         HabitAssignUserDurationDto expectedDto = new HabitAssignUserDurationDto();
         expectedDto.setDuration(22);
@@ -114,10 +143,11 @@ public class HabitAssignControllerTest {
         expectedDto.setStatus(HabitAssignStatus.REQUESTED);
         expectedDto.setWorkingDays(3);
 
-        when(habitAssignService.updateUserHabitInfoDuration(eq(habitAssignId), any(), any(Integer.class)))
+        when(habitAssignService.updateUserHabitInfoDuration(eq(habitAssignId), any(Long.class), any(Integer.class)))
                 .thenReturn(expectedDto);
 
-        mockMvc.perform(put("/habit/assign/{habitAssignId}/update-habit-duration",  habitAssignId)
+        mockMvc.perform(put("/habit/assign/{habitAssignId}/update-habit-duration", habitAssignId)
+                        .principal(principal)
                         .param("duration", String.valueOf(22)))
                 .andExpect(status().isOk())
                 .andExpect(result -> {
@@ -134,6 +164,8 @@ public class HabitAssignControllerTest {
                     Assertions.assertEquals(3L, actualDto.getHabitId());
                 });
 
-        verify(habitAssignService, times(1)).updateUserHabitInfoDuration(eq(habitAssignId), any(), any(Integer.class));
+        verify(habitAssignService, times(1)).updateUserHabitInfoDuration(eq(habitAssignId), any(Long.class), any(Integer.class));
     }
+
+
 }
