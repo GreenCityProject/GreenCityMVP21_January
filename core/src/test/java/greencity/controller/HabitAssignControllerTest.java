@@ -200,4 +200,38 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1)).getByHabitAssignIdAndUserId(habitAssignId, mockUser.getId(), locale.getLanguage());
     }
+
+    @Test
+    void getCurrentUserHabitAssignsByIdAndAcquiredTest() throws Exception {
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+
+        HabitAssignDto expectedDto = new HabitAssignDto();
+        expectedDto.setId(7L);
+        expectedDto.setStatus(HabitAssignStatus.REQUESTED);
+        expectedDto.setUserId(27L);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.getAllHabitAssignsByUserIdAndStatusNotCancelled(mockUser.getId(), locale.getLanguage()))
+                .thenReturn(List.of(expectedDto));
+
+        MvcResult result = mockMvc.perform(get("/habit/assign/allForCurrentUser")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal)
+                        .header("Accept-Language", locale.getLanguage()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse);
+
+        int listSize = JsonPath.parse(jsonResponse).read("$.length()", Integer.class);
+        Assertions.assertEquals(1, listSize, "The list should contain only one element");
+
+        Assertions.assertEquals(expectedDto.getId(), JsonPath.parse(jsonResponse).read("$[0].id", Long.class));
+        Assertions.assertEquals(expectedDto.getStatus(), HabitAssignStatus.valueOf(JsonPath.parse(jsonResponse).read("$[0].status", String.class)));
+        Assertions.assertEquals(expectedDto.getUserId(), JsonPath.parse(jsonResponse).read("$[0].userId", Long.class));
+
+        verify(habitAssignService, times(1)).getAllHabitAssignsByUserIdAndStatusNotCancelled(mockUser.getId(), locale.getLanguage());
+    }
 }
