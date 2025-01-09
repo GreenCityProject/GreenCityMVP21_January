@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import greencity.converters.UserArgumentResolver;
 import greencity.dto.habit.HabitAssignCustomPropertiesDto;
+import greencity.dto.habit.HabitAssignDto;
 import greencity.dto.habit.HabitAssignManagementDto;
 import greencity.dto.habit.HabitAssignUserDurationDto;
 import greencity.dto.user.UserVO;
@@ -27,6 +28,7 @@ import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.security.Principal;
 import java.util.List;
+import java.util.Locale;
 
 import static greencity.ModelUtils.getPrincipal;
 import static greencity.ModelUtils.getUserVO;
@@ -37,6 +39,7 @@ import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
 
 @ExtendWith(MockitoExtension.class)
@@ -167,5 +170,37 @@ public class HabitAssignControllerTest {
         verify(habitAssignService, times(1)).updateUserHabitInfoDuration(eq(habitAssignId), any(Long.class), any(Integer.class));
     }
 
+    @Test
+    void getHabitAssignTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
 
+        Locale locale = new Locale(Locale.US.getLanguage());
+        HabitAssignDto expectedDto = new HabitAssignDto();
+        expectedDto.setId(7L);
+        expectedDto.setStatus(HabitAssignStatus.REQUESTED);
+        expectedDto.setUserId(27L);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.getByHabitAssignIdAndUserId(habitAssignId, mockUser.getId(), locale.getLanguage()))
+                .thenReturn(expectedDto);
+
+        mockMvc.perform(get("/habit/assign/{habitAssignId}", habitAssignId)
+                        .principal(principal)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(locale)))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String resultDtoString = result.getResponse().getContentAsString();
+                    XmlMapper mapper = new XmlMapper();
+                    mapper.registerModule(new JavaTimeModule());
+                    HabitAssignDto actualDto = mapper.readValue(resultDtoString, HabitAssignDto.class);
+                    Assertions.assertNotNull(actualDto);
+                    Assertions.assertEquals(expectedDto.getId(), actualDto.getId());
+                    Assertions.assertEquals(expectedDto.getStatus(), actualDto.getStatus());
+                    Assertions.assertEquals(expectedDto.getUserId(), actualDto.getUserId());
+                });
+
+        verify(habitAssignService, times(1)).getByHabitAssignIdAndUserId(habitAssignId, mockUser.getId(), locale.getLanguage());
+    }
 }
