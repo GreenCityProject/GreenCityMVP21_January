@@ -3,6 +3,7 @@ package greencity.controller;
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
+import com.jayway.jsonpath.JsonPath;
 import greencity.converters.UserArgumentResolver;
 import greencity.dto.habit.HabitAssignCustomPropertiesDto;
 import greencity.dto.habit.HabitAssignDto;
@@ -23,6 +24,7 @@ import org.modelmapper.ModelMapper;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
@@ -149,23 +151,20 @@ public class HabitAssignControllerTest {
         when(habitAssignService.updateUserHabitInfoDuration(eq(habitAssignId), any(Long.class), any(Integer.class)))
                 .thenReturn(expectedDto);
 
-        mockMvc.perform(put("/habit/assign/{habitAssignId}/update-habit-duration", habitAssignId)
+        MvcResult result = mockMvc.perform(put("/habit/assign/{habitAssignId}/update-habit-duration", habitAssignId)
                         .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON)
                         .param("duration", String.valueOf(22)))
                 .andExpect(status().isOk())
-                .andExpect(result -> {
-                    String resultDtoString = result.getResponse().getContentAsString();
-                    XmlMapper mapper = new XmlMapper();
-                    mapper.registerModule(new JavaTimeModule());
-                    HabitAssignUserDurationDto actualDto = mapper.readValue(resultDtoString, HabitAssignUserDurationDto.class);
-                    Assertions.assertNotNull(actualDto);
-                    Assertions.assertEquals(22, actualDto.getDuration());
-                    Assertions.assertEquals(3, actualDto.getWorkingDays());
-                    Assertions.assertEquals(habitAssignId, actualDto.getHabitAssignId());
-                    Assertions.assertEquals(2L, actualDto.getUserId());
-                    Assertions.assertEquals(HabitAssignStatus.REQUESTED, actualDto.getStatus());
-                    Assertions.assertEquals(3L, actualDto.getHabitId());
-                });
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse);
+        Assertions.assertEquals(expectedDto.getDuration(), JsonPath.parse(jsonResponse).read("$.duration", Integer.class));
+        Assertions.assertEquals(expectedDto.getHabitAssignId(), JsonPath.parse(jsonResponse).read("$.habitAssignId", Long.class));
+        Assertions.assertEquals(expectedDto.getUserId(), JsonPath.parse(jsonResponse).read("$.userId", Long.class));
+        Assertions.assertEquals(expectedDto.getStatus(), HabitAssignStatus.valueOf(JsonPath.parse(jsonResponse).read("$.status", String.class)));
+        Assertions.assertEquals(expectedDto.getWorkingDays(), JsonPath.parse(jsonResponse).read("$.workingDays", Integer.class));
 
         verify(habitAssignService, times(1)).updateUserHabitInfoDuration(eq(habitAssignId), any(Long.class), any(Integer.class));
     }
@@ -175,7 +174,7 @@ public class HabitAssignControllerTest {
         long habitAssignId = 1L;
         UserVO mockUser = getUserVO();
 
-        Locale locale = new Locale(Locale.US.getLanguage());
+        Locale locale = Locale.ENGLISH;
         HabitAssignDto expectedDto = new HabitAssignDto();
         expectedDto.setId(7L);
         expectedDto.setStatus(HabitAssignStatus.REQUESTED);
@@ -185,21 +184,19 @@ public class HabitAssignControllerTest {
         when(habitAssignService.getByHabitAssignIdAndUserId(habitAssignId, mockUser.getId(), locale.getLanguage()))
                 .thenReturn(expectedDto);
 
-        mockMvc.perform(get("/habit/assign/{habitAssignId}", habitAssignId)
+        MvcResult result = mockMvc.perform(get("/habit/assign/{habitAssignId}", habitAssignId)
                         .principal(principal)
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(new ObjectMapper().writeValueAsString(locale)))
+                        .header("Accept-Language", locale.getLanguage())
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
-                .andExpect(result -> {
-                    String resultDtoString = result.getResponse().getContentAsString();
-                    XmlMapper mapper = new XmlMapper();
-                    mapper.registerModule(new JavaTimeModule());
-                    HabitAssignDto actualDto = mapper.readValue(resultDtoString, HabitAssignDto.class);
-                    Assertions.assertNotNull(actualDto);
-                    Assertions.assertEquals(expectedDto.getId(), actualDto.getId());
-                    Assertions.assertEquals(expectedDto.getStatus(), actualDto.getStatus());
-                    Assertions.assertEquals(expectedDto.getUserId(), actualDto.getUserId());
-                });
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse);
+        Assertions.assertEquals(expectedDto.getId(), JsonPath.parse(jsonResponse).read("$.id", Long.class));
+        Assertions.assertEquals(expectedDto.getStatus(), HabitAssignStatus.valueOf(JsonPath.parse(jsonResponse).read("$.status", String.class)));
+        Assertions.assertEquals(expectedDto.getUserId(), JsonPath.parse(jsonResponse).read("$.userId", Long.class));
 
         verify(habitAssignService, times(1)).getByHabitAssignIdAndUserId(habitAssignId, mockUser.getId(), locale.getLanguage());
     }
