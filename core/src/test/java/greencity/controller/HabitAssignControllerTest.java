@@ -5,7 +5,9 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import greencity.dto.habit.HabitAssignCustomPropertiesDto;
 import greencity.dto.habit.HabitAssignManagementDto;
+import greencity.dto.habit.HabitAssignUserDurationDto;
 import greencity.dto.user.UserVO;
+import greencity.enums.HabitAssignStatus;
 import greencity.service.HabitAssignService;
 import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
@@ -26,6 +28,7 @@ import static org.mockito.ArgumentMatchers.eq;
 import static org.mockito.Mockito.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 
@@ -41,7 +44,8 @@ public class HabitAssignControllerTest {
 
     @BeforeEach
     void setUp() {
-        mockMvc = MockMvcBuilders.standaloneSetup(habitAssignController).build();
+        mockMvc = MockMvcBuilders.standaloneSetup(habitAssignController)
+                .build();
     }
 
     @Test
@@ -96,5 +100,40 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1))
                 .assignCustomHabitForUser(eq(habitId), any(UserVO.class), any(HabitAssignCustomPropertiesDto.class));
+    }
+
+    @Test
+    void updateHabitAssignDurationTest() throws Exception {
+        long habitAssignId = 1L;
+
+        HabitAssignUserDurationDto expectedDto = new HabitAssignUserDurationDto();
+        expectedDto.setDuration(22);
+        expectedDto.setHabitAssignId(habitAssignId);
+        expectedDto.setUserId(2L);
+        expectedDto.setHabitId(3L);
+        expectedDto.setStatus(HabitAssignStatus.REQUESTED);
+        expectedDto.setWorkingDays(3);
+
+        when(habitAssignService.updateUserHabitInfoDuration(eq(habitAssignId), any(), any(Integer.class)))
+                .thenReturn(expectedDto);
+
+        mockMvc.perform(put("/habit/assign/{habitAssignId}/update-habit-duration",  habitAssignId)
+                        .param("duration", String.valueOf(22)))
+                .andExpect(status().isOk())
+                .andExpect(result -> {
+                    String resultDtoString = result.getResponse().getContentAsString();
+                    XmlMapper mapper = new XmlMapper();
+                    mapper.registerModule(new JavaTimeModule());
+                    HabitAssignUserDurationDto actualDto = mapper.readValue(resultDtoString, HabitAssignUserDurationDto.class);
+                    Assertions.assertNotNull(actualDto);
+                    Assertions.assertEquals(22, actualDto.getDuration());
+                    Assertions.assertEquals(3, actualDto.getWorkingDays());
+                    Assertions.assertEquals(habitAssignId, actualDto.getHabitAssignId());
+                    Assertions.assertEquals(2L, actualDto.getUserId());
+                    Assertions.assertEquals(HabitAssignStatus.REQUESTED, actualDto.getStatus());
+                    Assertions.assertEquals(3L, actualDto.getHabitId());
+                });
+
+        verify(habitAssignService, times(1)).updateUserHabitInfoDuration(eq(habitAssignId), any(), any(Integer.class));
     }
 }
