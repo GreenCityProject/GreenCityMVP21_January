@@ -5,10 +5,8 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.jayway.jsonpath.JsonPath;
 import greencity.converters.UserArgumentResolver;
-import greencity.dto.habit.HabitAssignCustomPropertiesDto;
-import greencity.dto.habit.HabitAssignDto;
-import greencity.dto.habit.HabitAssignManagementDto;
-import greencity.dto.habit.HabitAssignUserDurationDto;
+import greencity.dto.habit.*;
+import greencity.dto.shoppinglistitem.CustomShoppingListItemResponseDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.HabitAssignStatus;
 import greencity.service.HabitAssignService;
@@ -233,5 +231,34 @@ public class HabitAssignControllerTest {
         Assertions.assertEquals(expectedDto.getUserId(), JsonPath.parse(jsonResponse).read("$[0].userId", Long.class));
 
         verify(habitAssignService, times(1)).getAllHabitAssignsByUserIdAndStatusNotCancelled(mockUser.getId(), locale.getLanguage());
+    }
+
+    @Test
+    void getUserShoppingAndCustomShoppingListsTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+
+        UserShoppingAndCustomShoppingListsDto expectedDto = new UserShoppingAndCustomShoppingListsDto();
+        CustomShoppingListItemResponseDto customShoppingListItemResponseDto = new CustomShoppingListItemResponseDto();
+        customShoppingListItemResponseDto.setId(99L);
+        expectedDto.setCustomShoppingListItemDto(List.of(customShoppingListItemResponseDto));
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.getUserShoppingAndCustomShoppingLists(mockUser.getId(), habitAssignId, locale.getLanguage()))
+                .thenReturn(expectedDto);
+
+        MvcResult result = mockMvc.perform(get("/habit/assign/{habitAssignId}/allUserAndCustomList", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal)
+                        .header("Accept-Language", locale.getLanguage()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+        Assertions.assertEquals(expectedDto.getCustomShoppingListItemDto().getFirst().getId(), JsonPath.parse(jsonResponse).read("$.customShoppingListItemDto[0].id", Long.class), "ID of the first customShoppingListItemDto should match");
+
+        verify(habitAssignService, times(1)).getUserShoppingAndCustomShoppingLists(mockUser.getId(), habitAssignId, locale.getLanguage());
     }
 }
