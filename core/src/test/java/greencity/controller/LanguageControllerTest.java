@@ -1,8 +1,6 @@
 package greencity.controller;
 
-import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.service.LanguageService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -20,6 +18,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import java.util.List;
 
 import static org.mockito.Mockito.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 
 
@@ -36,25 +35,28 @@ class LanguageControllerTest {
 
     private static final String LANGUAGE_PATH = "/language";
 
-    private ObjectMapper mapper;
-
     @BeforeEach
     void setUp() {
         this.mockMvc = MockMvcBuilders.standaloneSetup(languageController).build();
-        mapper = new ObjectMapper();
     }
 
     @Test
-    @DisplayName("Should_Return_Language_Codes")
+    @DisplayName("Should_Return_All_Language_Codes")
     void getAllLanguageCodes() throws Exception {
-        when(languageService.findAllLanguageCodes()).thenReturn(List.of("ua", "en"));
+        List<String> languages = List.of("ua", "en", "fr");
+        when(languageService.findAllLanguageCodes()).thenReturn(languages);
 
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.get(LANGUAGE_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(languageService.findAllLanguageCodes()))
+                .accept(MediaType.APPLICATION_JSON)
         );
 
-        response.andExpect(MockMvcResultMatchers.status().isOk());
+        response.andExpect(MockMvcResultMatchers.status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(jsonPath("$[0]").value(languages.get(0)))
+                .andExpect(jsonPath("$[1]").value(languages.get(1)))
+                .andExpect(jsonPath("$[2]").value(languages.get(2)));
+
+        verify(languageService, times(1)).findAllLanguageCodes();
     }
 
     @Test
@@ -62,14 +64,13 @@ class LanguageControllerTest {
     void getEmptyListOfLanguageCodes() throws Exception {
         when(languageService.findAllLanguageCodes()).thenReturn(List.of());
 
-        ResultActions response = mockMvc.perform(MockMvcRequestBuilders.get(LANGUAGE_PATH)
-                .contentType(MediaType.APPLICATION_JSON)
-                .content(mapper.writeValueAsString(languageService.findAllLanguageCodes()))
-        );
+        mockMvc.perform(MockMvcRequestBuilders.get(LANGUAGE_PATH)
+                .accept(MediaType.APPLICATION_JSON))
+                    .andExpect(MockMvcResultMatchers.status().isOk())
+                    .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                    .andExpect(jsonPath("$").isArray())
+                    .andExpect(jsonPath("$").isEmpty());
 
-        response.andExpect(MockMvcResultMatchers.status().isOk())
-                .andExpect(jsonPath("$").value("<List/>"));
+        verify(languageService, times(1)).findAllLanguageCodes();
     }
-
-
 }
