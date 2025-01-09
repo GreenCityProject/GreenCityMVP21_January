@@ -184,7 +184,6 @@ public class HabitAssignControllerTest {
 
         MvcResult result = mockMvc.perform(get("/habit/assign/{habitAssignId}", habitAssignId)
                         .principal(principal)
-                        .contentType(MediaType.APPLICATION_JSON)
                         .header("Accept-Language", locale.getLanguage())
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
@@ -260,5 +259,27 @@ public class HabitAssignControllerTest {
         Assertions.assertEquals(expectedDto.getCustomShoppingListItemDto().getFirst().getId(), JsonPath.parse(jsonResponse).read("$.customShoppingListItemDto[0].id", Long.class), "ID of the first customShoppingListItemDto should match");
 
         verify(habitAssignService, times(1)).getUserShoppingAndCustomShoppingLists(mockUser.getId(), habitAssignId, locale.getLanguage());
+    }
+
+    @Test
+    void updateUserAndCustomShoppingListsTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+        UserShoppingAndCustomShoppingListsDto listsDto = new UserShoppingAndCustomShoppingListsDto();
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        doNothing().when(habitAssignService).fullUpdateUserAndCustomShoppingLists(mockUser.getId(), habitAssignId, listsDto, locale.getLanguage());
+
+        mockMvc.perform(put("/habit/assign/{habitAssignId}/allUserAndCustomList", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(listsDto))
+                        .header("Accept-Language", locale.getLanguage()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        verify(habitAssignService, times(1)).fullUpdateUserAndCustomShoppingLists(mockUser.getId(), habitAssignId, listsDto, locale.getLanguage());
     }
 }
