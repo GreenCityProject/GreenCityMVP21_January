@@ -79,7 +79,6 @@ public class HabitAssignControllerTest {
         UserVO mockUser = getUserVO();
 
         when(userService.findByEmail(anyString())).thenReturn(mockUser);
-
         when(habitAssignService.assignDefaultHabitForUser(eq(habitId), any(UserVO.class)))
                 .thenReturn(expectedDto);
 
@@ -96,6 +95,7 @@ public class HabitAssignControllerTest {
                     Assertions.assertEquals(7L, actualDto.getId());
                     Assertions.assertEquals(expectedDto.getId(), actualDto.getId());
                 });
+
         verify(habitAssignService, times(1)).assignDefaultHabitForUser(eq(habitId), any(UserVO.class));
     }
 
@@ -109,7 +109,6 @@ public class HabitAssignControllerTest {
         UserVO mockUser = getUserVO();
 
         when(userService.findByEmail(anyString())).thenReturn(mockUser);
-
         when(habitAssignService.assignCustomHabitForUser(eq(habitId), any(UserVO.class), any(HabitAssignCustomPropertiesDto.class)))
                 .thenReturn(List.of(expectedDto));
 
