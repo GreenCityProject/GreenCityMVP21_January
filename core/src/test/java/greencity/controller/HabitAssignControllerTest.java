@@ -528,4 +528,41 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1)).unenrollHabit(habitAssignId, mockUser.getId(), date);
     }
+
+    @Test
+    void getInprogressHabitAssignOnDateTest() throws Exception {
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+        LocalDate date = LocalDate.of(2025, 1, 10);
+        String formattedDate = date.toString();
+
+        HabitAssignDto expectedDto = new HabitAssignDto();
+        expectedDto.setId(11L);
+        expectedDto.setStatus(HabitAssignStatus.ACQUIRED);
+        expectedDto.setUserId(211L);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.findInprogressHabitAssignsOnDate(mockUser.getId(), date, locale.getLanguage()))
+                .thenReturn(List.of(expectedDto));
+
+        MvcResult result = mockMvc.perform(get("/habit/assign/active/{date}", formattedDate)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Accept-Language", locale.getLanguage())
+                        .principal(principal))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        HabitAssignDto actualDto = JsonPath.parse(jsonResponse).read("$.[0]", HabitAssignDto.class);
+        Assertions.assertNotNull(actualDto, "The result should not be null");
+
+        Assertions.assertEquals(expectedDto.getId(), actualDto.getId(), "ID of the habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getStatus(), actualDto.getStatus(), "Status of the habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getUserId(), actualDto.getUserId(), "UserId of the habitAssignDto should match");
+
+        verify(habitAssignService, times(1)).findInprogressHabitAssignsOnDate(mockUser.getId(), date, locale.getLanguage());
+    }
+
 }
