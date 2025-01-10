@@ -420,4 +420,39 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1)).findHabitByUserIdAndHabitAssignId(mockUser.getId(), habitAssignId, locale.getLanguage());
     }
+
+    @Test
+    void updateAssignByHabitIdTest() throws Exception {
+        long habitAssignId = 1L;
+
+        HabitAssignStatDto givenDto = new HabitAssignStatDto();
+        givenDto.setStatus(HabitAssignStatus.INPROGRESS);
+
+        HabitAssignManagementDto expectedDto = new HabitAssignManagementDto();
+        expectedDto.setId(habitAssignId);
+        expectedDto.setStatus(HabitAssignStatus.INPROGRESS);
+        expectedDto.setWorkingDays(6);
+
+        when(habitAssignService.updateStatusByHabitAssignId(habitAssignId, givenDto))
+                .thenReturn(expectedDto);
+
+        MvcResult result = mockMvc.perform(patch("/habit/assign/{habitAssignId}", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(givenDto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        HabitAssignManagementDto actualDto = JsonPath.parse(jsonResponse).read("$", HabitAssignManagementDto.class);
+        Assertions.assertNotNull(actualDto, "The result should not be null");
+
+        Assertions.assertEquals(expectedDto.getId(), actualDto.getId(), "ID of the habitAssignManagementDto should match");
+        Assertions.assertEquals(expectedDto.getStatus(), actualDto.getStatus(), "Status of the habitAssignManagementDto should match");
+        Assertions.assertEquals(expectedDto.getWorkingDays(), actualDto.getWorkingDays(), "WorkingDays of the habitAssignManagementDto should match");
+
+        verify(habitAssignService, times(1)).updateStatusByHabitAssignId(habitAssignId, givenDto);
+    }
 }
