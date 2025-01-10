@@ -634,4 +634,21 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1)).cancelHabitAssign(habitId, mockUser.getId());
     }
+
+    @Test
+    void deleteHabitAssignTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        doNothing().when(habitAssignService).deleteHabitAssign(habitAssignId, mockUser.getId());
+
+        mockMvc.perform(delete("/habit/assign/delete/{habitAssignId}", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        verify(habitAssignService, times(1)).deleteHabitAssign(habitAssignId, mockUser.getId());
+    }
 }
