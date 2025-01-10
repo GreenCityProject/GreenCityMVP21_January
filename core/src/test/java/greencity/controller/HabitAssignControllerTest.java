@@ -8,8 +8,10 @@ import com.jayway.jsonpath.JsonPath;
 import greencity.converters.UserArgumentResolver;
 import greencity.dto.habit.*;
 import greencity.dto.shoppinglistitem.CustomShoppingListItemResponseDto;
+import greencity.dto.user.UserShoppingListItemAdvanceDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.HabitAssignStatus;
+import greencity.enums.ShoppingListItemStatus;
 import greencity.service.HabitAssignService;
 import greencity.service.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -650,5 +652,25 @@ public class HabitAssignControllerTest {
                 .andReturn();
 
         verify(habitAssignService, times(1)).deleteHabitAssign(habitAssignId, mockUser.getId());
+    }
+
+    @Test
+    void updateShoppingListStatusTest() throws Exception {
+        UpdateUserShoppingListDto givenDto = new UpdateUserShoppingListDto();
+        givenDto.setHabitAssignId(2L);
+        UserShoppingListItemAdvanceDto userShoppingListItemAdvanceDto = new UserShoppingListItemAdvanceDto();
+        userShoppingListItemAdvanceDto.setId(7L);
+        userShoppingListItemAdvanceDto.setStatus(ShoppingListItemStatus.ACTIVE);
+        givenDto.setUserShoppingListAdvanceDto(List.of(userShoppingListItemAdvanceDto));
+        givenDto.setUserShoppingListItemId(1L);
+
+        mockMvc.perform(put("/habit/assign/saveShoppingListForHabitAssign")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(new ObjectMapper().writeValueAsString(givenDto)))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        verify(habitAssignService, times(1)).updateUserShoppingListItem(givenDto);
     }
 }
