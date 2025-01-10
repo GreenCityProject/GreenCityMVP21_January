@@ -385,4 +385,39 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1)).findHabitAssignByUserIdAndHabitId(mockUser.getId(), habitId, locale.getLanguage());
     }
+
+    @Test
+    void getUsersHabitByHabitAssignIdTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+
+        HabitDto expectedDto = new HabitDto();
+        expectedDto.setId(8L);
+        expectedDto.setIsCustomHabit(true);
+        expectedDto.setComplexity(77);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.findHabitByUserIdAndHabitAssignId(mockUser.getId(), habitAssignId, locale.getLanguage()))
+                .thenReturn(expectedDto);
+
+        MvcResult result = mockMvc.perform(get("/habit/assign/{habitAssignId}/more", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Accept-Language", locale.getLanguage())
+                        .principal(principal))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        HabitDto actualDto = JsonPath.parse(jsonResponse).read("$", HabitDto.class);
+        Assertions.assertNotNull(actualDto, "The result should not be null");
+
+        Assertions.assertEquals(expectedDto.getId(), actualDto.getId(), "ID of the habitDto should match");
+        Assertions.assertEquals(expectedDto.getComplexity(), actualDto.getComplexity(), "Complexity of the habitDto should match");
+        Assertions.assertEquals(expectedDto.getIsCustomHabit(), actualDto.getIsCustomHabit(), "isCustomHabit() should match");
+
+        verify(habitAssignService, times(1)).findHabitByUserIdAndHabitAssignId(mockUser.getId(), habitAssignId, locale.getLanguage());
+    }
 }
