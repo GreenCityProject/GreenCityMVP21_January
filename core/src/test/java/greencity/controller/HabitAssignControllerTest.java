@@ -2,6 +2,7 @@ package greencity.controller;
 
 import com.fasterxml.jackson.core.type.TypeReference;
 import com.fasterxml.jackson.dataformat.xml.XmlMapper;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.jayway.jsonpath.JsonPath;
 import greencity.converters.UserArgumentResolver;
@@ -24,9 +25,9 @@ import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.security.Principal;
+import java.text.SimpleDateFormat;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
@@ -565,4 +566,38 @@ public class HabitAssignControllerTest {
         verify(habitAssignService, times(1)).findInprogressHabitAssignsOnDate(mockUser.getId(), date, locale.getLanguage());
     }
 
+    @Test
+    void getHabitAssignBetweenDatesTest() throws Exception {
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+        LocalDate date1 = LocalDate.of(2025, 1, 7);
+        LocalDate date2 = LocalDate.of(2025, 1, 10);
+
+        HabitsDateEnrollmentDto expectedDto = new HabitsDateEnrollmentDto();
+        expectedDto.setEnrollDate(date1);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.findHabitAssignsBetweenDates(mockUser.getId(), date1, date2, locale.getLanguage()))
+                .thenReturn(List.of(expectedDto));
+
+        MvcResult result = mockMvc.perform(get("/habit/assign/activity/{from}/to/{to}", date1, date2)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Accept-Language", locale.getLanguage())
+                        .principal(principal))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        ObjectMapper objectMapper = new ObjectMapper();
+        objectMapper.registerModule(new JavaTimeModule());
+        objectMapper.setDateFormat(new SimpleDateFormat("yyyy-MM-dd"));
+
+        List<HabitsDateEnrollmentDto> actualDtos = objectMapper.readValue(jsonResponse, new TypeReference<List<HabitsDateEnrollmentDto>>() {
+        });
+        Assertions.assertEquals(date1, actualDtos.get(0).getEnrollDate());
+
+        verify(habitAssignService, times(1)).findHabitAssignsBetweenDates(mockUser.getId(), date1, date2, locale.getLanguage());
+    }
 }
