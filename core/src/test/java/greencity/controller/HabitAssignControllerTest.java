@@ -316,4 +316,38 @@ public class HabitAssignControllerTest {
         verify(habitAssignService, times(1)).getListOfUserAndCustomShoppingListsWithStatusInprogress(mockUser.getId(), locale.getLanguage());
     }
 
+    @Test
+    void getAllHabitAssignsByHabitIdAndAcquiredTest() throws Exception {
+        long habitId = 1L;
+        Locale locale = Locale.ENGLISH;
+
+        HabitAssignDto expectedDto = new HabitAssignDto();
+        expectedDto.setId(7L);
+        expectedDto.setStatus(HabitAssignStatus.ACQUIRED);
+        expectedDto.setUserId(27L);
+
+        when(habitAssignService.getAllHabitAssignsByHabitIdAndStatusNotCancelled(habitId, locale.getLanguage()))
+                .thenReturn(List.of(expectedDto));
+
+        MvcResult result = mockMvc.perform(get("/habit/assign/{habitId}/all", habitId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Accept-Language", locale.getLanguage()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        int listSize = JsonPath.parse(jsonResponse).read("$.length()", Integer.class);
+        Assertions.assertEquals(1, listSize, "The list should contain only one element");
+
+        HabitAssignDto actualDto = JsonPath.parse(jsonResponse).read("$[0]", HabitAssignDto.class);
+        Assertions.assertNotNull(actualDto, "The result should not be null");
+
+        Assertions.assertEquals(expectedDto.getId(), actualDto.getId(), "ID of the first habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getStatus(), actualDto.getStatus(), "Status of the habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getUserId(), actualDto.getUserId(), "ID of the userId should match");
+
+        verify(habitAssignService, times(1)).getAllHabitAssignsByHabitIdAndStatusNotCancelled(habitId, locale.getLanguage());
+    }
 }
