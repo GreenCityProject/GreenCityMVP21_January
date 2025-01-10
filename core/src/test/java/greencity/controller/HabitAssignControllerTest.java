@@ -597,7 +597,41 @@ public class HabitAssignControllerTest {
         List<HabitsDateEnrollmentDto> actualDtos = objectMapper.readValue(jsonResponse, new TypeReference<List<HabitsDateEnrollmentDto>>() {
         });
         Assertions.assertEquals(date1, actualDtos.get(0).getEnrollDate());
+        Assertions.assertEquals(1, actualDtos.size(), "Size of the result array should be 1");
 
         verify(habitAssignService, times(1)).findHabitAssignsBetweenDates(mockUser.getId(), date1, date2, locale.getLanguage());
+    }
+
+    @Test
+    void cancelHabitAssignTest() throws Exception {
+        long habitId = 1L;
+        UserVO mockUser = getUserVO();
+
+        HabitAssignDto expectedDto = new HabitAssignDto();
+        expectedDto.setId(12L);
+        expectedDto.setStatus(HabitAssignStatus.ACQUIRED);
+        expectedDto.setUserId(212L);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.cancelHabitAssign(habitId, mockUser.getId()))
+                .thenReturn(expectedDto);
+
+        MvcResult result = mockMvc.perform(patch("/habit/assign/cancel/{habitId}", habitId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        HabitAssignDto actualDto = JsonPath.parse(jsonResponse).read("$", HabitAssignDto.class);
+        Assertions.assertNotNull(actualDto, "The result should not be null");
+
+        Assertions.assertEquals(expectedDto.getId(), actualDto.getId(), "ID of the habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getStatus(), actualDto.getStatus(), "Status of the habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getUserId(), actualDto.getUserId(), "UserId of the habitAssignDto should match");
+
+        verify(habitAssignService, times(1)).cancelHabitAssign(habitId, mockUser.getId());
     }
 }
