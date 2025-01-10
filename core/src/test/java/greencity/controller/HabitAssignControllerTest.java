@@ -27,6 +27,7 @@ import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 import org.testcontainers.shaded.com.fasterxml.jackson.databind.ObjectMapper;
 
 import java.security.Principal;
+import java.time.LocalDate;
 import java.util.List;
 import java.util.Locale;
 
@@ -454,5 +455,42 @@ public class HabitAssignControllerTest {
         Assertions.assertEquals(expectedDto.getWorkingDays(), actualDto.getWorkingDays(), "WorkingDays of the habitAssignManagementDto should match");
 
         verify(habitAssignService, times(1)).updateStatusByHabitAssignId(habitAssignId, givenDto);
+    }
+
+    @Test
+    void enrollHabitTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+        LocalDate date = LocalDate.of(2025, 1, 10);
+        String formattedDate = date.toString();
+
+        HabitAssignDto expectedDto = new HabitAssignDto();
+        expectedDto.setId(4L);
+        expectedDto.setStatus(HabitAssignStatus.ACQUIRED);
+        expectedDto.setUserId(24L);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.enrollHabit(habitAssignId, mockUser.getId(), date, locale.getLanguage()))
+                .thenReturn(expectedDto);
+
+        MvcResult result = mockMvc.perform(post("/habit/assign/{habitAssignId}/enroll/{date}", habitAssignId, formattedDate)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .header("Accept-Language", locale.getLanguage())
+                        .principal(principal))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        HabitAssignDto actualDto = JsonPath.parse(jsonResponse).read("$", HabitAssignDto.class);
+        Assertions.assertNotNull(actualDto, "The result should not be null");
+
+        Assertions.assertEquals(expectedDto.getId(), actualDto.getId(), "ID of the habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getStatus(), actualDto.getStatus(), "Status of the habitAssignDto should match");
+        Assertions.assertEquals(expectedDto.getUserId(), actualDto.getUserId(), "UserId of the habitAssignDto should match");
+
+        verify(habitAssignService, times(1)).enrollHabit(habitAssignId, mockUser.getId(), date, locale.getLanguage());
     }
 }
