@@ -673,4 +673,21 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1)).updateUserShoppingListItem(givenDto);
     }
+
+    @Test
+    void updateProgressNotificationHasDisplayedTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        doNothing().when(habitAssignService).updateProgressNotificationHasDisplayed(habitAssignId, mockUser.getId());
+
+        mockMvc.perform(put("/habit/assign/{habitAssignId}/updateProgressNotificationHasDisplayed", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        verify(habitAssignService, times(1)).updateProgressNotificationHasDisplayed(habitAssignId, mockUser.getId());
+    }
 }
