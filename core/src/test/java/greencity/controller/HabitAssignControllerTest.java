@@ -282,4 +282,38 @@ public class HabitAssignControllerTest {
 
         verify(habitAssignService, times(1)).fullUpdateUserAndCustomShoppingLists(mockUser.getId(), habitAssignId, listsDto, locale.getLanguage());
     }
+
+    @Test
+    void getListOfUserAndCustomShoppingListsInProgressTest() throws Exception {
+        UserVO mockUser = getUserVO();
+        Locale locale = Locale.ENGLISH;
+
+        UserShoppingAndCustomShoppingListsDto expectedDto = new UserShoppingAndCustomShoppingListsDto();
+        CustomShoppingListItemResponseDto customShoppingListItemResponseDto = new CustomShoppingListItemResponseDto();
+        customShoppingListItemResponseDto.setId(88L);
+        expectedDto.setCustomShoppingListItemDto(List.of(customShoppingListItemResponseDto));
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(habitAssignService.getListOfUserAndCustomShoppingListsWithStatusInprogress(mockUser.getId(), locale.getLanguage()))
+                .thenReturn(List.of(expectedDto));
+
+        MvcResult result = mockMvc.perform(get("/habit/assign/allUserAndCustomShoppingListsInprogress")
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal)
+                        .header("Accept-Language", locale.getLanguage()))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        Assertions.assertNotNull(jsonResponse, "JSON response should not be null");
+
+        int listSize = JsonPath.parse(jsonResponse).read("$.length()", Integer.class);
+        Assertions.assertEquals(1, listSize, "The list should contain only one element");
+
+        Assertions.assertEquals(expectedDto.getCustomShoppingListItemDto().getFirst().getId(), JsonPath.parse(jsonResponse).read("$[0].customShoppingListItemDto[0].id", Long.class),
+                "ID of the first customShoppingListItemDto should match");
+
+        verify(habitAssignService, times(1)).getListOfUserAndCustomShoppingListsWithStatusInprogress(mockUser.getId(), locale.getLanguage());
+    }
+
 }
