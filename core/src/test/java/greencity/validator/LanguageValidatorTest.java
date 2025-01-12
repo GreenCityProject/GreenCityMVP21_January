@@ -30,12 +30,10 @@ public class LanguageValidatorTest {
     @InjectMocks
     private LanguageValidator languageValidator;
 
-    private List<String> languageCodes;
-
     @BeforeEach
     void setUp() {
         MockitoAnnotations.openMocks(this);
-        languageCodes = Arrays.asList("en", "ua", "fr");
+        List<String> languageCodes = Arrays.asList("en", "ua", "fr");
         when(languageService.findAllLanguageCodes()).thenReturn(languageCodes);
         languageValidator.initialize(null);
     }
