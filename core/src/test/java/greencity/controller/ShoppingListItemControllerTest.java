@@ -182,6 +182,7 @@ class ShoppingListItemControllerTest {
         String language = "en";
 
         UserVO mockUser = getUserVO();
+
         when(shoppingListItemService.getUserShoppingList(mockUser.getId(), habitId, language))
                 .thenReturn(Collections.emptyList());
 
