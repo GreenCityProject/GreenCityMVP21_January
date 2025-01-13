@@ -5,6 +5,7 @@ import com.fasterxml.jackson.dataformat.xml.XmlMapper;
 import com.fasterxml.jackson.databind.ObjectMapper;
 import com.fasterxml.jackson.datatype.jsr310.JavaTimeModule;
 import com.jayway.jsonpath.JsonPath;
+import greencity.constant.ErrorMessage;
 import greencity.converters.UserArgumentResolver;
 import greencity.dto.habit.*;
 import greencity.dto.shoppinglistitem.CustomShoppingListItemResponseDto;
@@ -12,6 +13,8 @@ import greencity.dto.user.UserShoppingListItemAdvanceDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.HabitAssignStatus;
 import greencity.enums.ShoppingListItemStatus;
+import greencity.exception.exceptions.NotFoundException;
+import greencity.exception.handler.CustomExceptionHandler;
 import greencity.service.HabitAssignService;
 import greencity.service.UserService;
 import org.junit.jupiter.api.Assertions;
@@ -22,17 +25,23 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.boot.web.error.ErrorAttributeOptions;
+import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
+import org.springframework.web.bind.annotation.ControllerAdvice;
+import org.springframework.web.context.request.WebRequest;
 
 import java.security.Principal;
 import java.text.SimpleDateFormat;
 import java.time.LocalDate;
+import java.util.HashMap;
 import java.util.List;
 import java.util.Locale;
+import java.util.Map;
 
 import static greencity.ModelUtils.getPrincipal;
 import static greencity.ModelUtils.getUserVO;
@@ -42,6 +51,7 @@ import static org.mockito.Mockito.*;
 
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.put;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
 
@@ -54,16 +64,27 @@ public class HabitAssignControllerTest {
     private UserService userService;
     @Mock
     private ModelMapper modelMapper;
+    @Mock
+    private ErrorAttributes errorAttributes;
+    @Mock
+    private ObjectMapper objectMapper;
 
     @InjectMocks
     private HabitAssignController habitAssignController;
 
     private MockMvc mockMvc;
     private Principal principal = getPrincipal();
+    private Map<String, Object> attributes;
 
     @BeforeEach
     void setUp() {
+        attributes = new HashMap<>();
+
+        attributes.put("timestamp", "2025-01-13T10:00:00");
+        attributes.put("trace", "Test stack trace");
+
         mockMvc = MockMvcBuilders.standaloneSetup(habitAssignController)
+                .setControllerAdvice(new CustomExceptionHandler(errorAttributes, objectMapper))
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver(),
                         new UserArgumentResolver(userService, modelMapper))
                 .build();
@@ -685,6 +706,27 @@ public class HabitAssignControllerTest {
                         .accept(MediaType.APPLICATION_JSON)
                         .principal(principal))
                 .andExpect(status().isOk())
+                .andReturn();
+
+        verify(habitAssignService, times(1)).updateProgressNotificationHasDisplayed(habitAssignId, mockUser.getId());
+    }
+
+    @Test
+    void notFoundUpdateProgressNotificationHasDisplayedTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+        attributes.put("path", "/habit/assign/1/updateProgressNotificationHasDisplayed");
+        attributes.put("message", ErrorMessage.HABIT_ASSIGN_NOT_FOUND_BY_ID + habitAssignId);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        when(errorAttributes.getErrorAttributes(any(WebRequest.class), any(ErrorAttributeOptions.class))).thenReturn(attributes);
+        doThrow(new NotFoundException(ErrorMessage.HABIT_ASSIGN_NOT_FOUND_BY_ID + habitAssignId)).when(habitAssignService).updateProgressNotificationHasDisplayed(habitAssignId, mockUser.getId());
+
+        mockMvc.perform(put("/habit/assign/{habitAssignId}/updateProgressNotificationHasDisplayed", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(ErrorMessage.HABIT_ASSIGN_NOT_FOUND_BY_ID + habitAssignId))
                 .andReturn();
 
         verify(habitAssignService, times(1)).updateProgressNotificationHasDisplayed(habitAssignId, mockUser.getId());
