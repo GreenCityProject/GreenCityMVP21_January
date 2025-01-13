@@ -2,6 +2,8 @@ package greencity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.ModelUtils;
+import greencity.annotations.ValidLanguage;
+import greencity.dto.PageableDto;
 import greencity.dto.habitfact.HabitFactDtoResponse;
 import greencity.dto.habitfact.HabitFactPostDto;
 import greencity.dto.habitfact.HabitFactVO;
@@ -10,11 +12,13 @@ import greencity.service.HabitFactService;
 import greencity.service.LanguageService;
 import greencity.validator.LanguageTranslationValidator;
 import greencity.validator.LanguageValidator;
+import jakarta.validation.ConstraintValidatorContext;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
+import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -28,6 +32,10 @@ import org.springframework.test.web.servlet.ResultActions;
 import org.springframework.test.web.servlet.request.MockMvcRequestBuilders;
 import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
+import java.lang.reflect.Field;
+import java.util.List;
+import java.util.Locale;
+
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
@@ -35,8 +43,8 @@ import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.
 @ExtendWith(MockitoExtension.class)
 @MockitoSettings(strictness = Strictness.LENIENT)
 
-//@WebMvcTest(controllers = {HabitFactController.class})
-//@ContextConfiguration(classes = {GreenCityApplication.class})
+//@WebMvcTest(controllers = {HabitFactController.class}) // without 47 throws "Found multiple @SpringBootConfiguration annotated classes"
+//@ContextConfiguration(classes = {GreenCityApplication.class}) // with 46 throws "Could not initialize class org.mockito.Mockito"
 class HabitFactControllerTest {
 
     @Mock
@@ -52,6 +60,9 @@ class HabitFactControllerTest {
     private LanguageTranslationValidator languageTranslationValidator;
 
     @Mock
+    private ConstraintValidatorContext  constraintValidatorContext;
+
+    @Mock
     ModelMapper modelMapper;
 
     @InjectMocks
@@ -65,9 +76,15 @@ class HabitFactControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-        mockMvc = MockMvcBuilders.standaloneSetup(habitFactController)
-//                .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
-                .build();
+        // 80 thru 83 ara hacks I used to somehow initialize languageService on languageTranslationValidator DOES NOT WORK
+        languageTranslationValidator = new LanguageTranslationValidator();
+        Field repositoryField = LanguageTranslationValidator.class.getDeclaredField("languageService");
+        repositoryField.setAccessible(true);
+        repositoryField.set(languageTranslationValidator, languageService);
+
+
+        when(languageService.getAllLanguages()).thenReturn(List.of(ModelUtils.getLanguageDTO()));
+        mockMvc = MockMvcBuilders.standaloneSetup(habitFactController).build();
         objectMapper = new ObjectMapper();
     }
 
@@ -78,24 +95,23 @@ class HabitFactControllerTest {
     @Test
     @DisplayName("Should_Return_Random_Fact_By_Habit_Id")
     void getRandomFactByHabitId() throws Exception {
-//        Long habitId = 1L;
-//        Locale locale = Locale.ENGLISH;
-//        LanguageTranslationDTO languageTranslationDTO = ModelUtils.getLanguageTranslationDTO();
-//        ValidLanguage validLanguage = Mockito.mock(ValidLanguage.class);
-//
-//
-//        when(languageService.findAllLanguageCodes()).thenReturn(List.of("ua", "en", "fr"));
-//
-//        doNothing().when(languageValidator).initialize(validLanguage);
-//
-//        when(habitFactService.getRandomHabitFactByHabitIdAndLanguage(habitId, locale.getLanguage()))
-//                .thenReturn(languageTranslationDTO);
-//
-//
-//        mockMvc.perform(MockMvcRequestBuilders.get("/facts/random/%d".formatted(habitId))
-//                .accept(MediaType.APPLICATION_JSON)
-//
-//        ).andExpect(status().isOk());
+        Long habitId = 1L;
+        Locale locale = Locale.ENGLISH;
+        LanguageTranslationDTO languageTranslationDTO = ModelUtils.getLanguageTranslationDTO();
+        ValidLanguage validLanguage = Mockito.mock(ValidLanguage.class);
+
+        when(languageService.findAllLanguageCodes()).thenReturn(List.of("ua", "en", "fr"));
+        doNothing().when(languageValidator).initialize(validLanguage);
+        when(habitFactService.getRandomHabitFactByHabitIdAndLanguage(habitId, locale.getLanguage()))
+                .thenReturn(languageTranslationDTO);
+
+        /** below throws "Unable to initialize greencity.validator.LanguageValidator"
+       Because:  Cannot invoke "greencity.service.LanguageService.findAllLanguageCodes()" because "<local3>.languageService" is null
+         **/
+        mockMvc.perform(MockMvcRequestBuilders.get("/facts/random/%d".formatted(habitId))
+                .accept(MediaType.APPLICATION_JSON)
+
+        ).andExpect(status().isOk());
     }
 
     @Test
@@ -116,16 +132,16 @@ class HabitFactControllerTest {
 
     @Test
     void getAll() throws Exception {
-//
-//        LanguageTranslationDTO langTransDTOMock = Mockito.mock(LanguageTranslationDTO.class);
-//        PageableDto<LanguageTranslationDTO> expected = Mockito.mock(PageableDto.class);
-//        expected.setPage(List.of(langTransDTOMock));
-//
-//        when(habitFactService.getAllHabitFacts(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
-//            .thenReturn(expected);
-//
-//        mockMvc.perform(MockMvcRequestBuilders.get(FACTS_URL).accept(MediaType.APPLICATION_JSON))
-//            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        LanguageTranslationDTO langTransDTOMock = Mockito.mock(LanguageTranslationDTO.class);
+        PageableDto<LanguageTranslationDTO> expected = Mockito.mock(PageableDto.class);
+        expected.setPage(List.of(langTransDTOMock));
+
+        when(habitFactService.getAllHabitFacts(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
+            .thenReturn(expected);
+        /** below throws : jakarta.servlet.ServletException: Request processing failed: java.lang.IllegalStateException:
+         No primary or single unique constructor found for interface org.springframework.data.domain.Pageable **/
+        mockMvc.perform(MockMvcRequestBuilders.get(HABIT_FACT_CONTROLLER_LINK).accept(MediaType.APPLICATION_JSON))
+            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
     }
 
     @Test
@@ -137,39 +153,13 @@ class HabitFactControllerTest {
         when(habitFactService.save(habitFactPostDto)).thenReturn(habitFactVO);
         when(modelMapper.map(habitFactVO, HabitFactDtoResponse.class)).thenReturn(habitFactDtoResponse);
 
+        /** below throws Request processing failed: jakarta.validation.ValidationException: HV000032: Unable to initialize greencity.validator.LanguageTranslationValidator.
+        Because "Cannot invoke "greencity.service.LanguageService.getAllLanguages()" because "<local3>.languageService" is null" **/
         ResultActions response = mockMvc.perform(MockMvcRequestBuilders.post(HABIT_FACT_CONTROLLER_LINK)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
                 .content(objectMapper.writeValueAsString(habitFactPostDto))
         );
-//
-//        response.andExpect(status().isCreated());
-
-//        // Given: Preparing the data
-//        HabitFactPostDto postDto = ModelUtils.getHabitFactPostDto();
-//        // Set properties on postDto as needed for the test
-//
-//        HabitFactVO habitFactVO = ModelUtils.getHabitFactVO();
-//
-//        HabitFactDtoResponse responseDto = Mockito.mock(HabitFactDtoResponse.class);
-//        // Set properties on responseDto as needed
-//
-//        // Mocking the service and mapper behavior
-//        when(habitFactService.save(postDto)).thenReturn(habitFactVO);
-//        when(modelMapper.map(any(HabitFactPostDto.class), eq(HabitFactDtoResponse.class))).thenReturn(responseDto);
-//
-//        // When & Then: Perform the POST request and assert results
-//        mockMvc.perform(MockMvcRequestBuilders.post(HABIT_FACT_CONTROLLER_LINK) // Adjust the endpoint as necessary
-//                        .contentType(MediaType.APPLICATION_JSON)
-//                        .content(new ObjectMapper().writeValueAsString(postDto)))
-//                .andExpect(status().isCreated())
-//                .andExpect(content().contentType(MediaType.APPLICATION_JSON));
-////                .andExpect(jsonPath("$").exists()); // Customize this based on expected response properties
-//
-//        // Verify interactions
-//        verify(habitFactService, times(1)).save(postDto);
-//        verify(modelMapper, times(1)).map(any(HabitFactPostDto.class), eq(HabitFactDtoResponse.class));
-
 
     }
 
