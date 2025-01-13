@@ -56,8 +56,6 @@ import static org.springframework.test.web.servlet.request.MockMvcRequestBuilder
 
 @MockitoSettings(strictness = Strictness.LENIENT)
 @ExtendWith(MockitoExtension.class)
-@ContextConfiguration
-@Import(SecurityConfig.class)
 class HabitControllerTest {
 
     @Mock
@@ -73,7 +71,6 @@ class HabitControllerTest {
     @InjectMocks
     private HabitController habitController;
 
-    @Autowired
     private MockMvc mockMvc;
 
     private ObjectMapper mapper;
@@ -121,23 +118,6 @@ class HabitControllerTest {
 
     }
 
-    /*
-    @Test
-    void testGetHabitBiIdReturns404() throws Exception{
-
-        Long id = 999L;
-        Locale lang = Locale.ENGLISH;
-
-        Mockito.when(habitService.getByIdAndLanguageCode(id, lang.getLanguage())).thenThrow(NotFoundException.class);
-
-
-            mockMvc.perform(get("/habit/{id}", id).header("Accept-Language", lang.getLanguage()))
-                    .andDo(print())
-                    .andExpect(status().isNotFound());
-
-    }
-
-     */
 
     @Test
     void testGetHabitBiIdReturns400() throws Exception{
@@ -153,22 +133,6 @@ class HabitControllerTest {
 
     }
 
-    /*
-    @Test
-    void testReturnsAll() throws Exception {
-
-        UserVO userVO = getUserVO();
-        when(userService.findByEmail(anyString())).thenReturn(userVO);
-
-
-        MvcResult result = mockMvc.perform(get("/habit")   )
-                       .andExpect(status().isOk())
-                       .andDo(print())
-                       .andReturn();
-
-    }
-
-     */
 
     @Test
     void testGetAllHabitsByLanguageCodeReturns200() throws Exception{
@@ -231,24 +195,6 @@ class HabitControllerTest {
 
     }
 
-    /*
-    @Test
-    void testGetAllHabitsByLanguageCodeReturns400() throws Exception {
-
-        Pageable pageable = PageRequest.of(0, 1);
-
-        Locale lang=Locale.of("111");
-
-        when(habitService.getAllHabitsByLanguageCode(any(), any(Pageable.class), anyString()))
-                .thenThrow(HttpServerErrorException.InternalServerError.class);
-
-        mockMvc.perform(get("/habit"))
-                .andExpect(status().isInternalServerError())
-                .andDo(print());
-
-    }
-
-     */
 
     @Test
     void testGetShoppingListItemsReturns200() throws Exception{
@@ -475,30 +421,6 @@ class HabitControllerTest {
 
     }
 
-    /*
-    @Test
-    void getAllByDifferentParametersReturns400() throws Exception{
-
-
-        given(habitService.getAllByDifferentParameters(any(UserVO.class), any(Pageable.class),
-                eq(Optional.empty()),
-                eq(Optional.empty()), eq(Optional.empty()), eq(Locale.ENGLISH.getLanguage())))
-                .willThrow(BadRequestException.class);
-
-
-        try {
-            MvcResult result = mockMvc.perform(get("/habit/search")
-                            .principal(principal))
-                    .andExpect(status().isBadRequest())
-                    .andDo(print())
-                    .andReturn();
-        }catch (BadRequestException exc){
-
-        }
-
-    }
-
-     */
 
     @Test
     void testAddCustomHabitReturns201() throws Exception{
@@ -609,22 +531,6 @@ class HabitControllerTest {
 
     }
 
-    /*
-
-    @Test
-    void testFindAllHabitsTagsReturns400() throws Exception{
-
-        given(tagsService.findAllHabitsTags(eq(null))).willThrow(BadRequestException.class);
-
-        MvcResult result = mockMvc.perform(get("/habit/tags")
-                .param("locale", ""))
-                .andExpect(status().isBadRequest())
-                .andDo(print())
-                .andReturn();
-
-    }
-
-     */
 
     @Test
     void testGetFriendsAssignedToHabitProfilePicturesReturns200 () throws Exception{
