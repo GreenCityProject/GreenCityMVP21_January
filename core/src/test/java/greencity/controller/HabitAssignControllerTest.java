@@ -674,6 +674,27 @@ public class HabitAssignControllerTest {
     }
 
     @Test
+    void notFoundDeleteHabitAssignTest() throws Exception {
+        long habitAssignId = 1L;
+        UserVO mockUser = getUserVO();
+        attributes.put("path", "/habit/assign/delete/" + habitAssignId);
+        attributes.put("message", ErrorMessage.HABIT_ASSIGN_NOT_FOUND_BY_ID + habitAssignId);
+
+        when(userService.findByEmail(anyString())).thenReturn(mockUser);
+        doThrow(new NotFoundException(ErrorMessage.HABIT_ASSIGN_NOT_FOUND_BY_ID + habitAssignId)).when(habitAssignService).deleteHabitAssign(habitAssignId, mockUser.getId());
+        when(errorAttributes.getErrorAttributes(any(WebRequest.class), any(ErrorAttributeOptions.class))).thenReturn(attributes);
+
+        mockMvc.perform(delete("/habit/assign/delete/{habitAssignId}", habitAssignId)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .principal(principal))
+                .andExpect(status().isNotFound())
+                .andExpect(jsonPath("$.message").value(ErrorMessage.HABIT_ASSIGN_NOT_FOUND_BY_ID + habitAssignId))
+                .andReturn();
+
+        verify(habitAssignService, times(1)).deleteHabitAssign(habitAssignId, mockUser.getId());
+    }
+
+    @Test
     void updateShoppingListStatusTest() throws Exception {
         UpdateUserShoppingListDto givenDto = new UpdateUserShoppingListDto();
         givenDto.setHabitAssignId(2L);
