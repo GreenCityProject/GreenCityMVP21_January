@@ -9,7 +9,6 @@ import greencity.dto.habitfact.HabitFactUpdateDto;
 import greencity.dto.habitfact.HabitFactVO;
 import greencity.dto.language.LanguageTranslationDTO;
 import greencity.service.HabitFactService;
-import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
@@ -35,7 +34,6 @@ import java.util.Locale;
 
 import static org.mockito.Mockito.*;
 import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -65,18 +63,12 @@ class HabitFactControllerTest {
 
     @BeforeEach
     void setUp() throws Exception {
-
         // mockMvc setup was shamelessly stolen from Yurii Feduniak, god bless U
         mockMvc = MockMvcBuilders.standaloneSetup(habitFactController)
                 .setCustomArgumentResolvers(new PageableHandlerMethodArgumentResolver())
                 .setValidator(validator)
                 .build();
-
         objectMapper = new ObjectMapper();
-    }
-
-    @AfterEach
-    void tearDown() {
     }
 
     @Test
@@ -111,26 +103,24 @@ class HabitFactControllerTest {
     }
 
     @Test
+    @DisplayName("Should_Return_All_LanguageTranslationDTOs")
     void getAll() throws Exception {
-        Pageable page = Mockito.mock(Pageable.class);
         Locale locale = Locale.ENGLISH;
-
         LanguageTranslationDTO langTranslationDTO = ModelUtils.getLanguageTranslationDTO();
-        PageableDto<LanguageTranslationDTO> response = Mockito.mock(PageableDto.class);
-        response.setPage(List.of(langTranslationDTO));
+        PageableDto<LanguageTranslationDTO> response = new PageableDto<>(List.of(langTranslationDTO), 0, 0, 0);
 
-        when(habitFactService.getAllHabitFacts(page, locale.getLanguage())).thenReturn(response);
+        when(habitFactService.getAllHabitFacts(any(Pageable.class), eq(locale.getLanguage()))).thenReturn(response);
 
-        ResultActions resultActions = mockMvc.perform(get(HABIT_FACT_CONTROLLER_LINK, page, locale)
+        ResultActions resultActions = mockMvc.perform(get(HABIT_FACT_CONTROLLER_LINK)
                 .accept(MediaType.APPLICATION_JSON)
-                .contentType(MediaType.APPLICATION_JSON)
-        );
+                .contentType(MediaType.APPLICATION_JSON));
+
         resultActions
-                .andDo(print())
                 .andExpect(status().isOk())
                 .andExpect(content().contentType(MediaType.APPLICATION_JSON))
                 .andExpect(content().json(objectMapper.writeValueAsString(response)));
 
+        verify(habitFactService, times(1)).getAllHabitFacts(any(Pageable.class), eq(locale.getLanguage()));
     }
 
     @Test
@@ -146,8 +136,7 @@ class HabitFactControllerTest {
         ResultActions resultActions = mockMvc.perform(post(HABIT_FACT_CONTROLLER_LINK)
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(fact))
-        );
+                .content(objectMapper.writeValueAsString(fact)));
 
         resultActions
                 .andExpect(status().isCreated())
@@ -170,8 +159,7 @@ class HabitFactControllerTest {
         ResultActions resultActions = mockMvc.perform(put("/facts/%d".formatted(RANDOM_ID))
                 .accept(MediaType.APPLICATION_JSON)
                 .contentType(MediaType.APPLICATION_JSON)
-                .content(objectMapper.writeValueAsString(habitFactUpdateDto))
-        );
+                .content(objectMapper.writeValueAsString(habitFactUpdateDto)));
 
         resultActions
                 .andExpect(status().isOk())
@@ -179,7 +167,6 @@ class HabitFactControllerTest {
                 .andExpect(content().json(objectMapper.writeValueAsString(response)));
 
         verify(habitFactService, times(1)).update(habitFactUpdateDto, RANDOM_ID);
-
     }
 
     @Test
