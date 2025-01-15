@@ -2,21 +2,18 @@ package greencity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.ModelUtils;
-import greencity.annotations.LanguageTranslationConstraint;
 import greencity.dto.PageableDto;
 import greencity.dto.habitfact.HabitFactDtoResponse;
 import greencity.dto.habitfact.HabitFactPostDto;
+import greencity.dto.habitfact.HabitFactUpdateDto;
 import greencity.dto.habitfact.HabitFactVO;
 import greencity.dto.language.LanguageTranslationDTO;
 import greencity.service.HabitFactService;
-import jakarta.validation.ConstraintValidatorContext;
-import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
-import org.mockito.ArgumentMatchers;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.Mockito;
@@ -24,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.mockito.junit.jupiter.MockitoSettings;
 import org.mockito.quality.Strictness;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -36,8 +34,8 @@ import java.util.List;
 import java.util.Locale;
 
 import static org.mockito.Mockito.*;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
+import static org.springframework.test.web.servlet.result.MockMvcResultHandlers.print;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.content;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
@@ -114,18 +112,29 @@ class HabitFactControllerTest {
 
     @Test
     void getAll() throws Exception {
-        LanguageTranslationDTO langTransDTOMock = Mockito.mock(LanguageTranslationDTO.class);
-        PageableDto<LanguageTranslationDTO> expected = Mockito.mock(PageableDto.class);
-        expected.setPage(List.of(langTransDTOMock));
+        Pageable page = Mockito.mock(Pageable.class);
+        Locale locale = Locale.ENGLISH;
 
-        when(habitFactService.getAllHabitFacts(ArgumentMatchers.any(), ArgumentMatchers.anyString()))
-            .thenReturn(expected);
+        LanguageTranslationDTO langTranslationDTO = ModelUtils.getLanguageTranslationDTO();
+        PageableDto<LanguageTranslationDTO> response = Mockito.mock(PageableDto.class);
+        response.setPage(List.of(langTranslationDTO));
 
-        mockMvc.perform(get(HABIT_FACT_CONTROLLER_LINK).accept(MediaType.APPLICATION_JSON))
-            .andExpect(content().contentType(MediaType.APPLICATION_JSON));
+        when(habitFactService.getAllHabitFacts(page, locale.getLanguage())).thenReturn(response);
+
+        ResultActions resultActions = mockMvc.perform(get(HABIT_FACT_CONTROLLER_LINK, page, locale)
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+        );
+        resultActions
+                .andDo(print())
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
+
     }
 
     @Test
+    @DisplayName("Should_Save_HabitFactPostDto")
     void save() throws Exception {
         HabitFactPostDto fact = ModelUtils.getHabitFactPostDto();
         HabitFactVO habitFactVO = ModelUtils.getHabitFactVO();
@@ -149,7 +158,28 @@ class HabitFactControllerTest {
     }
 
     @Test
-    void update() {
+    @DisplayName("Should_Update_By_HabitFactUpdateDto_And_Id")
+    void update() throws Exception {
+        HabitFactUpdateDto habitFactUpdateDto = ModelUtils.getHabitFactUpdateDto();
+        HabitFactVO updatedHabitFactVO = ModelUtils.getHabitFactVO();
+        HabitFactPostDto response = ModelUtils.getHabitFactPostDto();
+
+        when(habitFactService.update(habitFactUpdateDto, RANDOM_ID)).thenReturn(updatedHabitFactVO);
+        when(modelMapper.map(updatedHabitFactVO, HabitFactPostDto.class)).thenReturn(response);
+
+        ResultActions resultActions = mockMvc.perform(put("/facts/%d".formatted(RANDOM_ID))
+                .accept(MediaType.APPLICATION_JSON)
+                .contentType(MediaType.APPLICATION_JSON)
+                .content(objectMapper.writeValueAsString(habitFactUpdateDto))
+        );
+
+        resultActions
+                .andExpect(status().isOk())
+                .andExpect(content().contentType(MediaType.APPLICATION_JSON))
+                .andExpect(content().json(objectMapper.writeValueAsString(response)));
+
+        verify(habitFactService, times(1)).update(habitFactUpdateDto, RANDOM_ID);
+
     }
 
     @Test
