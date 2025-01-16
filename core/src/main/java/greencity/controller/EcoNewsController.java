@@ -113,7 +113,8 @@ public class EcoNewsController {
             @ApiResponse(responseCode = "201", description = HttpStatuses.CREATED),
             @ApiResponse(responseCode = "303", description = HttpStatuses.SEE_OTHER),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN)
+            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
+            @ApiResponse(responseCode = "415", description = HttpStatuses.SEE_OTHER)
     })
     @PostMapping(path = "/uploadImages", consumes = {MediaType.MULTIPART_FORM_DATA_VALUE})
     public ResponseEntity<String[]> uploadImages(
