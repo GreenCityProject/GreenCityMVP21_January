@@ -322,6 +322,54 @@ class EcoNewsControllerTest {
     }
 
     @Test
+    void deleteTest_BadRequest() throws Exception {
+        Long invalidEcoNewsId = -1L;
+        UserVO userVO = getUserVO();
+
+        when(userService.findByEmail(eq(principal.getName()))).thenReturn(userVO);
+
+        doThrow(new BadRequestException("Invalid EcoNews ID"))
+                .when(ecoNewsService).delete(eq(invalidEcoNewsId), eq(userVO));
+
+        mockMvc.perform(delete("/econews/{econewsId}", invalidEcoNewsId)
+                        .principal(principal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof BadRequestException))
+                .andExpect(result ->
+                        assertEquals("Invalid EcoNews ID", result.getResolvedException().getMessage()));
+
+        verify(ecoNewsService, times(1)).delete(eq(invalidEcoNewsId), eq(userVO));
+    }
+
+
+    @Test
+    void deleteTest_Forbidden() throws Exception {
+        Long ecoNewsId = 1L;
+        UserVO userVO = getUserVO();
+
+        when(userService.findByEmail(eq(principal.getName()))).thenReturn(userVO);
+
+        doThrow(new UserHasNoPermissionToAccessException("Access denied"))
+                .when(ecoNewsService).delete(eq(ecoNewsId), eq(userVO));
+
+        mockMvc.perform(delete("/econews/{econewsId}", ecoNewsId)
+                        .principal(principal)
+                        .contentType(MediaType.APPLICATION_JSON))
+                .andExpect(status().isForbidden())
+                .andExpect(result ->
+                        assertTrue(result.getResolvedException() instanceof UserHasNoPermissionToAccessException))
+                .andExpect(result ->
+                        assertEquals("Access denied", result.getResolvedException().getMessage()));
+
+        verify(ecoNewsService, times(1)).delete(eq(ecoNewsId), eq(userVO));
+    }
+
+
+
+
+    @Test
     void getEcoNewsTest() throws Exception {
         int pageNumber = 5;
         int pageSize = 20;
