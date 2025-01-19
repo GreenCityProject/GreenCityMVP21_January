@@ -30,6 +30,7 @@ import org.springframework.http.ResponseEntity;
 import org.springframework.social.NotAuthorizedException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
@@ -387,6 +388,7 @@ public class EcoNewsController {
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
+            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
             @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND,
                     content = @Content(schema = @Schema(implementation = NotFoundException.class)))
     })
