@@ -66,6 +66,14 @@ public class Event {
     )
     private List<Image> images = new ArrayList<>();
 
+    @ManyToMany
+    @JoinTable(
+            name = "event_participants",  // table for saving users joined to event
+            joinColumns = @JoinColumn(name = "event_id"),
+            inverseJoinColumns = @JoinColumn(name = "user_id")
+    )
+    private List<User> participants = new ArrayList<>();
+
     //We need one more field here - private Set<User> participants, but we can't add it without adding the field
     //private Set<Event> attending to the User class
 
