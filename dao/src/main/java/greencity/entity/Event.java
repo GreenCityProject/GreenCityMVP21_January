@@ -9,8 +9,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "event")
-@ToString(exclude = {"author"}) //we need to exclude fields that can create endless cycle, maybe we will add smth else
-@EqualsAndHashCode(exclude = {"author"}) //the same
+@ToString(exclude = {"author", "comments", "initiativeTypes", "images"}) //we need to exclude fields that can create endless cycle, maybe we will add smth else
+@EqualsAndHashCode(exclude = {"author", "comments", "initiativeTypes", "images"}) //the same
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -33,16 +33,19 @@ public class Event {
     @Column(nullable = false)
     private String title;
 
-    @OneToMany(mappedBy = "event", fetch = FetchType.LAZY)
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, fetch = FetchType.LAZY)
     private List<EventComment> comments = new ArrayList<>();
 
-    @Column(nullable = false)
+    @Column(name = "duration", nullable = false)
     private int duration;
 
     private int likes; //Maybe we will not need it when we add those fields connected with the User class
 
     @Column(name = "rating")
     private double rating;
+
+    @OneToMany(mappedBy = "event", cascade = CascadeType.ALL, orphanRemoval = true)
+    private List<EventDateInfo> eventDays = new ArrayList<>();
 
     @ManyToMany
     @JoinTable(
