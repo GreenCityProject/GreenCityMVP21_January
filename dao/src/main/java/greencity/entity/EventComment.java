@@ -54,8 +54,4 @@ public class EventComment {
 
     @Transient
     private boolean currentUserLiked = false;
-
-    //We need one more field here - private Set<User> usersLiked - but we can't create it without adding
-    //the field  private Set<EventComment> eventCommentsLiked; in the UserClass to uncouple the many-to-many connection.
-
 }

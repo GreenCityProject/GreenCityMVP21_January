@@ -9,8 +9,8 @@ import java.util.List;
 
 @Entity
 @Table(name = "event")
-@ToString(exclude = {"author"}) //we need to exclude fields that can create endless cycle, maybe we will add smth else
-@EqualsAndHashCode(exclude = {"author"}) //the same
+@ToString(exclude = {"author"})
+@EqualsAndHashCode(exclude = {"author"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -39,7 +39,8 @@ public class Event {
     @Column(nullable = false)
     private int duration;
 
-    private int likes; //Maybe we will not need it when we add those fields connected with the User class
+    @Transient
+    private int likes;
 
     @Column(name = "rating")
     private double rating;
@@ -62,11 +63,4 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "image_id")
     )
     private List<Image> images = new ArrayList<>();
-
-    //We need one more field here - private Set<User> participants, but we can't add it without adding the field
-    //private Set<Event> attending to the User class
-
-    //We need two more fields here - private Set<User> usersLikedEvent and private Set<User> usersDislikedEvent,
-    //but we need to create the field in the User class: private Set<Event> eventLiked and private Set<Event> eventDisliked
-
 }
