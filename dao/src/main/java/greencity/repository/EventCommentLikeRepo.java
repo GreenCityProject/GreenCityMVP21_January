@@ -1,13 +1,13 @@
 package greencity.repository;
 
 import greencity.entity.EventComment;
-import greencity.entity.EventCommentLike;
+import greencity.entity.EventCommentLikes;
 import greencity.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
 
 @Repository
-public interface EventCommentLikeRepo extends JpaRepository<EventCommentLike, Long> {
+public interface EventCommentLikeRepo extends JpaRepository<EventCommentLikes, Long> {
 
     /**
      * Method to count the total number of likes for a specific comment.

@@ -4,14 +4,14 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "event_comment_like")
-@ToString(exclude = {"user", "comment"})
+@Table(name = "participant")
+@ToString(exclude = {"user", "event"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
 @Setter
 @Builder
-public class EventCommentLike {
+public class Participation {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
     private long id;
@@ -20,5 +20,5 @@ public class EventCommentLike {
     private User user;
 
     @ManyToOne
-    private EventComment comment;
+    private Event event;
 }
