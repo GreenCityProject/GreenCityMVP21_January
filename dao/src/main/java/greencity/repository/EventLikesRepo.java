@@ -1,6 +1,7 @@
 package greencity.repository;
 
 import greencity.entity.EventLikes;
+import greencity.entity.EventLikesKey;
 import greencity.entity.User;
 import greencity.entity.Event;
 import org.springframework.data.jpa.repository.JpaRepository;
@@ -11,7 +12,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface EventLikesRepo extends JpaRepository<EventLikes, Long> {
+public interface EventLikesRepo extends JpaRepository<EventLikes, EventLikesKey> {
     /**
      * Method to find all likes for a specific event.
      *

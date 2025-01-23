@@ -2,6 +2,7 @@ package greencity.repository;
 
 import greencity.entity.Event;
 import greencity.entity.Participation;
+import greencity.entity.ParticipationKey;
 import greencity.entity.User;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.stereotype.Repository;
@@ -10,7 +11,7 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface ParticipationRepo extends JpaRepository<Participation, Integer> {
+public interface ParticipationRepo extends JpaRepository<Participation, ParticipationKey> {
 
     /**
      * Method to find all participants of a specific event
