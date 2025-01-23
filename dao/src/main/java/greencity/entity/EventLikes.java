@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "event_like")
+@Table(name = "event_likes")
 @ToString(exclude = {"user", "event"})
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,14 +12,15 @@ import lombok.*;
 @Setter
 @Builder
 public class EventLikes {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @EmbeddedId
+    private EventLikesKey id;
 
     @ManyToOne
+    @MapsId("userId")
     private User user;
 
     @ManyToOne
+    @MapsId("eventId")
     private Event event;
 
     @Column

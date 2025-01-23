@@ -4,7 +4,7 @@ import jakarta.persistence.*;
 import lombok.*;
 
 @Entity
-@Table(name = "participant")
+@Table(name = "participation")
 @ToString(exclude = {"user", "event"})
 @AllArgsConstructor
 @NoArgsConstructor
@@ -12,13 +12,14 @@ import lombok.*;
 @Setter
 @Builder
 public class Participation {
-    @Id
-    @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    @EmbeddedId
+    private ParticipationKey id;
 
     @ManyToOne
+    @MapsId("userId")
     private User user;
 
     @ManyToOne
+    @MapsId("eventId")
     private Event event;
 }
