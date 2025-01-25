@@ -34,7 +34,7 @@ public class EventComment {
     private LocalDateTime createdDate;
 
     @LastModifiedDate
-    @Column(nullable = false)
+    @Column
     private LocalDateTime modifiedDate;
 
     @ManyToOne

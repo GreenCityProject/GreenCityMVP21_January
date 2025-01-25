@@ -10,7 +10,6 @@ import lombok.*;
 @EqualsAndHashCode
 @Builder
 public class EventCommentRequestDto {
-    @NonNull
     @NotBlank(message = "Comment cannot be empty")
     private String text;
 }
