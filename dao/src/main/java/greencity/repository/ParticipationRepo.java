@@ -44,7 +44,7 @@ public interface ParticipationRepo extends JpaRepository<Participation, Particip
      * @param id ID of the Participant.
      * @return an {@link Optional} of {@link Participation}.
      */
-    Optional<Participation> findById(Long id);
+    Optional<Participation> findById(ParticipationKey id);
 
     /**
      * Method to find all participants
