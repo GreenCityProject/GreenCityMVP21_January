@@ -44,7 +44,7 @@ public interface EventLikesRepo extends JpaRepository<EventLikes, EventLikesKey>
      * @param id ID of the Participant.
      * @return an {@link Optional} of {@link EventLikes}.
      */
-    Optional<EventLikes> findById(Long id);
+    Optional<EventLikes> findById(EventLikesKey id);
 
     /**
      * Method to count the total number of likes for a specific event.
