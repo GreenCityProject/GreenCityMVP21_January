@@ -5,7 +5,6 @@ import lombok.*;
 
 @Entity
 @Table(name = "event_comment_likes")
-@ToString(exclude = {"user", "comment"})
 @AllArgsConstructor
 @NoArgsConstructor
 @Getter
@@ -14,14 +13,6 @@ import lombok.*;
 public class EventCommentLikes {
     @EmbeddedId
     private EventCommentLikesKey id;
-
-    @ManyToOne
-    @MapsId("userId")
-    private User user;
-
-    @ManyToOne
-    @MapsId("commentId")
-    private EventComment comment;
 
     @Column
     private boolean isLiked;
