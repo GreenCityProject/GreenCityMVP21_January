@@ -46,7 +46,7 @@ public interface EventLikesRepo extends JpaRepository<EventLikes, EventLikesKey>
 //     */
 //    Optional<EventLikes> findById(EventLikesKey id);
 
-//    /**
+    //    /**
 //     * Method to count the total number of likes for a specific event.
 //     *
 //     * @param event the {@link Event} instance.
@@ -54,4 +54,9 @@ public interface EventLikesRepo extends JpaRepository<EventLikes, EventLikesKey>
 //     */
 //    @Query("SELECT COUNT(el) FROM EventLikes el WHERE el.event = :event")
 //    long countByEvent(Event event); // Not sure about it, but added for future // After the changes in key class will not work
+    @Query("SELECT e.id.user FROM EventLikes e WHERE e.id.event.id = :eventId")
+    Optional<User> findById_EventId(Long eventId);
+
+    @Query("SELECT e.id.event FROM EventLikes e WHERE e.id.user.id = :userId")
+    Optional<Event> findById_UserId(Long userId);
 }
