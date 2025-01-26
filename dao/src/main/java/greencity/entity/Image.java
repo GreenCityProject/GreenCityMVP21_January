@@ -4,7 +4,9 @@ import jakarta.persistence.*;
 import lombok.*;
 
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "image")
@@ -20,6 +22,6 @@ public class Image {
 
     private String imagePath;
 
-    @ManyToMany(mappedBy = "images")
-    private List<Event> events = new ArrayList<>();
+    @ManyToMany(mappedBy = "images", cascade = CascadeType.PERSIST)
+    private Set<Event> events = new HashSet<>();
 }

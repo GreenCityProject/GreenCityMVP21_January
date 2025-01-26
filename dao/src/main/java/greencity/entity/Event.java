@@ -5,7 +5,9 @@ import lombok.*;
 
 import java.time.ZonedDateTime;
 import java.util.ArrayList;
+import java.util.HashSet;
 import java.util.List;
+import java.util.Set;
 
 @Entity
 @Table(name = "event")
@@ -62,5 +64,5 @@ public class Event {
             joinColumns = @JoinColumn(name = "event_id"),
             inverseJoinColumns = @JoinColumn(name = "image_id")
     )
-    private List<Image> images = new ArrayList<>();
+    private Set<Image> images = new HashSet<>();
 }
