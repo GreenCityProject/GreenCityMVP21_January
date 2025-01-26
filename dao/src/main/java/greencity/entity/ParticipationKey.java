@@ -1,7 +1,8 @@
 package greencity.entity;
 
-import jakarta.persistence.Embeddable;
+import jakarta.persistence.*;
 import lombok.*;
+import lombok.extern.slf4j.Slf4j;
 
 import java.io.Serializable;
 
@@ -11,7 +12,13 @@ import java.io.Serializable;
 @Setter
 @AllArgsConstructor
 @EqualsAndHashCode
+@Slf4j
 public class ParticipationKey implements Serializable {
-    private Long userId;
-    private Long eventId;
+    @ManyToOne
+    @JoinColumn(name = "user_id")
+    private User user;
+
+    @ManyToOne
+    @JoinColumn(name = "event_id")
+    private Event event;
 }

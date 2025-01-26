@@ -13,14 +13,14 @@ import java.util.List;
 import java.util.Optional;
 
 @Repository
-public interface EventRepo extends JpaRepository<Event, Integer> {
+public interface EventRepo extends JpaRepository<Event, Long> {
 
     /**
      * Method to get all events.
      *
      * @return list of all {@link Event} instances.
      */
-    List<Event> findAll();
+    // List<Event> findAll();
 
     /**
      * Method to get an event by its ID.
