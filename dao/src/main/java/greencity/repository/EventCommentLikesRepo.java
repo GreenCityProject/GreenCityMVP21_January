@@ -10,21 +10,21 @@ import org.springframework.stereotype.Repository;
 @Repository
 public interface EventCommentLikesRepo extends JpaRepository<EventCommentLikes, EventCommentLikesKey> {
 
-    /**
-     * Method to count the total number of likes for a specific comment.
-     *
-     * @param comment the {@link EventComment} instance.
-     * @return total number of likes.
-     */
-    long countByComment(EventComment comment);
+//    /**
+//     * Method to count the total number of likes for a specific comment.
+//     *
+//     * @param comment the {@link EventComment} instance.
+//     * @return total number of likes.
+//     */
+//    long countByComment(EventComment comment); //Causes problems
 
-    /**
-     * Method to check if a specific user liked a specific comment.
-     *
-     * @param user    the {@link User} instance.
-     * @param comment the {@link EventComment} instance.
-     * @return true if the user liked the comment, false otherwise.
-     */
-    boolean existsByUserAndComment(User user, EventComment comment);
+//    /**
+//     * Method to check if a specific user liked a specific comment.
+//     *
+//     * @param user    the {@link User} instance.
+//     * @param comment the {@link EventComment} instance.
+//     * @return true if the user liked the comment, false otherwise.
+//     */
+//    boolean existsByUserAndComment(User user, EventComment comment); // Causes problems
 
 }

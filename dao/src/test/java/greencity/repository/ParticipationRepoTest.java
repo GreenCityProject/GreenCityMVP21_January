@@ -36,7 +36,7 @@ public class ParticipationRepoTest {
     @Autowired
     private UserRepo userRepo;
 
-    private User author;
+    private User user;
     private Event event;
 
     @BeforeEach
@@ -45,17 +45,17 @@ public class ParticipationRepoTest {
         userRepo.deleteAll();
         eventRepo.deleteAll();
 
-        author = new User();
-        author.setFirstName("John");
-        author.setEmail("john.doe@mail.com");
-        author.setDateOfRegistration(LocalDateTime.now());
-        author.setName("John Doe");
-        author.setRefreshTokenKey("token");
-        author.setRole(Role.ROLE_USER);
-        userRepo.save(author);
+        user = new User();
+        user.setFirstName("John");
+        user.setEmail("john.doe@mail.com");
+        user.setDateOfRegistration(LocalDateTime.now());
+        user.setName("John Doe");
+        user.setRefreshTokenKey("token");
+        user.setRole(Role.ROLE_USER);
+        userRepo.save(user);
 
         event = new Event();
-        event.setAuthor(author);
+        event.setAuthor(user);
         event.setTitle("Sample Event");
         event.setDescription("Event description");
         event.setCreationDate(ZonedDateTime.now());
@@ -66,7 +66,7 @@ public class ParticipationRepoTest {
 
     @Test
     void findAllTest() {
-        ParticipationKey participationKey = new ParticipationKey(author, event);
+        ParticipationKey participationKey = new ParticipationKey(user, event);
 
         Participation participation = new Participation();
         participation.setId(participationKey);
@@ -79,17 +79,54 @@ public class ParticipationRepoTest {
 
     @Test
     void findById_EventIdTest() {
-        ParticipationKey participationKey = new ParticipationKey(author, event);
+        long eventId = event.getId();
+
+        ParticipationKey participationKey = new ParticipationKey(user, event);
 
         Participation participation = new Participation();
         participation.setId(participationKey);
 
         participationRepo.save(participation);
 
-        Optional<User> result = participationRepo.findById_EventId(2L);
+        Optional<User> result = participationRepo.findById_EventId(eventId);
 
         if (result.isPresent()) {
             assertEquals("John", result.get().getFirstName());
         }
+    }
+
+    @Test
+    void findById_UserIdTest() {
+        long userId = user.getId();
+
+        ParticipationKey participationKey = new ParticipationKey(user, event);
+
+        Participation participation = new Participation();
+        participation.setId(participationKey);
+
+        participationRepo.save(participation);
+
+        Optional<Event> result = participationRepo.findById_UserId(userId);
+
+        if (result.isPresent()) {
+            assertEquals("Sample Event", result.get().getTitle());
+        }
+    }
+
+    @Test
+    void deleteAllTest() {
+        ParticipationKey participationKey = new ParticipationKey(user, event);
+        List<Participation> result;
+
+        Participation participation = new Participation();
+        participation.setId(participationKey);
+
+        participationRepo.save(participation);
+        result = participationRepo.findAll();
+        assertEquals(1, result.size());
+
+        participationRepo.deleteAll();
+        result = participationRepo.findAll();
+        assertEquals(0, result.size());
     }
 }
