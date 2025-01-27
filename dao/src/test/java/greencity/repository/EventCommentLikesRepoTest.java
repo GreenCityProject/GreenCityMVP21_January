@@ -11,7 +11,6 @@ import org.springframework.test.context.TestPropertySource;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -37,9 +36,12 @@ public class EventCommentLikesRepoTest {
     EventRepo eventRepo;
 
     private User user;
+    private User user2;
     private Event event;
     private EventComment eventComment;
+    private EventComment eventComment2;
     private EventCommentLikes eventCommentLikes;
+    private EventCommentLikes eventCommentLikes2;
 
     @BeforeEach
     void setUp() {
@@ -57,6 +59,15 @@ public class EventCommentLikesRepoTest {
         user.setRole(Role.ROLE_USER);
         userRepo.save(user);
 
+        user2 = new User();
+        user2.setFirstName("Jane");
+        user2.setEmail("jane.doe@mail.com");
+        user2.setDateOfRegistration(LocalDateTime.now());
+        user2.setName("Jane Doe");
+        user2.setRefreshTokenKey("token2");
+        user2.setRole(Role.ROLE_USER);
+        userRepo.save(user2);
+
         event = new Event();
         event.setAuthor(user);
         event.setTitle("Sample Event");
@@ -71,81 +82,109 @@ public class EventCommentLikesRepoTest {
         eventComment.setUser(user);
         eventComment.setCreatedDate(LocalDateTime.now());
         eventCommentRepo.save(eventComment);
+
+        eventComment2 = new EventComment();
+        eventComment2.setText("Event comment2");
+        eventComment2.setUser(user2);
+        eventComment2.setCreatedDate(LocalDateTime.now());
+        eventCommentRepo.save(eventComment2);
     }
 
     @Test
     void findAllTest() {
         EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
         eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
+        EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user2, eventComment2);
+        eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
 
         eventCommentLikesRepo.save(eventCommentLikes);
+        eventCommentLikesRepo.save(eventCommentLikes2);
 
         List<EventCommentLikes> result = eventCommentLikesRepo.findAll();
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void findById_EventCommentIdTest() {
-        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
-        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
-
-        eventCommentLikesRepo.save(eventCommentLikes);
-
-        Optional<User> result = eventCommentLikesRepo.findById_EventCommentId(eventComment.getId());
-        if (result.isPresent()) {
-            assertEquals("john.doe@mail.com", result.get().getEmail());
-        }
-    }
-
-    @Test
-    void findById_UserIdTest() {
-        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
-        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
-
-        eventCommentLikesRepo.save(eventCommentLikes);
-
-        Optional<EventComment> result = eventCommentLikesRepo.findById_UserId(user.getId());
-        if (result.isPresent()) {
-            assertEquals("Event comment", result.get().getText());
-        }
-    }
-
-    @Test
-    void findById_UserIdNoSuchIdTest() {
-        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
-        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
-
-        eventCommentLikesRepo.save(eventCommentLikes);
-
-        Optional<EventComment> result = eventCommentLikesRepo.findById_UserId(77L);
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void findById_EventCommentIdNoSuchIdTest() {
-        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
-        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
-
-        eventCommentLikesRepo.save(eventCommentLikes);
-
-        Optional<User> result = eventCommentLikesRepo.findById_EventCommentId(77L);
-        assertTrue(result.isEmpty());
+        assertEquals(2, result.size());
     }
 
     @Test
     void deleteAllTest() {
         EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
         eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
+        EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user2, eventComment2);
+        eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
+
+        eventCommentLikesRepo.save(eventCommentLikes);
+        eventCommentLikesRepo.save(eventCommentLikes2);
 
         List<EventCommentLikes> result;
 
-        eventCommentLikesRepo.save(eventCommentLikes);
-
         result = eventCommentLikesRepo.findAll();
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
 
         eventCommentLikesRepo.deleteAll();
         result = eventCommentLikesRepo.findAll();
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void findUsersByEventCommentIdTest() {
+        long eventCommentId = eventComment.getId();
+
+        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
+        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
+        EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user2, eventComment);
+        eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
+
+        eventCommentLikesRepo.save(eventCommentLikes);
+        eventCommentLikesRepo.save(eventCommentLikes2);
+
+        List<User> result = eventCommentLikesRepo.findUsersByEventCommentId(eventCommentId);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findUsersByEventCommentIdNoUsersTest() {
+        long eventCommentId = eventComment2.getId();
+
+        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
+        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
+        EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user2, eventComment);
+        eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
+
+        eventCommentLikesRepo.save(eventCommentLikes);
+        eventCommentLikesRepo.save(eventCommentLikes2);
+
+        List<User> result = eventCommentLikesRepo.findUsersByEventCommentId(eventCommentId);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void findEventCommentsByUserIdTest() {
+        long userId = user.getId();
+
+        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
+        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
+        EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user, eventComment2);
+        eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
+
+        eventCommentLikesRepo.save(eventCommentLikes);
+        eventCommentLikesRepo.save(eventCommentLikes2);
+
+        List<EventComment> result = eventCommentLikesRepo.findEventCommentsByUserId(userId);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findEventCommentsByUserIdNoEventCommentsTest() {
+        long userId = user2.getId();
+
+        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
+        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
+        EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user, eventComment2);
+        eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
+
+        eventCommentLikesRepo.save(eventCommentLikes);
+        eventCommentLikesRepo.save(eventCommentLikes2);
+
+        List<EventComment> result = eventCommentLikesRepo.findEventCommentsByUserId(userId);
         assertEquals(0, result.size());
     }
 }

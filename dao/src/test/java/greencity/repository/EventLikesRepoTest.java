@@ -14,10 +14,8 @@ import org.springframework.test.context.TestPropertySource;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
-import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
-import static org.junit.jupiter.api.Assertions.assertTrue;
 
 @DataJpaTest
 @TestPropertySource(properties = {
@@ -39,8 +37,12 @@ public class EventLikesRepoTest {
     EventRepo eventRepo;
 
     private User user;
+    private User user2;
+    private User user3;
     private Event event;
+    private Event event2;
     private EventLikes eventLikes;
+    private EventLikes eventLikes2;
 
     @BeforeEach
     void setUp() {
@@ -57,6 +59,24 @@ public class EventLikesRepoTest {
         user.setRole(Role.ROLE_USER);
         userRepo.save(user);
 
+        user2 = new User();
+        user2.setFirstName("Jane");
+        user2.setEmail("jane.doe@mail.com");
+        user2.setDateOfRegistration(LocalDateTime.now());
+        user2.setName("Jane Doe");
+        user2.setRefreshTokenKey("token2");
+        user2.setRole(Role.ROLE_USER);
+        userRepo.save(user2);
+
+        user3 = new User();
+        user3.setFirstName("Ann");
+        user3.setEmail("ann.doe@mail.com");
+        user3.setDateOfRegistration(LocalDateTime.now());
+        user3.setName("Ann Doe");
+        user3.setRefreshTokenKey("token3");
+        user3.setRole(Role.ROLE_USER);
+        userRepo.save(user3);
+
         event = new Event();
         event.setAuthor(user);
         event.setTitle("Sample Event");
@@ -65,85 +85,112 @@ public class EventLikesRepoTest {
         event.setOpen(true);
         event.setDuration(60);
         eventRepo.save(event);
+
+        event2 = new Event();
+        event2.setAuthor(user);
+        event2.setTitle("Sample Event");
+        event2.setDescription("Event description");
+        event2.setCreationDate(ZonedDateTime.now());
+        event2.setOpen(true);
+        event2.setDuration(60);
+        eventRepo.save(event2);
     }
 
     @Test
     void findAllTest() {
-        EventLikesKey eventLikesKey = new EventLikesKey(user, event);
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
         eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user3, event);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
 
         eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
 
         List<EventLikes> result = eventLikesRepo.findAll();
-        assertEquals(1, result.size());
-    }
-
-    @Test
-    void findById_EventIdTest() {
-        EventLikesKey eventLikesKey = new EventLikesKey(user, event);
-        eventLikes = new EventLikes(eventLikesKey, true, false);
-
-        eventLikesRepo.save(eventLikes);
-
-        Optional<User> result = eventLikesRepo.findById_EventId(event.getId());
-
-        if (result.isPresent()) {
-            assertEquals("token", result.get().getRefreshTokenKey());
-        }
-    }
-
-    @Test
-    void findById_UserIdTest() {
-        EventLikesKey eventLikesKey = new EventLikesKey(user, event);
-        eventLikes = new EventLikes(eventLikesKey, true, false);
-
-        eventLikesRepo.save(eventLikes);
-
-        Optional<Event> result = eventLikesRepo.findById_UserId(user.getId());
-
-        if (result.isPresent()) {
-            assertEquals("Event description", result.get().getDescription());
-        }
-    }
-
-    @Test
-    void findById_EventIdNoSuchIdTest() {
-        EventLikesKey eventLikesKey = new EventLikesKey(user, event);
-        eventLikes = new EventLikes(eventLikesKey, true, false);
-
-        eventLikesRepo.save(eventLikes);
-
-        Optional<User> result = eventLikesRepo.findById_EventId(77L);
-
-        assertTrue(result.isEmpty());
-    }
-
-    @Test
-    void findById_UserIdNoSuchIdTest() {
-        EventLikesKey eventLikesKey = new EventLikesKey(user, event);
-        eventLikes = new EventLikes(eventLikesKey, true, false);
-
-        eventLikesRepo.save(eventLikes);
-
-        Optional<Event> result = eventLikesRepo.findById_UserId(77L);
-
-        assertTrue(result.isEmpty());
+        assertEquals(2, result.size());
     }
 
     @Test
     void deleteAllTest() {
-        EventLikesKey eventLikesKey = new EventLikesKey(user, event);
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
         eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user3, event);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
+
+        eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
 
         List<EventLikes> result;
 
-        eventLikesRepo.save(eventLikes);
-
         result = eventLikesRepo.findAll();
-        assertEquals(1, result.size());
+        assertEquals(2, result.size());
 
         eventLikesRepo.deleteAll();
         result = eventLikesRepo.findAll();
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void findUsersByEventIdTest() {
+        long eventId = event.getId();
+
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
+        eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user3, event);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
+
+        eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
+
+        List<User> result = eventLikesRepo.findUsersByEventId(eventId);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findUsersByEventIdNoUsersTest() {
+        long eventId = event2.getId();
+
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
+        eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user3, event);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
+
+        eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
+
+        List<User> result = eventLikesRepo.findUsersByEventId(eventId);
+        assertEquals(0, result.size());
+    }
+
+    @Test
+    void findEventsByUserIdTest() {
+        long userId = user2.getId();
+
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
+        eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user2, event2);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
+
+        eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
+
+        List<Event> result = eventLikesRepo.findEventsByUserId(userId);
+        assertEquals(2, result.size());
+    }
+
+    @Test
+    void findEventsByUserIdNoEventsTest() {
+        long userId = user.getId();
+
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
+        eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user2, event2);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
+
+        eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
+
+        List<Event> result = eventLikesRepo.findEventsByUserId(userId);
         assertEquals(0, result.size());
     }
 }

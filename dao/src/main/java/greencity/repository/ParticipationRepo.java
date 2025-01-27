@@ -56,9 +56,10 @@ public interface ParticipationRepo extends JpaRepository<Participation, Particip
 //     * @return list of {@link Participation} instances
 //     * */
     //  List<Participation> findAll();
+
     @Query("SELECT p.id.user FROM Participation p WHERE p.id.event.id = :eventId")
-    Optional<User> findById_EventId(Long eventId);
+    List<User> findUsersByEventId(@Param("eventId") Long eventId);
 
     @Query("SELECT p.id.event FROM Participation p WHERE p.id.user.id = :userId")
-    Optional<Event> findById_UserId(Long userId);
+    List<Event> findEventsByUserId(@Param("userId") Long userId);
 }
