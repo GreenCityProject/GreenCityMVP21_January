@@ -40,17 +40,16 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     private final Long ONE_WEEK = 1L;
 
+    @Override
+    public List<FriendCardDto> getAllMutualFriendsByUserId(Long userId, Long targetUserId) {
+        List<FriendCardDto> userFriends = new ArrayList<>(getAllFriendsByUserId(userId));
+        List<FriendCardDto> targetUserFriends = new ArrayList<>(getAllFriendsByUserId(targetUserId));
+        return (userFriends.retainAll(targetUserFriends)) ? userFriends : new ArrayList<>();
+    }
 
     @Override
     public List<FriendCardDto> getAllFriendsByUserId(Long id) {
         return getAllFriendsOfUserById(id);
-    }
-
-    @Override
-    public List<FriendCardDto> getAllMutualFriendsByUserId(Long userId, Long targetUserId) {
-        List<FriendCardDto> userFriends = getAllFriendsByUserId(userId);
-        List<FriendCardDto> targetUserFriends = getAllFriendsByUserId(targetUserId);
-        return (userFriends.retainAll(targetUserFriends)) ? userFriends : new ArrayList<>();
     }
 
     @Override
