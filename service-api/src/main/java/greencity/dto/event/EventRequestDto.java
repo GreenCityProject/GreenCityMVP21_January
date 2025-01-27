@@ -1,5 +1,6 @@
 package greencity.dto.event;
 
+import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
 import lombok.*;
@@ -24,6 +25,8 @@ public class EventRequestDto {
             message = "Event description must contain more than 20 characters but less than 63,206 characters"
     )
     private String description;
+
+    @Max(7)
     private int duration = 1;
 
     @Size(
