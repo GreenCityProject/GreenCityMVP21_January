@@ -7,6 +7,8 @@ import greencity.entity.Image;
 import org.modelmapper.AbstractConverter;
 import org.springframework.stereotype.Component;
 
+import java.util.stream.Collectors;
+
 @Component
 public class EventRequestDtoMapper extends AbstractConverter<EventRequestDto, Event> {
 
@@ -27,7 +29,7 @@ public class EventRequestDtoMapper extends AbstractConverter<EventRequestDto, Ev
                         .map(dto -> Image.builder()
                                 .imagePath(dto.getImagePath())
                                 .build())
-                        .toList())
+                        .collect(Collectors.toSet()))
                 .build();
 
     }
