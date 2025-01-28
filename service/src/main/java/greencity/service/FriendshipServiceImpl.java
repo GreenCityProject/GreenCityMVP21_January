@@ -2,7 +2,7 @@ package greencity.service;
 
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.FriendCardDto;
-import greencity.dto.friendship.FriendshipRequestDto;
+import greencity.dto.friendship.RequestedFriendshipDto;
 import greencity.dto.user.UserVO;
 import greencity.entity.Friendship;
 import greencity.enums.FriendshipStatus;
@@ -55,7 +55,7 @@ public class FriendshipServiceImpl implements FriendshipService {
     }
 
     @Override
-    // TODO (check if proposed are not in pending status or already befriended)
+    // TODO sprint 4 "Recommendations for friends #109"
     public PageableDto<FriendCardDto> recommendFriendsForUser(UserVO user) {
         return null;
     }
@@ -157,9 +157,9 @@ public class FriendshipServiceImpl implements FriendshipService {
     }
 
     @Override
-    public List<FriendshipRequestDto> getAllFriendshipRequestsForUserById(Long recipientId) {
+    public List<RequestedFriendshipDto> getAllFriendshipRequestsForUserById(Long recipientId) {
         return friendshipRepo.getFriendshipRequestsByUserId(recipientId).stream()
-                .map(friendship -> modelMapper.map(friendship, FriendshipRequestDto.class))
+                .map(friendship -> modelMapper.map(friendship, RequestedFriendshipDto.class))
                 .toList();
     }
 

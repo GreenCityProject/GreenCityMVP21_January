@@ -2,7 +2,7 @@ package greencity.service;
 
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.FriendCardDto;
-import greencity.dto.friendship.FriendshipRequestDto;
+import greencity.dto.friendship.RequestedFriendshipDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.FriendshipStatus;
 
@@ -28,7 +28,7 @@ public interface FriendshipService {
      * @return a list of FriendshipRequestDto objects representing users who have sent friendship
      * requests to the specified user
      */
-    List<FriendshipRequestDto> getAllFriendshipRequestsForUserById(Long userId);
+    List<RequestedFriendshipDto> getAllFriendshipRequestsForUserById(Long userId);
 
     /**
      * Retrieves a list of mutual friends between two specified users.

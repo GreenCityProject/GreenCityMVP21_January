@@ -4,7 +4,7 @@ import jakarta.validation.constraints.Min;
 
 import java.util.Objects;
 
-public class FriendshipRequestDto {
+public class RequestedFriendshipDto {
 
     @Min(1)
     private Long senderId;
@@ -12,9 +12,9 @@ public class FriendshipRequestDto {
     @Min(1)
     private Long recipientId;
 
-    public FriendshipRequestDto() {}
+    public RequestedFriendshipDto() {}
 
-    public FriendshipRequestDto(Long senderId, Long recipientId) {
+    public RequestedFriendshipDto(Long senderId, Long recipientId) {
         this.senderId = senderId;
         this.recipientId = recipientId;
     }
@@ -37,7 +37,7 @@ public class FriendshipRequestDto {
 
     @Override
     public boolean equals(Object o) {
-        if (!(o instanceof FriendshipRequestDto that)) return false;
+        if (!(o instanceof RequestedFriendshipDto that)) return false;
         return Objects.equals(senderId, that.senderId) && Objects.equals(recipientId, that.recipientId);
     }
 
