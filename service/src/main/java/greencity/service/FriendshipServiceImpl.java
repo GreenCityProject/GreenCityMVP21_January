@@ -157,8 +157,8 @@ public class FriendshipServiceImpl implements FriendshipService {
     }
 
     @Override
-    public List<FriendshipRequestDto> getAllFriendshipRequestsForUserById(Long userId) {
-        return friendshipRepo.getFriendshipRequestsByUserId(userId).stream()
+    public List<FriendshipRequestDto> getAllFriendshipRequestsForUserById(Long recipientId) {
+        return friendshipRepo.getFriendshipRequestsByUserId(recipientId).stream()
                 .map(friendship -> modelMapper.map(friendship, FriendshipRequestDto.class))
                 .toList();
     }

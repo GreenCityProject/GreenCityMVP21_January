@@ -7,8 +7,9 @@ import org.springframework.stereotype.Component;
 
 @Component
 public class FriendshipRequestDtoMapper extends AbstractConverter<Friendship, FriendshipRequestDto> {
+
     @Override
     protected FriendshipRequestDto convert(Friendship source) {
-        return null;
+        return new FriendshipRequestDto(source.getUser().getId(), source.getFriend().getId());
     }
 }

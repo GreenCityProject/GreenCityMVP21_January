@@ -33,5 +33,6 @@ public interface FriendshipRepo extends JpaRepository<Friendship, Long> {
      * @return a list of Friendship entities representing all pending friendship requests
      * for the specified user. If no requests are found, an empty list is returned.
      */
-    List<Friendship> getFriendshipRequestsByUserId(Long userId);
+    @Query("SELECT f FROM Friendship f WHERE f.friend.id = :recipientId AND f.status = 'REQUESTED'")
+    List<Friendship> getFriendshipRequestsByUserId(Long recipientId);
 }
