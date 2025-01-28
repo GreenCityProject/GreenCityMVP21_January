@@ -16,6 +16,7 @@ import java.time.LocalDateTime;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
+import java.util.function.Function;
 
 @Service
 public class FriendshipServiceImpl implements FriendshipService {
@@ -39,17 +40,18 @@ public class FriendshipServiceImpl implements FriendshipService {
     private final ModelMapper modelMapper;
 
     private final Long ONE_WEEK = 1L;
+    private final Function<Friendship, Long> getFriendId = friendship -> friendship.getFriend().getId();
 
     @Override
     public List<FriendCardDto> getAllMutualFriendsByUserId(Long userId, Long targetUserId) {
-        List<FriendCardDto> userFriends = new ArrayList<>(getAllFriendsByUserId(userId));
-        List<FriendCardDto> targetUserFriends = new ArrayList<>(getAllFriendsByUserId(targetUserId));
+        List<FriendCardDto> userFriends = new ArrayList<>(getAllFriendCardsOfUserById(userId));
+        List<FriendCardDto> targetUserFriends = new ArrayList<>(getAllFriendCardsOfUserById(targetUserId));
         return (userFriends.retainAll(targetUserFriends)) ? userFriends : new ArrayList<>();
     }
 
     @Override
     public List<FriendCardDto> getAllFriendsByUserId(Long id) {
-        return getAllFriendsOfUserById(id);
+        return getAllFriendCardsOfUserById(id);
     }
 
     @Override
@@ -165,9 +167,22 @@ public class FriendshipServiceImpl implements FriendshipService {
         return friendshipRepo.findFriendshipByEitherUserId(userId, friendId);
     }
 
-    private List<FriendCardDto> getAllFriendsOfUserById(Long id) {
-        return friendshipRepo.getAllFriendshipsByUserId(id).stream()
-                .map(friendship -> modelMapper.map(friendship, FriendCardDto.class))
+    private List<FriendCardDto> getAllFriendCardsOfUserById(Long userId) {
+        return friendshipRepo.getAllFriendshipsByUserId(userId).stream()
+                .map(friendship -> {
+                    FriendCardDto friendCard = modelMapper.map(friendship.getFriend(), FriendCardDto.class);
+                    friendCard.setMutualFriends(getAmountOfMutualFriends(userId, getFriendId.apply(friendship)));
+                    return friendCard;
+                })
                 .toList();
+    }
+
+    private int getAmountOfMutualFriends(Long userId, Long targetUserId) {
+        List<Long> userFriends =
+                new ArrayList<>(friendshipRepo.getAllFriendshipsByUserId(userId).stream().map(getFriendId).toList());
+        List<Long> targetFriends =
+                new ArrayList<>(friendshipRepo.getAllFriendshipsByUserId(targetUserId).stream().map(getFriendId).toList());
+        userFriends.retainAll(targetFriends);
+        return userFriends.size();
     }
 }
