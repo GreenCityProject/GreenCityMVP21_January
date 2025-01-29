@@ -1,7 +1,8 @@
 package greencity.service;
 
+import greencity.dto.event.EventResponseDto;
 import greencity.dto.event.ParticipationRequestDto;
-import greencity.dto.event.ParticipationResponseDto;
+import greencity.dto.user.UserProfilePictureDto;
 import greencity.entity.Event;
 import greencity.entity.Participation;
 import greencity.entity.ParticipationKey;
@@ -49,17 +50,38 @@ public class ParticipationServiceImpl implements ParticipationService {
     }
 
     @Override
-    public List<ParticipationResponseDto> getParticipantsByEventId(Long eventId) {
-        return List.of();
+    public List<UserProfilePictureDto> getUsersByEventId(Long eventId) {
+        eventRepo.findById(eventId)
+                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+
+        List<User> users = participationRepo.findUsersByEventId(eventId);
+
+        return users.stream()
+                .map(user -> modelMapper.map(user, UserProfilePictureDto.class)).toList();
     }
 
     @Override
-    public List<ParticipationResponseDto> getEventsByUserId(Long userId) {
-        return List.of();
+    public List<EventResponseDto> getEventsByUserId(Long userId) {
+        userRepo.findById(userId)
+                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+
+        List<Event> events = participationRepo.findEventsByUserId(userId);
+
+        return events.stream().map(event -> modelMapper.map(event, EventResponseDto.class)).toList();
     }
 
     @Override
     public boolean isUserParticipating(Long userId, Long eventId) {
-        return false;
+        if (!userRepo.existsById(userId)) {
+            throw new EntityNotFoundException("User not found with id: " + userId);
+        }
+
+        if (!eventRepo.existsById(eventId)) {
+            throw new EntityNotFoundException("Event not found with id: " + eventId);
+        }
+
+        List<Event> events = participationRepo.findEventsByUserId(userId);
+
+        return events.stream().anyMatch(event -> event.getId() == eventId);
     }
 }
