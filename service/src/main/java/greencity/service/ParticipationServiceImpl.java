@@ -45,7 +45,7 @@ public class ParticipationServiceImpl implements ParticipationService {
 
         ParticipationKey participationKey = new ParticipationKey(user, event);
         Participation participation = participationRepo.findById(participationKey)
-                .orElseThrow(() -> new EntityNotFoundException("Participation not found with id: " + participationKey));
+                .orElseThrow(() -> new EntityNotFoundException("Participation not found"));
         participationRepo.delete(participation);
     }
 
