@@ -19,7 +19,7 @@ import java.util.List;
 public class ImageServiceImpl implements ImageService {
     private ImageRepo imageRepo;
     private EventRepo eventRepo;
-    private final ModelMapper modelMapper = new ModelMapper();
+    private ModelMapper modelMapper;
 
     @Override
     public ImageResponseDto createImage(ImageRequestDto imageRequestDto) {
