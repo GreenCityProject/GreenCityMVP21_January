@@ -21,4 +21,6 @@ public interface EventLikesRepo extends JpaRepository<EventLikes, EventLikesKey>
     @Query("SELECT e.id.event FROM EventLikes e WHERE e.id.user.id = :userId")
     List<Event> findEventsByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT COUNT(e) FROM EventLikes e WHERE e.id.event.id = :eventId")
+    long countLikesByEventId(@Param("eventId") Long eventId);
 }

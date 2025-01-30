@@ -17,4 +17,6 @@ public interface EventLikeService {
 
     List<EventLikesResponseDto> getAllLikes();
 
+    long countLikes(long eventId);
+
 }

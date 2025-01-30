@@ -193,4 +193,38 @@ public class EventLikesRepoTest {
         List<Event> result = eventLikesRepo.findEventsByUserId(userId);
         assertEquals(0, result.size());
     }
+
+    @Test
+    void countLikesByEventIdTest() {
+        long eventId = event.getId();
+
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
+        eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user3, event);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
+
+        eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
+
+        long likes = eventLikesRepo.countLikesByEventId(eventId);
+
+        assertEquals(2, likes);
+    }
+
+    @Test
+    void countLikesByEventIdNoLikesTest() {
+        long eventId = event2.getId();
+
+        EventLikesKey eventLikesKey = new EventLikesKey(user2, event);
+        eventLikes = new EventLikes(eventLikesKey, true, false);
+        EventLikesKey eventLikesKey2 = new EventLikesKey(user3, event);
+        eventLikes2 = new EventLikes(eventLikesKey2, true, false);
+
+        eventLikesRepo.save(eventLikes);
+        eventLikesRepo.save(eventLikes2);
+
+        long likes = eventLikesRepo.countLikesByEventId(eventId);
+
+        assertEquals(0, likes);
+    }
 }
