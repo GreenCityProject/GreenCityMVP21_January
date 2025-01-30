@@ -34,4 +34,6 @@ public interface EventCommentLikesService {
      * @return a list of event comment IDs.
      */
     List<Long> getEventCommentsByUserId(Long userId);
+
+    long countLikesByEventCommentId(Long eventCommentId);
 }

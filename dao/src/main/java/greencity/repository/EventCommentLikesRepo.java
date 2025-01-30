@@ -21,4 +21,6 @@ public interface EventCommentLikesRepo extends JpaRepository<EventCommentLikes, 
     @Query("SELECT e.id.eventComment FROM EventCommentLikes e WHERE e.id.user.id = :userId")
     List<EventComment> findEventCommentsByUserId(@Param("userId") Long userId);
 
+    @Query("SELECT COUNT(e) FROM EventCommentLikes e WHERE e.id.eventComment.id = :eventCommentId")
+    long countLikesByEventCommentId(@Param("eventCommentId") Long eventCommentId);
 }

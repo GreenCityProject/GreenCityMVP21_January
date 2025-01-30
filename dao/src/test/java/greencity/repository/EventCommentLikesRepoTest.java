@@ -2,6 +2,7 @@ package greencity.repository;
 
 import greencity.entity.*;
 import greencity.enums.Role;
+import org.junit.jupiter.api.Assertions;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
@@ -42,6 +43,7 @@ public class EventCommentLikesRepoTest {
     private EventComment eventComment2;
     private EventCommentLikes eventCommentLikes;
     private EventCommentLikes eventCommentLikes2;
+    private EventCommentLikes eventCommentLikes3;
 
     @BeforeEach
     void setUp() {
@@ -186,5 +188,25 @@ public class EventCommentLikesRepoTest {
 
         List<EventComment> result = eventCommentLikesRepo.findEventCommentsByUserId(userId);
         assertEquals(0, result.size());
+    }
+
+    @Test
+    void countLikesByEventCommentIdTest() {
+        long eventCommentId = eventComment.getId();
+
+        EventCommentLikesKey eventCommentLikesKey = new EventCommentLikesKey(user, eventComment);
+        eventCommentLikes = new EventCommentLikes(eventCommentLikesKey, true, false);
+        EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user, eventComment2);
+        eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
+        EventCommentLikesKey eventCommentLikesKey3 = new EventCommentLikesKey(user2, eventComment);
+        eventCommentLikes3 = new EventCommentLikes(eventCommentLikesKey3, true, false);
+
+        eventCommentLikesRepo.save(eventCommentLikes);
+        eventCommentLikesRepo.save(eventCommentLikes2);
+        eventCommentLikesRepo.save(eventCommentLikes3);
+
+        long result = eventCommentLikesRepo.countLikesByEventCommentId(eventCommentId);
+
+        Assertions.assertEquals(2, result);
     }
 }
