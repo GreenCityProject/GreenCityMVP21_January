@@ -4,13 +4,17 @@ import greencity.dto.event.EventRequestDto;
 import greencity.entity.Event;
 import greencity.entity.InitiativeType;
 import greencity.entity.Image;
+import lombok.AllArgsConstructor;
 import org.modelmapper.AbstractConverter;
+import org.modelmapper.ModelMapper;
+import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Component;
 
 import java.util.stream.Collectors;
 
 @Component
 public class EventRequestDtoMapper extends AbstractConverter<EventRequestDto, Event> {
+    private final ModelMapper modelMapper = new ModelMapper();
 
     @Override
     protected Event convert(EventRequestDto eventRequestDto) {
@@ -25,13 +29,13 @@ public class EventRequestDtoMapper extends AbstractConverter<EventRequestDto, Ev
                                 .build())
                         .toList())
                 .isOpen(eventRequestDto.isOpen())
+//                .images(eventRequestDto.getImages().stream()
+//                        .map(dto -> Image.builder()
+//                                .imagePath(dto.getImagePath())
+//                                .build())
+//                        .collect(Collectors.toSet()))
                 .images(eventRequestDto.getImages().stream()
-                        .map(dto -> Image.builder()
-                                .imagePath(dto.getImagePath())
-                                .build())
-                        .collect(Collectors.toSet()))
+                        .map(dto -> modelMapper.map(dto, Image.class)).collect(Collectors.toSet()))
                 .build();
-
     }
-
 }

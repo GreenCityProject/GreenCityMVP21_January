@@ -1,28 +1,31 @@
 package greencity.service;
 
-import greencity.dto.event.EventDateInfoRequestDto;
 import greencity.dto.event.EventRequestDto;
 import greencity.dto.event.EventResponseDto;
+import greencity.dto.event.InitiativeTypeRequestDto;
 import greencity.entity.Event;
-import greencity.mapping.EventRequestDtoMapper;
-import greencity.mapping.EventResponseDtoMapper;
+import greencity.entity.InitiativeType;
 import greencity.repository.EventRepo;
+import greencity.repository.InitiativeTypeRepo;
 import lombok.RequiredArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
-import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
+import java.util.ArrayList;
 import java.util.List;
 import java.util.Optional;
 import java.util.stream.Collectors;
 
 @Service
 @RequiredArgsConstructor
+@Slf4j
 public class EventServiceImpl implements EventService {
     private final EventRepo eventRepo;
     private final ModelMapper modelMapper;
+    private final InitiativeTypeRepo initiativeTypeRepo;
 
     @Override
     @Transactional
@@ -33,6 +36,13 @@ public class EventServiceImpl implements EventService {
 
         Event event = modelMapper.map(eventRequestDto, Event.class);
         event.setCreationDate(ZonedDateTime.now());
+
+        List<InitiativeType> initiativeTypes = new ArrayList<>();
+        for (InitiativeTypeRequestDto i : eventRequestDto.getInitiativeTypes()) {
+            initiativeTypes.add(initiativeTypeRepo.findByName(i.getName()).get());
+        }
+
+        event.setInitiativeTypes(initiativeTypes);
 
         Event savedEvent = eventRepo.save(event);
         return modelMapper.map(savedEvent, EventResponseDto.class);

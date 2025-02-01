@@ -1,23 +1,23 @@
 package greencity.service;
 
-import greencity.dto.event.EventDateInfoRequestDto;
-import greencity.dto.event.EventRequestDto;
-import greencity.dto.event.EventResponseDto;
+import greencity.dto.event.*;
 import greencity.entity.Event;
+import greencity.entity.Image;
+import greencity.entity.InitiativeType;
 import greencity.repository.EventRepo;
-import greencity.service.EventServiceImpl;
+import greencity.repository.InitiativeTypeRepo;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
 import org.mockito.InjectMocks;
 import org.mockito.Mock;
-import org.mockito.Mockito;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
+import java.util.Set;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -29,6 +29,9 @@ class EventServiceImplTest {
     private EventRepo eventRepo;
 
     @Mock
+    private InitiativeTypeRepo initiativeTypeRepo;
+
+    @Mock
     private ModelMapper modelMapper;
 
     @InjectMocks
@@ -37,6 +40,9 @@ class EventServiceImplTest {
     private Event event;
     private EventRequestDto eventRequestDto;
     private EventResponseDto eventResponseDto;
+    private InitiativeType initiativeType;
+    private InitiativeTypeRequestDto initiativeTypeRequestDto;
+    private ImageRequestDto imageRequestDto;
 
     @BeforeEach
     void setUp() {
@@ -45,21 +51,36 @@ class EventServiceImplTest {
         eventRequestDto.setDescription("This is a test event.");
         eventRequestDto.setEventDays(List.of(new EventDateInfoRequestDto(), new EventDateInfoRequestDto()));
 
+        imageRequestDto = new ImageRequestDto();
+        imageRequestDto.setImagePath("ImagePath");
+
         event = new Event();
         event.setId(1L);
         event.setTitle(eventRequestDto.getTitle());
         event.setDescription(eventRequestDto.getDescription());
         event.setCreationDate(ZonedDateTime.now());
+        event.setImages(Set.of(new Image()));
 
         eventResponseDto = new EventResponseDto();
         eventResponseDto.setId(event.getId());
         eventResponseDto.setTitle(event.getTitle());
         eventResponseDto.setDescription(event.getDescription());
+
+        initiativeType = new InitiativeType();
+        initiativeType.setId(1L);
+        initiativeType.setName("Test Initiative Type");
+
+        initiativeTypeRequestDto = new InitiativeTypeRequestDto();
+        initiativeTypeRequestDto.setName("Test Initiative Type");
+
+        eventRequestDto.setInitiativeTypes(List.of(initiativeTypeRequestDto));
+        eventRequestDto.setImages(List.of(imageRequestDto));
     }
 
     @Test
     void createEvent_ShouldSaveAndReturnEventResponseDto() {
         when(modelMapper.map(eventRequestDto, Event.class)).thenReturn(event);
+        when(initiativeTypeRepo.findByName(any(String.class))).thenReturn(Optional.of(initiativeType));
         when(eventRepo.save(event)).thenReturn(event);
         when(modelMapper.map(event, EventResponseDto.class)).thenReturn(eventResponseDto);
 
