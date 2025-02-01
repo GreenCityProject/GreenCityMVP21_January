@@ -68,7 +68,7 @@ public class FriendshipServiceImpl implements FriendshipService {
                 && friendshipOptional.get().getStatus() != FriendshipStatus.CANCELLED
                 && friendshipOptional.get().getStatus() != FriendshipStatus.DECLINED;
 
-        if (isNotEligibleForResending) {
+        if (isNotEligibleForResending || senderId.equals(recipientId)) {
             return false;
         } else if (friendshipOptional.isEmpty()) {
             friendship.setUser(userRepo.getReferenceById(senderId));
