@@ -44,4 +44,5 @@ public class EventRequestDto {
     private List<InitiativeTypeRequestDto> initiativeTypes;
     private boolean isOpen = true;
     private List<ImageRequestDto> images;
+    private ImageRequestDto mainImage;
 }

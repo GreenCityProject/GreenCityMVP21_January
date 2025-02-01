@@ -36,6 +36,8 @@ public class EventRequestDtoMapper extends AbstractConverter<EventRequestDto, Ev
 //                        .collect(Collectors.toSet()))
                 .images(eventRequestDto.getImages().stream()
                         .map(dto -> modelMapper.map(dto, Image.class)).collect(Collectors.toSet()))
+                .mainImage(eventRequestDto.getMainImage() != null ?
+                        modelMapper.map(eventRequestDto.getMainImage(), Image.class) : null)
                 .build();
     }
 }

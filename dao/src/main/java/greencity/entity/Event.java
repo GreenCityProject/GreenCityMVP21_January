@@ -65,4 +65,8 @@ public class Event {
             inverseJoinColumns = @JoinColumn(name = "image_id")
     )
     private Set<Image> images = new HashSet<>();
+
+    @ManyToOne
+    @JoinColumn(name = "main_image_id")
+    private Image mainImage;
 }

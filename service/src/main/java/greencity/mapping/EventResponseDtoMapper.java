@@ -7,10 +7,12 @@ import greencity.dto.event.InitiativeTypeResponseDto;
 import greencity.dto.user.AuthorDto;
 import greencity.entity.Event;
 import org.modelmapper.AbstractConverter;
+import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
 @Component
 public class EventResponseDtoMapper extends AbstractConverter<Event, EventResponseDto> {
+    private final ModelMapper modelMapper = new ModelMapper();
 
     @Override
     protected EventResponseDto convert(Event event) {
@@ -44,6 +46,8 @@ public class EventResponseDtoMapper extends AbstractConverter<Event, EventRespon
                                 .text(comment.getText())
                                 .build())
                         .toList())
+                .mainImage(event.getMainImage() != null ?
+                        modelMapper.map(event.getMainImage(), ImageResponseDto.class) : null)
                 .build();
 
     }
