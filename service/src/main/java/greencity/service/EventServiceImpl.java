@@ -45,6 +45,11 @@ public class EventServiceImpl implements EventService {
             Image defaultImage = imageRepo.findById(1L).orElseThrow(() -> new EntityNotFoundException("Default image not found"));
             images.add(defaultImage);
             mainImage = defaultImage;
+        } else if (eventRequestDto.getMainImage() == null || eventRequestDto.getMainImage().getImagePath() == null) {
+            eventRequestDto.setMainImage(eventRequestDto.getImages().getFirst());
+            Image image = modelMapper.map(eventRequestDto.getImages().getFirst(), Image.class);
+            imageRepo.save(image);
+            event.setMainImage(image);
         } else {
             for (ImageRequestDto imageRequestDto : eventRequestDto.getImages()) {
                 Image image = Image.builder().imagePath(imageRequestDto.getImagePath()).build();
@@ -53,15 +58,19 @@ public class EventServiceImpl implements EventService {
 
                 if (imageRequestDto.getImagePath().equals(eventRequestDto.getMainImage().getImagePath())) {
                     mainImage = image;
+                    imageRepo.save(image);
+                    event.setMainImage(image);
                 }
             }
             if (mainImage == null) {
-                throw new IllegalArgumentException("Main image not found in provided images");
+                mainImage = imageRepo.findById(1L).orElse(null);
             }
         }
 
         event.setImages(images);
-        event.setMainImage(mainImage);
+        if (event.getMainImage() == null) {
+            event.setMainImage(mainImage);
+        }
 
         Event savedEvent = eventRepo.save(event);
 
@@ -73,7 +82,7 @@ public class EventServiceImpl implements EventService {
 
         List<InitiativeType> initiativeTypes = new ArrayList<>();
         for (InitiativeTypeRequestDto i : eventRequestDto.getInitiativeTypes()) {
-            initiativeTypes.add(initiativeTypeRepo.findByName(i.getName()).orElseThrow(() -> new EntityNotFoundException("Initiative type not found: " + i.getName()))); // Handle if InitiativeType not found
+            initiativeTypes.add(initiativeTypeRepo.findByName(i.getName()).orElseThrow(() -> new EntityNotFoundException("Initiative type not found: " + i.getName())));
         }
 
         event.setInitiativeTypes(initiativeTypes);
