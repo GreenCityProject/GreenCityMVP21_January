@@ -2,10 +2,13 @@ package greencity.service;
 
 import greencity.dto.event.EventRequestDto;
 import greencity.dto.event.EventResponseDto;
+import greencity.dto.event.ImageRequestDto;
 import greencity.dto.event.InitiativeTypeRequestDto;
 import greencity.entity.Event;
+import greencity.entity.Image;
 import greencity.entity.InitiativeType;
 import greencity.repository.EventRepo;
+import greencity.repository.ImageRepo;
 import greencity.repository.InitiativeTypeRepo;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -14,9 +17,7 @@ import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
 import java.time.ZonedDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Optional;
+import java.util.*;
 import java.util.stream.Collectors;
 
 @Service
@@ -26,6 +27,7 @@ public class EventServiceImpl implements EventService {
     private final EventRepo eventRepo;
     private final ModelMapper modelMapper;
     private final InitiativeTypeRepo initiativeTypeRepo;
+    private final ImageRepo imageRepo;
 
     @Override
     @Transactional
@@ -43,6 +45,21 @@ public class EventServiceImpl implements EventService {
         }
 
         event.setInitiativeTypes(initiativeTypes);
+
+        Set<Image> images = new HashSet<>();
+        if(eventRequestDto.getImages() == null || eventRequestDto.getImages().isEmpty()) {
+            Image imageToSave = imageRepo.findById(1L).get();
+            event.setImages(Set.of(imageToSave));
+            event.setMainImage(imageToSave);
+        } else {
+            for(ImageRequestDto imageRequestDto : eventRequestDto.getImages()) {
+                Image image = Image.builder().imagePath(imageRequestDto.getImagePath()).build();
+                images.add(image);
+                imageRepo.save(image);
+            }
+            event.setImages(images);
+            event.setMainImage(imageRepo.findByImagePath(eventRequestDto.getMainImage().getImagePath()).orElse(null));
+        }
 
         Event savedEvent = eventRepo.save(event);
         return modelMapper.map(savedEvent, EventResponseDto.class);

@@ -1,5 +1,6 @@
 package greencity.controller;
 
+import greencity.annotations.CurrentUser;
 import greencity.dto.event.*;
 import greencity.service.EventService;
 import greencity.service.ImageStorageClient;
@@ -20,33 +21,16 @@ import java.util.List;
 @RequestMapping("/events")
 @RequiredArgsConstructor
 public class EventController {
+
     private final EventService eventService;
-    private final ImageStorageClient imageStorageClient;
 
     @PostMapping
-    public ResponseEntity<?> create(@Validated @RequestBody EventCreateDTO eventCreateDTO, @RequestPart(required = false) List<MultipartFile> files) {
-        //List<MultipartFile> files = eventCreateDTO.getFiles();
-        EventRequestDto event = eventCreateDTO.getEvent();
-        ImageRequestDto mainImage = eventCreateDTO.getMainImage();
-        String containerName = eventCreateDTO.getContainerName();
-        ImageRequestDto chosenOfProposedImage = eventCreateDTO.getChosenOfProposedImage();
+    public ResponseEntity<?> create(@Validated @RequestBody EventRequestDto eventRequestDto, @CurrentUser Principal currentUser) {
 
-        EventGenericDto eventGenericDto = new EventGenericDto();
+        return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(eventRequestDto));
 
-        List<String> images;
-        try {
-            images = imageStorageClient.uploadImage(containerName, files, chosenOfProposedImage);
-            eventGenericDto.setImages(images);
-        } catch (IOException e) {
-            return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(e.getMessage());
-        }
-
-        if (mainImage == null) {
-            event.setMainImage(ImageRequestDto.builder().imagePath(images.getFirst()).build());
-        }
-
-        eventGenericDto.setEvent(eventService.createEvent(event));
-
-        return ResponseEntity.status(HttpStatus.CREATED).body(eventGenericDto);
     }
+
+//    @PutMapping
+//    public ResponseEntity<?> update(@Validated @RequestBody EventRequestDto eventRequestDto) {}
 }
