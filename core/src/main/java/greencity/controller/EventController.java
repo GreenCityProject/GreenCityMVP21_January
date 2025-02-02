@@ -8,10 +8,7 @@ import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.annotation.Validated;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.web.bind.annotation.*;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.io.IOException;
@@ -27,8 +24,8 @@ public class EventController {
     private final ImageStorageClient imageStorageClient;
 
     @PostMapping
-    public ResponseEntity<?> create(@Validated @RequestBody EventCreateDTO eventCreateDTO, @Parameter(hidden = true) Principal principal) {
-        List<MultipartFile> files = eventCreateDTO.getFiles();
+    public ResponseEntity<?> create(@Validated @RequestBody EventCreateDTO eventCreateDTO, @RequestPart(required = false) List<MultipartFile> files) {
+        //List<MultipartFile> files = eventCreateDTO.getFiles();
         EventRequestDto event = eventCreateDTO.getEvent();
         ImageRequestDto mainImage = eventCreateDTO.getMainImage();
         String containerName = eventCreateDTO.getContainerName();

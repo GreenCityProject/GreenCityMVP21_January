@@ -13,8 +13,8 @@ import java.util.List;
 @NoArgsConstructor
 @AllArgsConstructor
 public class EventCreateDTO {
-    @Size(min = 0, max = 5, message = "Max 5 images")
-    private List<MultipartFile> files;
+//    @Size(min = 0, max = 5, message = "Max 5 images")
+//    private List<MultipartFile> files;
 
     @NotBlank(message = "Event info can't be empty")
     private EventRequestDto event;

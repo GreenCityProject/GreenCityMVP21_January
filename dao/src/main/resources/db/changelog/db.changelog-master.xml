@@ -188,6 +188,8 @@
     <include file="db/changelog/logs/ch-add-table-initiative_type-Feduniak.xml"/>
     <include file="db/changelog/logs/ch-add-table-event_likes-Feduniak.xml"/>
     <include file="db/changelog/logs/ch-add-table-participation-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-insert-into-initiative_type-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-insert-into-image-Feduniak.xml"/>
 
 
 </databaseChangeLog>

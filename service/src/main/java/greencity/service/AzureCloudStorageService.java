@@ -4,6 +4,7 @@ import com.azure.storage.blob.BlobClient;
 import com.azure.storage.blob.BlobContainerClient;
 import com.azure.storage.blob.BlobServiceClient;
 import com.azure.storage.blob.BlobServiceClientBuilder;
+import com.azure.storage.blob.models.BlobHttpHeaders;
 import greencity.constant.ErrorMessage;
 import greencity.exception.exceptions.BadRequestException;
 import greencity.exception.exceptions.ImageUrlParseException;
@@ -17,6 +18,8 @@ import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.URI;
 import java.net.URISyntaxException;
+import java.nio.file.Files;
+import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.UUID;
 
@@ -49,6 +52,20 @@ public class AzureCloudStorageService implements FileService {
         } catch (IOException e) {
             throw new NotSavedException(ErrorMessage.FILE_NOT_SAVED);
         }
+
+        String contentType = null;
+        try {
+            contentType = Files.probeContentType(Path.of(multipartFile.getOriginalFilename()));
+        } catch (IOException e) {
+            throw new RuntimeException(e);
+        }
+        if (contentType == null) {
+            contentType = "application/octet-stream";
+        }
+
+        BlobHttpHeaders headers = new BlobHttpHeaders().setContentType(contentType);
+        client.setHttpHeaders(headers);
+
         return client.getBlobUrl();
     }
 
