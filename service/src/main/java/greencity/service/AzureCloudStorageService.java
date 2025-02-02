@@ -29,6 +29,8 @@ public class AzureCloudStorageService implements FileService {
     private final String containerName;
     private final ModelMapper modelMapper;
 
+    private static final long MAX_FILE_SIZE = 10 * 1024 * 1024;
+
     /**
      * Constructor with parameters.
      */
@@ -44,6 +46,10 @@ public class AzureCloudStorageService implements FileService {
      */
 
     public String upload(MultipartFile multipartFile) {
+        if (multipartFile.getSize() > MAX_FILE_SIZE) {
+            throw new IllegalArgumentException("File size exceeds the 10 MB limit.");
+        }
+
         final String blob = UUID.randomUUID().toString();
         BlobClient client = containerClient()
             .getBlobClient(blob + multipartFile.getOriginalFilename());
