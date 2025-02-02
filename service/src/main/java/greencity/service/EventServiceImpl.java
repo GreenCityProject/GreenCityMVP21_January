@@ -79,7 +79,15 @@ public class EventServiceImpl implements EventService {
         event.setInitiativeTypes(initiativeTypes);
 
         Event finalEvent = eventRepo.save(savedEvent);
-        return modelMapper.map(finalEvent, EventResponseDto.class);
+
+        EventResponseDto eventResponseDto = modelMapper.map(finalEvent, EventResponseDto.class);
+
+        List<EventDateInfo> eventDateInfos = eventDateInfoRepo.findByEvent(finalEvent);
+        List<EventDateInfoResponseDto> eventDateInfoResponseDtos = eventDateInfos.stream().map(e -> modelMapper.map(e, EventDateInfoResponseDto.class)).collect(Collectors.toList());
+
+        eventResponseDto.setEventDays(eventDateInfoResponseDtos);
+
+        return eventResponseDto;
     }
 
     @Override
