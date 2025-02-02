@@ -26,6 +26,8 @@ public class EventRequestDto {
     )
     private String description;
 
+    private String authorEmail;
+
     @Max(7)
     private int duration = 1;
 

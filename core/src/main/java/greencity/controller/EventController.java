@@ -27,6 +27,7 @@ public class EventController {
     @PostMapping
     public ResponseEntity<?> create(@Validated @RequestBody EventRequestDto eventRequestDto, @CurrentUser Principal currentUser) {
 
+        eventRequestDto.setAuthorEmail(currentUser.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(eventRequestDto));
 
     }
