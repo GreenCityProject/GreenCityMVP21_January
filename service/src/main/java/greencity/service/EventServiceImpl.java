@@ -3,6 +3,7 @@ package greencity.service;
 import greencity.dto.event.*;
 import greencity.entity.*;
 import greencity.repository.*;
+import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
@@ -37,35 +38,45 @@ public class EventServiceImpl implements EventService {
         User author = userRepo.findByEmail(eventRequestDto.getAuthorEmail()).orElse(null);
         event.setAuthor(author);
 
+        Set<Image> images = new HashSet<>();
+        Image mainImage = null;
+
+        if (eventRequestDto.getImages() == null || eventRequestDto.getImages().isEmpty()) {
+            Image defaultImage = imageRepo.findById(1L).orElseThrow(() -> new EntityNotFoundException("Default image not found"));
+            images.add(defaultImage);
+            mainImage = defaultImage;
+        } else {
+            for (ImageRequestDto imageRequestDto : eventRequestDto.getImages()) {
+                Image image = Image.builder().imagePath(imageRequestDto.getImagePath()).build();
+                imageRepo.save(image);
+                images.add(image);
+
+                if (imageRequestDto.getImagePath().equals(eventRequestDto.getMainImage().getImagePath())) {
+                    mainImage = image;
+                }
+            }
+            if (mainImage == null) {
+                throw new IllegalArgumentException("Main image not found in provided images");
+            }
+        }
+
+        event.setImages(images);
+        event.setMainImage(mainImage);
+
         Event savedEvent = eventRepo.save(event);
 
-        for(EventDateInfoRequestDto infoRequestDto : eventRequestDto.getEventDays()) {
+        for (EventDateInfoRequestDto infoRequestDto : eventRequestDto.getEventDays()) {
             EventDateInfo eventDateInfo = modelMapper.map(infoRequestDto, EventDateInfo.class);
-            eventDateInfo.setEvent(event);
+            eventDateInfo.setEvent(savedEvent);
             eventDateInfoRepo.save(eventDateInfo);
         }
 
         List<InitiativeType> initiativeTypes = new ArrayList<>();
         for (InitiativeTypeRequestDto i : eventRequestDto.getInitiativeTypes()) {
-            initiativeTypes.add(initiativeTypeRepo.findByName(i.getName()).get());
+            initiativeTypes.add(initiativeTypeRepo.findByName(i.getName()).orElseThrow(() -> new EntityNotFoundException("Initiative type not found: " + i.getName()))); // Handle if InitiativeType not found
         }
 
         event.setInitiativeTypes(initiativeTypes);
-
-        Set<Image> images = new HashSet<>();
-        if(eventRequestDto.getImages() == null || eventRequestDto.getImages().isEmpty()) {
-            Image imageToSave = imageRepo.findById(1L).get();
-            event.setImages(Set.of(imageToSave));
-            event.setMainImage(imageToSave);
-        } else {
-            for(ImageRequestDto imageRequestDto : eventRequestDto.getImages()) {
-                Image image = Image.builder().imagePath(imageRequestDto.getImagePath()).build();
-                imageRepo.save(image);
-                images.add(image);
-            }
-            event.setImages(images);
-            event.setMainImage(imageRepo.findByImagePath(eventRequestDto.getMainImage().getImagePath()).orElse(null));
-        }
 
         Event finalEvent = eventRepo.save(savedEvent);
         return modelMapper.map(finalEvent, EventResponseDto.class);

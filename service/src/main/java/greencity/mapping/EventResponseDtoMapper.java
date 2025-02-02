@@ -10,12 +10,24 @@ import org.modelmapper.AbstractConverter;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Component;
 
+import java.util.Collections;
+import java.util.List;
+
 @Component
 public class EventResponseDtoMapper extends AbstractConverter<Event, EventResponseDto> {
     private final ModelMapper modelMapper = new ModelMapper();
 
     @Override
     protected EventResponseDto convert(Event event) {
+
+        List<EventCommentResponseDto> commentDtos = event.getComments() == null ?
+                Collections.emptyList() :
+                event.getComments().stream()
+                        .map(comment -> EventCommentResponseDto.builder()
+                                .id(comment.getId())
+                                .text(comment.getText())
+                                .build())
+                        .toList();
 
         return EventResponseDto.builder()
                 .id(event.getId())
@@ -40,12 +52,7 @@ public class EventResponseDtoMapper extends AbstractConverter<Event, EventRespon
                         .name(event.getAuthor().getName())
                         .build())
                 .creationDate(event.getCreationDate())
-                .comments(event.getComments().stream()
-                        .map(comment -> EventCommentResponseDto.builder()
-                                .id(comment.getId())
-                                .text(comment.getText())
-                                .build())
-                        .toList())
+                .comments(commentDtos)
                 .mainImage(event.getMainImage() != null ?
                         modelMapper.map(event.getMainImage(), ImageResponseDto.class) : null)
                 .build();
