@@ -45,6 +45,11 @@ public class EventRequestDto {
     )
     private List<InitiativeTypeRequestDto> initiativeTypes;
     private boolean isOpen = true;
+
+    @Size(
+            max = 5,
+            message = "The number of images must be up to 5"
+    )
     private List<ImageRequestDto> images;
     private ImageRequestDto mainImage;
 }

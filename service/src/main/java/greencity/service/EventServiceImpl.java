@@ -47,32 +47,29 @@ public class EventServiceImpl implements EventService {
             Image defaultImage = imageRepo.findById(1L).orElseThrow(() -> new EntityNotFoundException("Default image not found"));
             images.add(defaultImage);
             mainImage = defaultImage;
-        } else if (eventRequestDto.getMainImage() == null || eventRequestDto.getMainImage().getImagePath() == null) {
-            eventRequestDto.setMainImage(eventRequestDto.getImages().getFirst());
-            Image image = modelMapper.map(eventRequestDto.getImages().getFirst(), Image.class);
-            imageRepo.save(image);
-            event.setMainImage(image);
         } else {
             for (ImageRequestDto imageRequestDto : eventRequestDto.getImages()) {
-                Image image = Image.builder().imagePath(imageRequestDto.getImagePath()).build();
-                imageRepo.save(image);
+                Image image = saveImage(imageRequestDto.getImagePath());
+
                 images.add(image);
 
-                if (imageRequestDto.getImagePath().equals(eventRequestDto.getMainImage().getImagePath())) {
+                if (eventRequestDto.getMainImage() != null && imageRequestDto.getImagePath().equals(eventRequestDto.getMainImage().getImagePath())) {
                     mainImage = image;
-                    imageRepo.save(image);
-                    event.setMainImage(image);
                 }
             }
+
             if (mainImage == null) {
-                mainImage = imageRepo.findById(1L).orElse(null);
+                if (eventRequestDto.getImages() != null && !eventRequestDto.getImages().isEmpty()) {
+                    mainImage = imageRepo.findByImagePath(eventRequestDto.getImages().get(0).getImagePath()).orElse(null);
+
+                } else {
+                    mainImage = imageRepo.findById(1L).orElse(null);
+                }
             }
         }
 
         event.setImages(images);
-        if (event.getMainImage() == null) {
-            event.setMainImage(mainImage);
-        }
+        event.setMainImage(mainImage);
 
         Event savedEvent = eventRepo.save(event);
 
@@ -108,7 +105,19 @@ public class EventServiceImpl implements EventService {
         } catch (MessagingException e) {
             throw new RuntimeException(e);
         }
+
         return eventResponseDto;
+    }
+
+    public Image saveImage(String imagePath) {
+        Optional<Image> existingImage = imageRepo.findByImagePath(imagePath);
+
+        if (existingImage.isPresent()) {
+            return existingImage.get();
+        } else {
+            Image newImage = Image.builder().imagePath(imagePath).build();
+            return imageRepo.save(newImage);
+        }
     }
 
     @Override

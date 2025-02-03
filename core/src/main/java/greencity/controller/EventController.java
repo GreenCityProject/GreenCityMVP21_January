@@ -3,6 +3,7 @@ package greencity.controller;
 import greencity.annotations.CurrentUser;
 import greencity.dto.event.*;
 import greencity.service.EventService;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -20,7 +21,7 @@ public class EventController {
     private final EventService eventService;
 
     @PostMapping
-    public ResponseEntity<?> create(@Validated @RequestBody EventRequestDto eventRequestDto, @CurrentUser Principal currentUser) {
+    public ResponseEntity<?> create(@Valid @RequestBody EventRequestDto eventRequestDto, @CurrentUser Principal currentUser) {
 
         eventRequestDto.setAuthorEmail(currentUser.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(eventRequestDto));

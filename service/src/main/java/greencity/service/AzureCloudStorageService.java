@@ -13,7 +13,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.core.env.PropertyResolver;
 import org.springframework.stereotype.Service;
+import org.springframework.web.multipart.MultipartException;
 import org.springframework.web.multipart.MultipartFile;
+
 import java.io.BufferedInputStream;
 import java.io.IOException;
 import java.net.URI;
@@ -36,7 +38,7 @@ public class AzureCloudStorageService implements FileService {
      * Constructor with parameters.
      */
     public AzureCloudStorageService(@Autowired PropertyResolver propertyResolver,
-        ModelMapper modelMapper) {
+                                    ModelMapper modelMapper) {
         this.connectionString = propertyResolver.getProperty("azure.connection.string");
         this.containerName = propertyResolver.getProperty("azure.container.name");
         this.modelMapper = modelMapper;
@@ -48,12 +50,16 @@ public class AzureCloudStorageService implements FileService {
 
     public String upload(MultipartFile multipartFile) {
         if (multipartFile.getSize() > MAX_FILE_SIZE) {
-            throw new IllegalArgumentException("File size exceeds the 10 MB limit.");
+            String fileName = multipartFile.getOriginalFilename();
+            String fileExtension = fileName.substring(fileName.lastIndexOf('.') + 1).toLowerCase();
+            if (fileExtension.equals("jpg") || fileExtension.equals("png")) {
+                throw new MultipartException("Incorrect image size. Maximum allowed size is 10 MB");
+            }
         }
 
         final String blob = UUID.randomUUID().toString();
         BlobClient client = containerClient()
-            .getBlobClient(blob + multipartFile.getOriginalFilename());
+                .getBlobClient(blob + multipartFile.getOriginalFilename());
         try {
             client.upload(new BufferedInputStream(multipartFile.getInputStream()), multipartFile.getSize());
         } catch (IOException e) {
@@ -78,7 +84,7 @@ public class AzureCloudStorageService implements FileService {
 
     private BlobContainerClient containerClient() {
         BlobServiceClient serviceClient = new BlobServiceClientBuilder()
-            .connectionString(connectionString).buildClient();
+                .connectionString(connectionString).buildClient();
         return serviceClient.getBlobContainerClient(containerName);
     }
 
