@@ -99,7 +99,7 @@ public class EventServiceImpl implements EventService {
         eventResponseDto.setEventDays(eventDateInfoResponseDtos);
 
         String emailBody = String.format(
-                "Dear %s,\n\nYour event \"%s\" has been created.\n\nBest regards,\nGreen City team",
+                "Dear %s,<br><br>Your event \"%s\" has been created.<br><br>Best regards,<br>Green City team",
                 author.getName(), event.getTitle());
         String emailSubject = "\uD83D\uDD14 Your Event Creation Status";
 

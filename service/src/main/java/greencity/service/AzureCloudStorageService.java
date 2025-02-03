@@ -21,6 +21,7 @@ import java.net.URISyntaxException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.Objects;
 import java.util.UUID;
 
 @Service
@@ -61,7 +62,7 @@ public class AzureCloudStorageService implements FileService {
 
         String contentType = null;
         try {
-            contentType = Files.probeContentType(Path.of(multipartFile.getOriginalFilename()));
+            contentType = Files.probeContentType(Path.of(Objects.requireNonNull(multipartFile.getOriginalFilename())));
         } catch (IOException e) {
             throw new RuntimeException(e);
         }
