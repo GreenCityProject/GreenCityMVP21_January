@@ -24,7 +24,6 @@ public class EventController {
 
         eventRequestDto.setAuthorEmail(currentUser.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(eventRequestDto));
-
     }
 
 //    @PutMapping

@@ -3,6 +3,7 @@ package greencity.service;
 import greencity.dto.event.*;
 import greencity.entity.*;
 import greencity.repository.*;
+import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
@@ -24,6 +25,7 @@ public class EventServiceImpl implements EventService {
     private final ImageRepo imageRepo;
     private final UserRepo userRepo;
     private final EventDateInfoRepo eventDateInfoRepo;
+    private final EmailService emailService;
 
     @Override
     @Transactional
@@ -96,6 +98,16 @@ public class EventServiceImpl implements EventService {
 
         eventResponseDto.setEventDays(eventDateInfoResponseDtos);
 
+        String emailBody = String.format(
+                "Dear %s,\n\nYour event \"%s\" has been created.\n\nBest regards,\nGreen City team",
+                author.getName(), event.getTitle());
+        String emailSubject = "\uD83D\uDD14 Your Event Creation Status";
+
+        try {
+            emailService.sendEmail(author.getEmail(), emailSubject, emailBody);
+        } catch (MessagingException e) {
+            throw new RuntimeException(e);
+        }
         return eventResponseDto;
     }
 
