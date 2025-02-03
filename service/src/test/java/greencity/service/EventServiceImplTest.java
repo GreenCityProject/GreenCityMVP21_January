@@ -1,11 +1,13 @@
 package greencity.service;
 
+import greencity.ModelUtils;
 import greencity.dto.event.*;
 import greencity.entity.Event;
+import greencity.entity.EventDateInfo;
 import greencity.entity.Image;
 import greencity.entity.InitiativeType;
-import greencity.repository.EventRepo;
-import greencity.repository.InitiativeTypeRepo;
+import greencity.repository.*;
+import jakarta.mail.MessagingException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -32,7 +34,19 @@ class EventServiceImplTest {
     private InitiativeTypeRepo initiativeTypeRepo;
 
     @Mock
+    private EventDateInfoRepo eventDateInfoRepo;
+
+    @Mock
     private ModelMapper modelMapper;
+
+    @Mock
+    private ImageRepo imageRepo;
+
+    @Mock
+    private UserRepo userRepo;
+
+    @Mock
+    private EmailService emailService;
 
     @InjectMocks
     private EventServiceImpl eventService;
@@ -60,6 +74,7 @@ class EventServiceImplTest {
         event.setDescription(eventRequestDto.getDescription());
         event.setCreationDate(ZonedDateTime.now());
         event.setImages(Set.of(new Image()));
+        event.setAuthor(ModelUtils.getUser());
 
         eventResponseDto = new EventResponseDto();
         eventResponseDto.setId(event.getId());
@@ -75,14 +90,20 @@ class EventServiceImplTest {
 
         eventRequestDto.setInitiativeTypes(List.of(initiativeTypeRequestDto));
         eventRequestDto.setImages(List.of(imageRequestDto));
+        eventRequestDto.setAuthorEmail(ModelUtils.getUser().getEmail());
     }
 
     @Test
-    void createEvent_ShouldSaveAndReturnEventResponseDto() {
+    void createEvent_ShouldSaveAndReturnEventResponseDto() throws MessagingException {
         when(modelMapper.map(eventRequestDto, Event.class)).thenReturn(event);
         when(initiativeTypeRepo.findByName(any(String.class))).thenReturn(Optional.of(initiativeType));
         when(eventRepo.save(event)).thenReturn(event);
         when(modelMapper.map(event, EventResponseDto.class)).thenReturn(eventResponseDto);
+        when(userRepo.findByEmail(any(String.class))).thenReturn(Optional.of(ModelUtils.getUser()));
+        when(imageRepo.findByImagePath(any(String.class))).thenReturn(Optional.of(new Image()));
+        when(modelMapper.map(any(EventDateInfoRequestDto.class), eq(EventDateInfo.class))).thenReturn(new EventDateInfo());
+        when(eventDateInfoRepo.save(any(EventDateInfo.class))).thenReturn(new EventDateInfo());
+        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
 
         EventResponseDto result = eventService.createEvent(eventRequestDto);
 
@@ -91,7 +112,7 @@ class EventServiceImplTest {
         assertEquals(event.getTitle(), result.getTitle());
         assertEquals(event.getDescription(), result.getDescription());
 
-        verify(eventRepo, times(1)).save(event);
+        verify(eventRepo, times(2)).save(event);
     }
 
     @Test
