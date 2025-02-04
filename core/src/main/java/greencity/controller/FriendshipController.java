@@ -160,7 +160,7 @@ public class FriendshipController {
     public ResponseEntity<FriendshipResponseDto> deleteFriendship(
             @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
             @PathVariable("friendId") @NotNull(message = "User ID must not be null.") Long friendId) {
-        if(isNotCurrentUser(userId) && isNotCurrentUser(friendId)) {
+        if(isNotCurrentUser(userId) || isNotCurrentUser(friendId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         boolean isDeleted = friendshipService.deleteFriendByUserId(userId, friendId);
