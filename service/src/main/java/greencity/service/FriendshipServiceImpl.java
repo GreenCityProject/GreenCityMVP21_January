@@ -101,7 +101,7 @@ public class FriendshipServiceImpl implements FriendshipService {
     public boolean acceptFriendshipRequestByUserId(Long senderId, Long recipientId) {
         Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderInsensitive(senderId, recipientId);
         Friendship friendship = friendshipOptional.orElseGet(Friendship::new);
-        if(friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
+        if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.ACCEPTED);
             friendshipRepo.save(friendship);
             notificationServise.notify("Accepted Friendship Req.");
@@ -118,6 +118,7 @@ public class FriendshipServiceImpl implements FriendshipService {
             friendship.setStatus(FriendshipStatus.DECLINED);
             friendshipRepo.save(friendship);
             notificationServise.notify("Declined Friendship Req.");
+            return true;
         }
         return false;
     }
@@ -130,7 +131,7 @@ public class FriendshipServiceImpl implements FriendshipService {
     @Override
     public boolean deleteFriendByUserId(Long userId, Long friendId) {
         Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderInsensitive(userId, friendId);
-        if ( friendshipOptional.isPresent() && friendshipOptional.get().getStatus() == FriendshipStatus.ACCEPTED) {
+        if (friendshipOptional.isPresent() && friendshipOptional.get().getStatus() == FriendshipStatus.ACCEPTED) {
             friendshipRepo.delete(friendshipOptional.get());
             return true;
         }
@@ -142,6 +143,7 @@ public class FriendshipServiceImpl implements FriendshipService {
         Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderInsensitive(userId, friendId);
         return friendshipOptional.isPresent() && friendshipOptional.get().getStatus() == FriendshipStatus.ACCEPTED;
     }
+
 
     @Override
     public boolean blockFriendshipRequestsFromUserById(Long senderId, Long recipientId) {
@@ -163,11 +165,11 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .toList();
     }
 
-    private Optional<Friendship> getFriendshipByUserIdOrderInsensitive(Long userId, Long friendId) {
+    protected Optional<Friendship> getFriendshipByUserIdOrderInsensitive(Long userId, Long friendId) {
         return friendshipRepo.findFriendshipByEitherUserId(userId, friendId);
     }
 
-    private List<FriendCardDto> getAllFriendCardsOfUserById(Long userId) {
+    protected List<FriendCardDto> getAllFriendCardsOfUserById(Long userId) {
         return friendshipRepo.getAllFriendshipsByUserId(userId).stream()
                 .map(friendship -> {
                     FriendCardDto friendCard = modelMapper.map(friendship.getFriend(), FriendCardDto.class);
@@ -177,7 +179,7 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .toList();
     }
 
-    private int getAmountOfMutualFriends(Long userId, Long targetUserId) {
+    protected int getAmountOfMutualFriends(Long userId, Long targetUserId) {
         List<Long> userFriends =
                 new ArrayList<>(friendshipRepo.getAllFriendshipsByUserId(userId).stream().map(getFriendId).toList());
         List<Long> targetFriends =
