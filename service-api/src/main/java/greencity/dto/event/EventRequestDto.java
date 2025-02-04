@@ -1,5 +1,6 @@
 package greencity.dto.event;
 
+import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
 import jakarta.validation.constraints.Size;
@@ -36,6 +37,7 @@ public class EventRequestDto {
             max = 7,
             message = "The number of event days must be between 1 and 7"
     )
+    @Valid
     private List<EventDateInfoRequestDto> eventDays;
 
     @Size(
@@ -50,6 +52,7 @@ public class EventRequestDto {
             max = 5,
             message = "The number of images must be up to 5"
     )
+    @Valid
     private List<ImageRequestDto> images;
     private ImageRequestDto mainImage;
 }

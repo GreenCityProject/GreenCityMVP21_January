@@ -33,12 +33,10 @@ public class EventDateInfoRequestDto {
     private Boolean isOnline;
 
     @Size(max = 255, message = "Location cannot exceed 255 characters.")
-    @NotBlank(message = "Location is mandatory if the event is offline.")
     private String location;
 
     @Size(max = 2083, message = "URL length cannot exceed 2083 characters.")
     @Pattern(regexp = "^(https?|ftp)://[^\\s/$.?#].[^\\s]*$", message = "Invalid URL format.")
-    @NotBlank(message = "URL is mandatory if the event is online.")
     private String url;
 
 }

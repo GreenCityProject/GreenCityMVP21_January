@@ -45,10 +45,10 @@ public class EventDateInfo {
     @Column(name = "is_online", nullable = false)
     private boolean isOnline;
 
-    @Column(name = "location", nullable = false)
+    @Column(name = "location")
     private String location;
 
-    @Column(name = "url", nullable = false)
+    @Column(name = "url")
     private String url;
 
 }

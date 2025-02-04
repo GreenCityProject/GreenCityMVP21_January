@@ -33,6 +33,14 @@ public class EventServiceImpl implements EventService {
         if (eventRequestDto.getEventDays() == null || eventRequestDto.getEventDays().isEmpty()) {
             throw new IllegalArgumentException("Event must have at least one event day.");
         }
+        for(EventDateInfoRequestDto e : eventRequestDto.getEventDays()) {
+            if (e.getIsOnline() && e.getUrl() == null) {
+                throw new IllegalArgumentException("If event is online it has to have the url");
+            }
+            if (e.getIsPlace() && e.getLocation() == null) {
+                throw new IllegalArgumentException("If event is offline it has to have the location");
+            }
+        }
 
         Event event = modelMapper.map(eventRequestDto, Event.class);
         event.setCreationDate(ZonedDateTime.now());

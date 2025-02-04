@@ -57,6 +57,7 @@ class EventServiceImplTest {
     private InitiativeType initiativeType;
     private InitiativeTypeRequestDto initiativeTypeRequestDto;
     private ImageRequestDto imageRequestDto;
+    private EventDateInfoRequestDto eventDateInfoRequestDto;
 
     @BeforeEach
     void setUp() {
@@ -91,6 +92,14 @@ class EventServiceImplTest {
         eventRequestDto.setInitiativeTypes(List.of(initiativeTypeRequestDto));
         eventRequestDto.setImages(List.of(imageRequestDto));
         eventRequestDto.setAuthorEmail(ModelUtils.getUser().getEmail());
+
+        eventDateInfoRequestDto = new EventDateInfoRequestDto();
+        eventDateInfoRequestDto.setIsOnline(true);
+        eventDateInfoRequestDto.setUrl("http://google.com");
+        eventDateInfoRequestDto.setIsPlace(false);
+
+        eventRequestDto.setEventDays(List.of(eventDateInfoRequestDto));
+
     }
 
     @Test
