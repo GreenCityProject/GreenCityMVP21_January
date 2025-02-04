@@ -23,13 +23,13 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     private final FriendshipRepo friendshipRepo;
     private final UserRepo userRepo;
-    private final NotificationServise notificationServise;
+    private final NotificationService notificationServise;
 
     @Autowired
     public FriendshipServiceImpl(
             FriendshipRepo friendshipRepo,
             UserRepo userRepo,
-            NotificationServise notificationServise,
+            NotificationService notificationServise,
             ModelMapper modelMapper) {
         this.friendshipRepo = friendshipRepo;
         this.userRepo = userRepo;

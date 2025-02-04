@@ -1,5 +1,5 @@
 package greencity.service;
 
-public interface NotificationServise {
+public interface NotificationService {
     void notify(String notification);
 }

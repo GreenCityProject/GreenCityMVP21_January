@@ -34,7 +34,7 @@ public class FriendshipServiceImplTest {
     private UserRepo userRepo;
 
     @Mock
-    private NotificationServise notificationServise;
+    private NotificationService notificationServise;
 
     @Mock
     private ModelMapper modelMapper;
