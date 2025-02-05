@@ -95,7 +95,7 @@ public class EventServiceImpl implements EventService {
         try {
             emailService.sendEmail(author.getEmail(), emailSubject, emailBody);
         } catch (MessagingException e) {
-            throw new RuntimeException(e);
+            throw new IllegalStateException("Failed to send event creation email", e);
         }
     }
 
