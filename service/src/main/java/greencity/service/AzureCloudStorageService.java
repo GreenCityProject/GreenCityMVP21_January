@@ -70,7 +70,7 @@ public class AzureCloudStorageService implements FileService {
         try {
             contentType = Files.probeContentType(Path.of(Objects.requireNonNull(multipartFile.getOriginalFilename())));
         } catch (IOException e) {
-            throw new RuntimeException(e);
+            throw new NotSavedException("Failed to determine file content type");
         }
         if (contentType == null) {
             contentType = "application/octet-stream";

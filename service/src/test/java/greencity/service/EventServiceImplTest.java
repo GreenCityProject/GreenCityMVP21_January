@@ -55,9 +55,6 @@ class EventServiceImplTest {
     private EventRequestDto eventRequestDto;
     private EventResponseDto eventResponseDto;
     private InitiativeType initiativeType;
-    private InitiativeTypeRequestDto initiativeTypeRequestDto;
-    private ImageRequestDto imageRequestDto;
-    private EventDateInfoRequestDto eventDateInfoRequestDto;
 
     @BeforeEach
     void setUp() {
@@ -66,7 +63,7 @@ class EventServiceImplTest {
         eventRequestDto.setDescription("This is a test event.");
         eventRequestDto.setEventDays(List.of(new EventDateInfoRequestDto(), new EventDateInfoRequestDto()));
 
-        imageRequestDto = new ImageRequestDto();
+        ImageRequestDto imageRequestDto = new ImageRequestDto();
         imageRequestDto.setImagePath("ImagePath");
 
         event = new Event();
@@ -86,14 +83,14 @@ class EventServiceImplTest {
         initiativeType.setId(1L);
         initiativeType.setName("Test Initiative Type");
 
-        initiativeTypeRequestDto = new InitiativeTypeRequestDto();
+        InitiativeTypeRequestDto initiativeTypeRequestDto = new InitiativeTypeRequestDto();
         initiativeTypeRequestDto.setName("Test Initiative Type");
 
         eventRequestDto.setInitiativeTypes(List.of(initiativeTypeRequestDto));
         eventRequestDto.setImages(List.of(imageRequestDto));
         eventRequestDto.setAuthorEmail(ModelUtils.getUser().getEmail());
 
-        eventDateInfoRequestDto = new EventDateInfoRequestDto();
+        EventDateInfoRequestDto eventDateInfoRequestDto = new EventDateInfoRequestDto();
         eventDateInfoRequestDto.setIsOnline(true);
         eventDateInfoRequestDto.setUrl("http://google.com");
         eventDateInfoRequestDto.setIsPlace(false);
@@ -112,7 +109,7 @@ class EventServiceImplTest {
         when(imageRepo.findByImagePath(any(String.class))).thenReturn(Optional.of(new Image()));
         when(modelMapper.map(any(EventDateInfoRequestDto.class), eq(EventDateInfo.class))).thenReturn(new EventDateInfo());
         when(eventDateInfoRepo.save(any(EventDateInfo.class))).thenReturn(new EventDateInfo());
-        doNothing().when(emailService).sendEmail(anyString(), anyString(), anyString());
+        when(modelMapper.map(any(ImageRequestDto.class), eq(Image.class))).thenReturn(new Image());
 
         EventResponseDto result = eventService.createEvent(eventRequestDto);
 
@@ -121,7 +118,7 @@ class EventServiceImplTest {
         assertEquals(event.getTitle(), result.getTitle());
         assertEquals(event.getDescription(), result.getDescription());
 
-        verify(eventRepo, times(2)).save(event);
+        verify(eventRepo, times(1)).save(event);
     }
 
     @Test

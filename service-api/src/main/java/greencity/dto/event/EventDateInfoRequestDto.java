@@ -1,5 +1,6 @@
 package greencity.dto.event;
 
+import greencity.annotations.ConsistentDateTime;
 import jakarta.validation.constraints.*;
 import lombok.*;
 
@@ -11,6 +12,7 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
+@ConsistentDateTime
 public class EventDateInfoRequestDto {
 
     @NotNull(message = "Event date is mandatory.")

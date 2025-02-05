@@ -39,7 +39,6 @@ public class EventCommentRepoTest {
     private User user;
     private Event event;
     private EventComment eventComment;
-    private EventComment eventComment2;
     private User user2;
 
     @BeforeEach
@@ -81,7 +80,7 @@ public class EventCommentRepoTest {
         eventComment.setCreatedDate(LocalDateTime.now());
         eventComment.setEvent(event);
 
-        eventComment2 = new EventComment();
+        EventComment eventComment2 = new EventComment();
         eventComment2.setText("Event comment2");
         eventComment2.setUser(user2);
         eventComment2.setCreatedDate(LocalDateTime.now());

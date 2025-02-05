@@ -44,7 +44,7 @@ class EventControllerTest {
     @Mock
     private EventService eventService;
 
-    private Principal principal = getPrincipal();
+    private final Principal principal = getPrincipal();
 
     @Mock
     private UserService userService;
@@ -61,16 +61,14 @@ class EventControllerTest {
     @InjectMocks
     private EventController eventController;
 
-    private Map<String, Object> attributes;
     private EventRequestDto eventRequestDto;
-    private EventDateInfoRequestDto eventDateInfoRequestDto;
     private ObjectMapper objectMapper2;
     private MockMvc mockMvc;
     private EventResponseDto eventResponseDto;
 
     @BeforeEach
     void setUp() {
-        attributes = new HashMap<>();
+        Map<String, Object> attributes = new HashMap<>();
 
         attributes.put("timestamp", "2025-01-13T10:00:00");
         attributes.put("trace", "Test stack trace");
@@ -95,7 +93,7 @@ class EventControllerTest {
         eventRequestDto.setDuration(1);
         eventRequestDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
 
-        eventDateInfoRequestDto = new EventDateInfoRequestDto();
+        EventDateInfoRequestDto eventDateInfoRequestDto = new EventDateInfoRequestDto();
         eventDateInfoRequestDto.setIsOnline(true);
         eventDateInfoRequestDto.setIsAllDay(false);
         eventDateInfoRequestDto.setUrl("http://google.com");

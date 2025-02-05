@@ -40,7 +40,6 @@ public class ImageRepoTest {
     private Event event;
     private User user;
     private Image image1;
-    private Image image2;
 
     @BeforeEach
     void setUp() {
@@ -69,7 +68,7 @@ public class ImageRepoTest {
         image1.getEvents().add(event);
         event.getImages().add(image1);
 
-        image2 = new Image();
+        Image image2 = new Image();
         image2.setImagePath("uploads\\new2_image.jpg");
         image2.getEvents().add(event);
         event.getImages().add(image2);

@@ -38,12 +38,10 @@ public class EventCommentLikesRepoTest {
 
     private User user;
     private User user2;
-    private Event event;
     private EventComment eventComment;
     private EventComment eventComment2;
     private EventCommentLikes eventCommentLikes;
     private EventCommentLikes eventCommentLikes2;
-    private EventCommentLikes eventCommentLikes3;
 
     @BeforeEach
     void setUp() {
@@ -70,7 +68,7 @@ public class EventCommentLikesRepoTest {
         user2.setRole(Role.ROLE_USER);
         userRepo.save(user2);
 
-        event = new Event();
+        Event event = new Event();
         event.setAuthor(user);
         event.setTitle("Sample Event");
         event.setDescription("Event description");
@@ -199,7 +197,7 @@ public class EventCommentLikesRepoTest {
         EventCommentLikesKey eventCommentLikesKey2 = new EventCommentLikesKey(user, eventComment2);
         eventCommentLikes2 = new EventCommentLikes(eventCommentLikesKey2, true, false);
         EventCommentLikesKey eventCommentLikesKey3 = new EventCommentLikesKey(user2, eventComment);
-        eventCommentLikes3 = new EventCommentLikes(eventCommentLikesKey3, true, false);
+        EventCommentLikes eventCommentLikes3 = new EventCommentLikes(eventCommentLikesKey3, true, false);
 
         eventCommentLikesRepo.save(eventCommentLikes);
         eventCommentLikesRepo.save(eventCommentLikes2);
