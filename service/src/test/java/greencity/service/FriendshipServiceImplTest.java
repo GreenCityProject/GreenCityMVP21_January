@@ -49,7 +49,6 @@ public class FriendshipServiceImplTest {
     private Friendship friendship2;
     private Friendship friendship3;
     private FriendCardDto friendCardDto1;
-    private FriendCardDto friendCardDto2;
     private RequestedFriendshipDto requestedFriendshipDto;
 
     private Long userId = 1L;
@@ -92,7 +91,7 @@ public class FriendshipServiceImplTest {
         friendCardDto1.setId(user2.getId());
         friendCardDto1.setName(user2.getName());
 
-        friendCardDto2 = new FriendCardDto();
+        FriendCardDto friendCardDto2 = new FriendCardDto();
         friendCardDto2.setId(user1.getId());
         friendCardDto2.setName(user1.getName());
 
