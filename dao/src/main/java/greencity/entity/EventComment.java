@@ -23,7 +23,7 @@ import java.util.List;
 public class EventComment {
     @Id
     @GeneratedValue(strategy = GenerationType.IDENTITY)
-    private long id;
+    private Long id;
 
     @Column(nullable = false)
     @Size(min = 1, max = 8000)

@@ -12,7 +12,7 @@ import java.time.LocalDateTime;
 @EqualsAndHashCode
 @Builder
 public class EventCommentResponseDto {
-    private long id;
+    private Long id;
     private String text;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
