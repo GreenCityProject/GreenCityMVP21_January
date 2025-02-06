@@ -16,7 +16,6 @@ import org.springframework.http.HttpStatus;
 import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -578,6 +577,8 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
 
+
+
     /**
      * Customize the response for WrongIdException.
      *
@@ -616,11 +617,22 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
                 ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE)));
     }
 
+    @ExceptionHandler(UnsupportedMediaTypeException.class)
+    public final ResponseEntity<Object> handleUnsupportedMediaTypeException(
+            UnsupportedMediaTypeException ex, WebRequest request) {
+        log.info(ex.getMessage());
+        ExceptionResponse exceptionResponse = new ExceptionResponse(getErrorAttributes(request));
+        exceptionResponse.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(exceptionResponse);
+
+    }
+
     @ExceptionHandler(IllegalArgumentException.class)
     public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
 
         String errorMessage = "Invalid argument provided: " + ex.getMessage();
 
         return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+
     }
 }
