@@ -141,7 +141,7 @@ public class EventServiceImpl implements EventService {
         return eventResponseDto;
     }
 
-    public Image saveImage(String imagePath) {
+    private Image saveImage(String imagePath) {
         Optional<Image> existingImage = imageRepo.findByImagePath(imagePath);
 
         if (existingImage.isPresent()) {
