@@ -1,5 +1,6 @@
 package greencity.service;
 
+import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
 
@@ -7,7 +8,7 @@ import java.util.List;
 
 public interface EventCommentService {
 
-    EventCommentResponseDto addComment(Long eventId, Long userId, EventCommentRequestDto requestDto);
+    AddEventCommentDtoResponse addComment(Long eventId, Long userId, EventCommentRequestDto requestDto);
 
     EventCommentResponseDto replyToComment(Long parentCommentId, Long userId, EventCommentRequestDto requestDto);
 
