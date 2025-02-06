@@ -1,0 +1,74 @@
+<!DOCTYPE html>
+<html xmlns:th="http://www.thymeleaf.org">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1">
+    <title>Email</title>
+    <style type="text/css">
+        body {
+            font-family: Arial, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: #f4f4f4;
+        }
+
+        table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .email-container {
+            max-width: 600px;
+            margin: 20px auto;
+            background-color: #ffffff;
+            padding: 20px;
+            border-radius: 8px;
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+        }
+
+        .header {
+            background-color: #13aa57;
+            color: white;
+            padding: 15px;
+            text-align: center;
+            border-radius: 8px 8px 0 0;
+        }
+
+        .footer a {
+            color: #13aa57;
+            text-decoration: none;
+        }
+
+        .body-text {
+            font-size: 16px;
+            color: #333333;
+            line-height: 1.5;
+            margin-bottom: 20px;
+        }
+
+        .green-bar {
+            background-color: #13aa57;
+            color: white;
+            text-align: center;
+            padding: 20px;
+            font-family: Arial, sans-serif;
+            font-size: 18px;
+            font-weight: bold;
+        }
+
+    </style>
+</head>
+<body>
+<div class="email-container">
+    <div class="header">
+        <h1>GreenCity</h1>
+    </div>
+    <div class="body-text">
+        <p th:utext="${body}"></p>
+    </div>
+    <div class="green-bar">
+        <p>Have a nice day!</p>
+    </div>
+</div>
+</body>
+</html>

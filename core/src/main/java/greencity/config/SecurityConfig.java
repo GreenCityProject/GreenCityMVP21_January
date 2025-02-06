@@ -101,7 +101,7 @@ public class SecurityConfig {
                                 resp.sendError(SC_FORBIDDEN, "You don't have authorities.")))
                 .authorizeHttpRequests(req -> req
                         .requestMatchers(HttpMethod.OPTIONS, "/**").permitAll()
-                        .requestMatchers("/", "/management/", "/management/login").permitAll()
+                        .requestMatchers("/", "/management/", "/management/login", "/error").permitAll()
                         .requestMatchers("/v2/api-docs/**", "/v3/api-docs/**", "/swagger.json",
                                 "/swagger-ui.html").permitAll()
                         .requestMatchers("/swagger-resources/**", "/webjars/**", "/swagger-ui/**").permitAll()
@@ -179,6 +179,9 @@ public class SecurityConfig {
                                 "/facts",
                                 "/facts/random/{habitId}",
                                 "/facts/dayFact/{languageId}",
+                                "/friends/{userId}/areFriends/{friendId}/",
+                                "/friends/{userId}/mutual/{targetUserId}/",
+                                "/friends/{userId}/requested/",
                                 "/newsSubscriber/unsubscribe",
                                 "/social-networks/image",
                                 "/user",
@@ -199,6 +202,7 @@ public class SecurityConfig {
                                 "/habit/{habitId}/friends/profile-pictures")
                         .hasAnyRole(USER, ADMIN, MODERATOR, UBS_EMPLOYEE)
                         .requestMatchers(HttpMethod.POST,
+                                "/events",
                                 "/category",
                                 "/econews",
                                 "/econews/like",
@@ -208,6 +212,7 @@ public class SecurityConfig {
                                 CUSTOM_SHOPPING_LIST_ITEMS,
                                 "/files/image",
                                 "/files/convert",
+                                "/friends/{senderId}/request/{recipientId}/",
                                 HABIT_ASSIGN_ID,
                                 HABIT_ASSIGN_ID + "/custom",
                                 "/habit/assign/{habitAssignId}/enroll/**",
@@ -223,6 +228,9 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.PUT,
                                 "/habit/statistic/{id}",
                                 "/econews/update",
+                                "/friends/{senderId}/accept/{recipientId}/",
+                                "/friends/{senderId}/block/{recipientId}/",
+                                "/friends/{senderId}/cancel/{recipientId}/",
                                 "/ownSecurity",
                                 "/user/profile",
                                 HABIT_ASSIGN_ID + "/update-habit-duration",
@@ -247,6 +255,7 @@ public class SecurityConfig {
                                 ECONEWS_COMMENTS,
                                 "/events/comments/{eventCommentId}",
                                 "/econews/{econewsId}",
+                                "/friends/{userId}/delete/{friendId}/",
                                 CUSTOM_SHOPPING_LIST_ITEMS,
                                 CUSTOM_SHOPPING_LIST_URL,
                                 "/favorite_place/{placeId}",

@@ -29,6 +29,6 @@ public class Filter {
     @Column
     private String type;
 
-    @Column(columnDefinition = "text")
+    @Column(columnDefinition = "text", name = "`values`")
     private String values;
 }

@@ -176,5 +176,23 @@
     <include file="db/changelog/logs/ch-drop-places-table-Bokalo.xml"/>
     <include file="db/changelog/logs/ch-drop-news-subscribers-table-Bokalo.xml"/>
     <include file="db/changelog/logs/ch-drop-user-friends-table-Bokalo.xml"/>
+    <include file="db/changelog/logs/ch-add-table-event-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-add-table-image-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-add-table-event_image-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-add-column-main_image_id-to-event-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-add-table-event_comment-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-add-table-event_comment_likes_key-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-drop-table-event_comment_likes_key-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-add-table-event_comment_likes-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-add-table-event_info-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-add-table-initiative_type-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-add-table-event_likes-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-add-table-participation-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-insert-into-initiative_type-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-insert-into-image-Feduniak.xml"/>
+    <include file="db/changelog/logs/ch-add-fix_sequence_image-Bulhakova.xml"/>
+    <include file="/db/changelog/logs/ch-alter-table-event_info-Bulhakova.xml"/>
+
+
 </databaseChangeLog>
 

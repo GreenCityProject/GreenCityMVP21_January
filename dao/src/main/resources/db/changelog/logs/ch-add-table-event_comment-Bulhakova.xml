@@ -1,0 +1,36 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="Bulhakova-5" author="Oleksandra Bulhakova">
+        <createTable tableName="event_comment">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="text" type="VARCHAR(8000)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="created_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="modified_date" type="TIMESTAMP"/>
+            <column name="parent_comment_id" type="BIGINT"/>
+            <column name="user_id" type="BIGINT"/>
+            <column name="event_id" type="BIGINT"/>
+            <column name="deleted" type="BOOLEAN"/>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="event_comment" baseColumnNames="parent_comment_id"
+                                 referencedTableName="event_comment" referencedColumnNames="id"
+                                 constraintName="fk_event_comment_parent"/>
+
+        <addForeignKeyConstraint baseTableName="event_comment" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_event_comment_user"/>
+
+        <addForeignKeyConstraint baseTableName="event_comment" baseColumnNames="event_id"
+                                 referencedTableName="event" referencedColumnNames="id"
+                                 constraintName="fk_event_comment_event"/>
+    </changeSet>
+</databaseChangeLog>

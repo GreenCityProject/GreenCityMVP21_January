@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="Feduniak-5" author="Yurii Feduniak">
+
+        <createTable tableName="initiative_type">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="name" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="Feduniak-6" author="Yurii Feduniak">
+
+        <createTable tableName="event_initiative_type">
+            <column name="event_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="initiative_type_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="event_initiative_type" baseColumnNames="event_id"
+                                 referencedTableName="event" referencedColumnNames="id"
+                                 constraintName="fk_event_initiative_type_event"/>
+
+        <addForeignKeyConstraint baseTableName="event_initiative_type" baseColumnNames="initiative_type_id"
+                                 referencedTableName="initiative_type" referencedColumnNames="id"
+                                 constraintName="fk_event_initiative_type_initiative_type"/>
+    </changeSet>
+
+</databaseChangeLog>
