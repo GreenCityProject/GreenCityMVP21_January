@@ -16,13 +16,6 @@ import java.util.Optional;
 public interface EventRepo extends JpaRepository<Event, Long> {
 
     /**
-     * Method to get all events.
-     *
-     * @return list of all {@link Event} instances.
-     */
-    // List<Event> findAll();
-
-    /**
      * Method to get an event by its ID.
      *
      * @param id ID of the event.
@@ -37,38 +30,6 @@ public interface EventRepo extends JpaRepository<Event, Long> {
      * @return list of {@link Event} instances with the specified title.
      */
     List<Event> findByTitleIgnoreCase(String title);
-
-    /**
-     * Method to find all events created by a specific author.
-     *
-     * @param author {@link User} who created the events.
-     * @return list of {@link Event} instances.
-     */
-    List<Event> findAllByAuthor(User author);
-
-    /**
-     * Method to find all events that are open.
-     *
-     * @return list of open {@link Event} instances.
-     */
-    List<Event> findAllByIsOpenTrue();
-
-    /**
-     * Method to get all events sorted by creation date in descending order.
-     *
-     * @param pageable {@link Pageable} for pagination.
-     * @return page of {@link Event} instances sorted by creation date.
-     */
-    Page<Event> findAllByOrderByCreationDateDesc(Pageable pageable);
-
-    /**
-     * Method to find events by title containing a specific keyword (case-insensitive).
-     *
-     * @param title keyword to search for.
-     * @param pageable {@link Pageable} for pagination.
-     * @return page of {@link Event} instances.
-     */
-    Page<Event> findByTitleContainingIgnoreCase(String title, Pageable pageable);
 
     /**
      * Method to get the count of all open events.
@@ -86,6 +47,5 @@ public interface EventRepo extends JpaRepository<Event, Long> {
      * @return list of {@link Event} instances within the date range.
      */
     List<Event> findAllByCreationDateBetween(ZonedDateTime startDate, ZonedDateTime endDate);
-
 
 }
