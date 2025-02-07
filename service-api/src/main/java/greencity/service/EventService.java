@@ -18,8 +18,14 @@ public interface EventService {
 
     List<EventResponseDto> getAllEvents();
 
-    List<EventResponseDto> findEventsByTitle(String title);
+    List<EventResponseDto> getAllUserEvents(Long userId);
 
-    List<EventResponseDto> getAllOpenEvents();
+    List<EventResponseDto> getAllUserEventsByStatus(String status);
+
+    List<EventResponseDto> getAllUserPastEvents(Long userId);
+
+    List<EventResponseDto> getAllUserLiveEvents(Long userId);
+
+    List<EventResponseDto> getAllUserUpcomingEvents(Long userId);
 
 }

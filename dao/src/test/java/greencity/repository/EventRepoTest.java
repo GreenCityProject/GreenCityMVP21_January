@@ -1,14 +1,17 @@
 package greencity.repository;
 
 import greencity.entity.Event;
+import greencity.entity.EventDateInfo;
 import greencity.entity.User;
 import greencity.enums.Role;
+import org.junit.jupiter.api.AfterEach;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
 import org.springframework.test.context.TestPropertySource;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -33,6 +36,9 @@ public class EventRepoTest {
     private EventRepo eventRepo;
 
     @Autowired
+    private EventDateInfoRepo eventDateInfoRepo;
+
+    @Autowired
     private UserRepo userRepo;
 
     private User author;
@@ -50,6 +56,99 @@ public class EventRepoTest {
         author.setRefreshTokenKey("token");
         author.setRole(Role.ROLE_USER);
         userRepo.save(author);
+    }
+
+    @AfterEach
+    void tearDown() {
+        eventDateInfoRepo.deleteAll();
+        eventRepo.deleteAll();
+        userRepo.deleteAll();
+    }
+
+    @Test
+    void testFindUserEventsByTime_Past() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Event event = new Event();
+        event.setTitle("Past Event");
+        event.setDescription("Test event");
+        event.setCreationDate(ZonedDateTime.now());
+        event.setAuthor(author);
+        event.setOpen(true);
+        event.setDuration(120);
+
+        eventRepo.save(event);
+
+        EventDateInfo eventDateInfo = new EventDateInfo();
+        eventDateInfo.setEvent(event);
+        eventDateInfo.setEventDate(LocalDate.now());
+        eventDateInfo.setEventTimeStart(now.minusDays(5));
+        eventDateInfo.setEventTimeEnd(now.minusDays(5).plusHours(2));
+
+        eventDateInfoRepo.save(eventDateInfo);
+
+        List<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "PAST");
+
+        assertEquals(1, events.size());
+        assertEquals("Past Event", events.get(0).getTitle());
+    }
+
+    @Test
+    void testFindUserEventsByTime_Live() {
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Event event = new Event();
+        event.setTitle("Live Event");
+        event.setDescription("Test event");
+        event.setCreationDate(ZonedDateTime.now());
+        event.setAuthor(author);
+        event.setOpen(true);
+        event.setDuration(120);
+
+        eventRepo.save(event);
+
+        EventDateInfo eventDateInfo = new EventDateInfo();
+        eventDateInfo.setEvent(event);
+        eventDateInfo.setEventDate(LocalDate.now());
+        eventDateInfo.setEventTimeStart(now);
+        eventDateInfo.setEventTimeEnd(now.plusHours(2));
+
+        eventDateInfoRepo.save(eventDateInfo);
+
+        List<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "LIVE");
+
+        assertEquals(1, events.size());
+        assertEquals("Live Event", events.get(0).getTitle());
+    }
+
+    @Test
+    void testFindUserEventsByTime_Upcoming() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Event event = new Event();
+        event.setTitle("Upcoming Event");
+        event.setDescription("Test event");
+        event.setCreationDate(ZonedDateTime.now());
+        event.setAuthor(author);
+        event.setOpen(true);
+        event.setDuration(120);
+
+        eventRepo.save(event);
+
+        EventDateInfo eventDateInfo = new EventDateInfo();
+        eventDateInfo.setEvent(event);
+        eventDateInfo.setEventDate(LocalDate.now());
+        eventDateInfo.setEventTimeStart(now.plusDays(2));
+        eventDateInfo.setEventTimeEnd(now.plusDays(2).plusHours(2));
+
+        eventDateInfoRepo.save(eventDateInfo);
+
+        List<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "UPCOMING");
+
+        assertEquals(1, events.size());
+        assertEquals("Upcoming Event", events.get(0).getTitle());
     }
 
     @Test
