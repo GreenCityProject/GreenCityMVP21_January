@@ -18,6 +18,8 @@ public interface EventCommentService {
 
     List<EventCommentResponseDto> getCommentsByEvent(Long eventId);
 
+    EventCommentResponseDto getCommentById(Long commentId);
+
     List<EventCommentResponseDto> getRepliesByComment(Long commentId);
 
     long countCommentsByEvent(Long eventId); // As i always said, we need to count somehow every like

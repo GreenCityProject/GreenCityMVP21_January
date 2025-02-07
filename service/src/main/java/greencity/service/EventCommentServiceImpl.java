@@ -86,6 +86,13 @@ public class EventCommentServiceImpl implements EventCommentService {
     }
 
     @Override
+    public EventCommentResponseDto getCommentById(Long commentId) {
+        EventComment comment = eventCommentRepo.findById(commentId)
+                .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
+        return modelMapper.map(comment, EventCommentResponseDto.class);
+    }
+
+    @Override
     public List<EventCommentResponseDto> getRepliesByComment(Long commentId) {
         //This method is yet to be implemented
         return List.of();
