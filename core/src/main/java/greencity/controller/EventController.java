@@ -3,8 +3,10 @@ package greencity.controller;
 import greencity.annotations.CurrentUser;
 import greencity.dto.event.*;
 import greencity.service.EventService;
+import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -28,5 +30,10 @@ public class EventController {
         }
         eventRequestDto.setAuthorEmail(currentUser.getName());
         return ResponseEntity.status(HttpStatus.CREATED).body(eventService.createEvent(eventRequestDto));
+    }
+
+    @GetMapping("/myEvents")
+    public ResponseEntity<EventProfilePreviewPageable> getEventsByUser(@CurrentUser Principal currentUser, @Parameter(hidden = true) Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllUserEvents(currentUser.getName(), pageable));
     }
 }

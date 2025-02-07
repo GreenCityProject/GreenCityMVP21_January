@@ -2,12 +2,15 @@ package greencity.service;
 
 import greencity.dto.event.*;
 import greencity.entity.*;
+import greencity.mapping.EventMappingContext;
 import greencity.repository.*;
 import jakarta.mail.MessagingException;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.RequiredArgsConstructor;
 import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -26,6 +29,7 @@ public class EventServiceImpl implements EventService {
     private final UserRepo userRepo;
     private final EventDateInfoRepo eventDateInfoRepo;
     private final EmailService emailService;
+    private final ParticipationRepo participationRepo;
 
     private void validateEventRequest(EventRequestDto eventRequestDto) {
         if (eventRequestDto.getEventDays() == null || eventRequestDto.getEventDays().isEmpty()) {
@@ -178,12 +182,48 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventResponseDto> findEventsByTitle(String title) {
+    public EventProfilePreviewPageable getAllUserEvents(String userEmail, Pageable pageable) {
+        User user = userRepo.findByEmail(userEmail).orElseThrow(() -> new EntityNotFoundException("User not found: " + userEmail));
+
+        Page<Event> events = eventRepo.findAllByAuthorOrParticipant(user.getId(), pageable);
+        List<Event> listOfEvents = events.getContent();
+
+        List<EventProfilePreviewDto> content = listOfEvents.stream()
+                .map(event -> {
+                    EventDateInfo eventDateInfo = eventDateInfoRepo.findByEvent(event).getFirst();
+                    List<User> participants = participationRepo.findUsersByEventId(event.getId());
+                    EventMappingContext context = new EventMappingContext(event, eventDateInfo, participants);
+                    return modelMapper.map(context, EventProfilePreviewDto.class);
+                })
+                .toList();
+
+        return new EventProfilePreviewPageable(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
+    }
+
+    @Override
+    public List<EventResponseDto> getAllUserEventsByStatus(String status) {
         return List.of();
     }
 
     @Override
-    public List<EventResponseDto> getAllOpenEvents() {
+    public List<EventResponseDto> getAllUserPastEvents(Long userId) {
+        return List.of();
+    }
+
+    @Override
+    public List<EventResponseDto> getAllUserLiveEvents(Long userId) {
+        return List.of();
+    }
+
+    @Override
+    public List<EventResponseDto> getAllUserUpcomingEvents(Long userId) {
         return List.of();
     }
 }

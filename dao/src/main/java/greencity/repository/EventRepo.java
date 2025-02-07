@@ -73,6 +73,15 @@ public interface EventRepo extends JpaRepository<Event, Long> {
 
     List<Event> findAllByAuthorId(Long userId);
 
+    @Query("""
+    SELECT e FROM Event e 
+    WHERE e.author.id = :userId 
+    OR EXISTS (
+        SELECT p FROM Participation p WHERE p.id.event.id = e.id AND p.id.user.id = :userId
+    )
+    """)
+    Page<Event> findAllByAuthorOrParticipant(@Param("userId") Long userId, Pageable pageable);
+
 //    @Query("SELECT e FROM Event e JOIN EventDateInfo edi " +
 //            "ON edi.event.id = e.id " +
 //            "WHERE e.author.id = :authorId " +

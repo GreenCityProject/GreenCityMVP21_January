@@ -9,10 +9,15 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDate;
 import java.time.LocalDateTime;
+import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -349,5 +354,48 @@ public class EventRepoTest {
         assertEquals("Event within range", foundEvents.get(0).getTitle());
     }
 
+    @Test
+    void findAllByAuthorOrParticipantTest() {
+        Event event1 = new Event();
+        event1.setTitle("First test event");
+        event1.setDescription("Description");
+        event1.setCreationDate(ZonedDateTime.of(2024, 12, 3, 12, 30, 0, 0, ZoneId.of("Europe/Kyiv")));
+        event1.setAuthor(author);
+        event1.setOpen(true);
+        event1.setDuration(1);
+        eventRepo.save(event1);
 
+        EventDateInfo eventDateInfo1 = new EventDateInfo();
+        eventDateInfo1.setEvent(event1);
+        eventDateInfo1.setEventDate(LocalDate.of(2024, 1, 1));
+        eventDateInfo1.setEventTimeStart(LocalDateTime.now().minusHours(1));
+        eventDateInfo1.setEventTimeEnd(LocalDateTime.now().plusHours(1));
+        eventDateInfo1.setOnline(true);
+        eventDateInfoRepo.save(eventDateInfo1);
+
+        Event event2 = new Event();
+        event2.setTitle("Second event");
+        event2.setDescription("Description2");
+        event2.setCreationDate(ZonedDateTime.now());
+        event2.setAuthor(author);
+        event2.setOpen(true);
+        event2.setDuration(1);
+        eventRepo.save(event2);
+
+        EventDateInfo eventDateInfo2 = new EventDateInfo();
+        eventDateInfo2.setEvent(event2);
+        eventDateInfo2.setEventDate(LocalDate.now());
+        eventDateInfo2.setEventTimeStart(LocalDateTime.now().minusHours(1));
+        eventDateInfo2.setEventTimeEnd(LocalDateTime.now().plusHours(1));
+        eventDateInfo2.setOnline(true);
+        eventDateInfoRepo.save(eventDateInfo2);
+
+        Pageable pageable = PageRequest.of(0, 1, Sort.by(Sort.Direction.DESC, "creationDate"));
+
+        Page<Event> events = eventRepo.findAllByAuthorOrParticipant(author.getId(), pageable);
+
+        assertEquals(1, events.getContent().size());
+        assertEquals(2, events.getTotalElements());
+        assertEquals("Second event", events.getContent().get(0).getTitle());
+    }
 }
