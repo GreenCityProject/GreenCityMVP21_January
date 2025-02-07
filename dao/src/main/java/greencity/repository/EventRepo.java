@@ -71,5 +71,16 @@ public interface EventRepo extends JpaRepository<Event, Long> {
                                      @Param("now") LocalDateTime now,
                                      @Param("type") String type);
 
+    List<Event> findAllByAuthorId(Long userId);
+
+//    @Query("SELECT e FROM Event e JOIN EventDateInfo edi " +
+//            "ON edi.event.id = e.id " +
+//            "WHERE e.author.id = :authorId " +
+//            "AND edi.isOnline = :isOnline")
+//    List<Event> findAllByAuthorIdAndEventDateInfoIsOnline(@Param("userId") Long authorId, @Param("isOnline") boolean isOnline);
+
+
+
+
 
 }
