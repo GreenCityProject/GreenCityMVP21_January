@@ -2,6 +2,7 @@ package greencity.service;
 
 import greencity.dto.event.*;
 import greencity.entity.*;
+import greencity.exception.exceptions.NotFoundException;
 import greencity.mapping.EventMappingContext;
 import greencity.repository.*;
 import jakarta.mail.MessagingException;
@@ -183,7 +184,7 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventProfilePreviewPageable getAllUserEvents(String userEmail, Pageable pageable) {
-        User user = userRepo.findByEmail(userEmail).orElseThrow(() -> new EntityNotFoundException("User not found: " + userEmail));
+        User user = userRepo.findByEmail(userEmail).orElseThrow(() -> new NotFoundException("User not found: " + userEmail));
 
         Page<Event> events = eventRepo.findAllByAuthorOrParticipant(user.getId(), pageable);
         List<Event> listOfEvents = events.getContent();

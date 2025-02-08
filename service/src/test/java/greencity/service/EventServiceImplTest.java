@@ -2,12 +2,12 @@ package greencity.service;
 
 import greencity.ModelUtils;
 import greencity.dto.event.*;
-import greencity.entity.Event;
-import greencity.entity.EventDateInfo;
-import greencity.entity.Image;
-import greencity.entity.InitiativeType;
+import greencity.entity.*;
+import greencity.exception.exceptions.NotFoundException;
+import greencity.mapping.EventMappingContext;
 import greencity.repository.*;
 import jakarta.mail.MessagingException;
+import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -15,6 +15,7 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.*;
 
 import java.time.ZonedDateTime;
 import java.util.List;
@@ -47,6 +48,9 @@ class EventServiceImplTest {
 
     @Mock
     private EmailService emailService;
+
+    @Mock
+    private ParticipationRepo participationRepo;
 
     @InjectMocks
     private EventServiceImpl eventService;
@@ -96,7 +100,6 @@ class EventServiceImplTest {
         eventDateInfoRequestDto.setIsPlace(false);
 
         eventRequestDto.setEventDays(List.of(eventDateInfoRequestDto));
-
     }
 
     @Test
@@ -166,4 +169,52 @@ class EventServiceImplTest {
         assertEquals("Event must have at least one event day.", exception.getMessage());
     }
 
+    @Test
+    void getAllUserEventsTest() {
+        User mockUser = ModelUtils.getUser();
+        when(userRepo.findByEmail(any(String.class))).thenReturn(Optional.of(mockUser));
+
+        Event event1 = new Event();
+        event1.setId(1L);
+        Event event2 = new Event();
+        event2.setId(2L);
+
+        List<Event> content = List.of(event1, event2);
+        Page<Event> events = new PageImpl<>(content);
+        Pageable pageable = PageRequest.of(0, 3, Sort.by(Sort.Direction.DESC, "id"));
+
+        when(eventRepo.findAllByAuthorOrParticipant(anyLong(), eq(pageable))).thenReturn(events);
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo()));
+        when(participationRepo.findUsersByEventId(anyLong())).thenReturn(List.of());
+
+        EventProfilePreviewDto mockDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Mock Event Dto")
+                .build();
+
+        when(modelMapper.map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class)))
+                .thenReturn(mockDto);
+
+        EventProfilePreviewPageable result = eventService.getAllUserEvents(mockUser.getEmail(), pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Mock Event Dto", result.getContent().get(0).getTitle());
+
+        verify(userRepo, times(1)).findByEmail(anyString());
+        verify(eventRepo, times(1)).findAllByAuthorOrParticipant(anyLong(), eq(pageable));
+        verify(eventDateInfoRepo, times(2)).findByEvent(any(Event.class));
+        verify(participationRepo, times(2)).findUsersByEventId(anyLong());
+        verify(modelMapper, times(2)).map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class));
+    }
+
+    @Test
+    void getAllUserEventsNoUserFoundTest() {
+        when(userRepo.findByEmail(any(String.class))).thenReturn(Optional.empty());
+
+        assertThrows(NotFoundException.class, () -> eventService.getAllUserEvents("a@gmail.com", Pageable.unpaged()));
+
+        verify(userRepo, times(1)).findByEmail(anyString());
+        verify(eventRepo, never()).findAllByAuthorOrParticipant(anyLong(), any(Pageable.class));
+    }
 }
