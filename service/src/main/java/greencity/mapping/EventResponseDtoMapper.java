@@ -55,8 +55,7 @@ public class EventResponseDtoMapper extends AbstractConverter<Event, EventRespon
                 .comments(commentDtos)
                 .mainImage(event.getMainImage() != null ?
                         modelMapper.map(event.getMainImage(), ImageResponseDto.class) : null)
+                .rating(event.getRating())
                 .build();
-
     }
-
 }

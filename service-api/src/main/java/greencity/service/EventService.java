@@ -16,7 +16,7 @@ public interface EventService {
 
     void deleteEvent(Long id);
 
-    Optional<EventResponseDto> getEventById(Long id);
+    Optional<EventResponseDto> getEventById(Long id, String userEmail);
 
     List<EventResponseDto> getAllEvents();
 

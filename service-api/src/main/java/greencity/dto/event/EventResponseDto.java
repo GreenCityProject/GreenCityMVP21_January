@@ -27,4 +27,6 @@ public class EventResponseDto {
     private List<UserProfilePictureDto> participants;
     private List<EventCommentResponseDto> comments;
     private ImageResponseDto mainImage;
+    private double rating;
+    private boolean isJoined;
 }

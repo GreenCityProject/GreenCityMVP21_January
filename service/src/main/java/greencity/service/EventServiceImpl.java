@@ -157,6 +157,11 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    private boolean checkParticipation(Long userId, Long eventId) {
+        List<User> participants = participationRepo.findUsersByEventId(eventId);
+        return participants.stream().anyMatch(p -> p.getId().equals(userId));
+    }
+
     @Override
     public EventResponseDto updateEvent(Long id, EventRequestDto eventRequestDto) {
         return null;
@@ -169,9 +174,20 @@ public class EventServiceImpl implements EventService {
 
     @Override
     @Transactional(readOnly = true)
-    public Optional<EventResponseDto> getEventById(Long id) {
-        return eventRepo.findById(id)
-                .map(event -> modelMapper.map(event, EventResponseDto.class));
+    public Optional<EventResponseDto> getEventById(Long id, String userEmail) {
+        EventResponseDto eventResponseDto = eventRepo.findById(id).map(event -> modelMapper
+                .map(event, EventResponseDto.class)).orElse(null);
+
+        if (userRepo.findByEmail(userEmail).isPresent()) {
+            assert eventResponseDto != null;
+            eventResponseDto.setJoined(checkParticipation(userRepo.findByEmail(userEmail).get().getId(), eventResponseDto.getId()));
+        }
+        if (eventResponseDto != null) {
+            return Optional.of(eventResponseDto);
+        }
+        else {
+            return Optional.empty();
+        }
     }
 
     @Override

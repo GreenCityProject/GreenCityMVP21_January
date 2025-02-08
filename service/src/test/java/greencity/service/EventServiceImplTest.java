@@ -7,7 +7,6 @@ import greencity.exception.exceptions.NotFoundException;
 import greencity.mapping.EventMappingContext;
 import greencity.repository.*;
 import jakarta.mail.MessagingException;
-import jakarta.persistence.EntityNotFoundException;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -129,7 +128,7 @@ class EventServiceImplTest {
         when(eventRepo.findById(1L)).thenReturn(Optional.of(event));
         when(modelMapper.map(event, EventResponseDto.class)).thenReturn(eventResponseDto);
 
-        Optional<EventResponseDto> result = eventService.getEventById(1L);
+        Optional<EventResponseDto> result = eventService.getEventById(1L, "email@gmail.com");
 
         assertTrue(result.isPresent());
         assertEquals(event.getId(), result.get().getId());
@@ -140,7 +139,7 @@ class EventServiceImplTest {
     void getEventById_ShouldReturnEmpty_WhenEventDoesNotExist() {
         when(eventRepo.findById(1L)).thenReturn(Optional.empty());
 
-        Optional<EventResponseDto> result = eventService.getEventById(1L);
+        Optional<EventResponseDto> result = eventService.getEventById(1L, "email@gmail.com");
 
         assertTrue(result.isEmpty());
         verify(eventRepo, times(1)).findById(1L);
