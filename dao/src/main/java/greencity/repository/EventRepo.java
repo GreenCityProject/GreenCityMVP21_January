@@ -86,10 +86,15 @@ public interface EventRepo extends JpaRepository<Event, Long> {
     @Query("SELECT e FROM Event e JOIN EventDateInfo edi ON edi.event.id = e.id " +
             "WHERE e.author.id = :authorId " +
             "AND edi.isOnline = :isOnline " +
-            "AND edi.eventDate = (SELECT MIN(edi2.eventDate) FROM EventDateInfo edi2 WHERE edi2.event.id = e.id)")
+            "AND (" +
+            "   (:isOnline = true AND edi.eventDate = (SELECT MIN(edi2.eventDate) FROM EventDateInfo edi2 WHERE edi2.event.id = e.id)) " +
+            "   OR " +
+            "   (:isOnline = false AND edi.location = (SELECT edi3.location FROM EventDateInfo edi3 WHERE edi3.event.id = e.id))" +
+            ")")
     Page<Event> findEventsByAuthorAndFirstDayOnlineStatus(@Param("authorId") Long authorId,
                                                           @Param("isOnline") boolean isOnline,
                                                           Pageable pageable);
+
 
 
 
