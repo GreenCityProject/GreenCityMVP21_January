@@ -236,6 +236,7 @@ public class EventRepoTest {
         eventDateInfo2.setEventTimeStart(LocalDateTime.now().minusHours(1));
         eventDateInfo2.setEventTimeEnd(LocalDateTime.now().plusHours(1));
         eventDateInfo2.setOnline(false);
+        eventDateInfo2.setLocation("Some Location");
         eventDateInfoRepo.save(eventDateInfo2);
 
         Pageable pageable = PageRequest.of(0, 10);
