@@ -21,6 +21,7 @@ public class FriendCardDtoMapper extends AbstractConverter<User, FriendCardDto> 
         Objects.requireNonNull(friend, "User cannot be null");
         return new FriendCardDto(
                 friend.getId(),
+                Optional.empty(),
                 Optional.ofNullable(friend.getProfilePicturePath()).orElse(""),
                 friend.getName(),
                 friend.getRating(),

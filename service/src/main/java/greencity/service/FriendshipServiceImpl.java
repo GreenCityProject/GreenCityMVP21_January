@@ -2,6 +2,7 @@ package greencity.service;
 
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.FriendCardDto;
+import greencity.dto.friendship.FriendshipVO;
 import greencity.dto.friendship.RequestedFriendshipDto;
 import greencity.dto.user.UserVO;
 import greencity.entity.Friendship;
@@ -24,23 +25,21 @@ public class FriendshipServiceImpl implements FriendshipService {
     private final FriendshipRepo friendshipRepo;
     private final UserRepo userRepo;
     private final NotificationService notificationServise;
+    private final ModelMapper modelMapper;
+    private final Long ONE_WEEK = 1L;
+    private final Function<Friendship, Long> getFriendId = friendship -> friendship.getFriend().getId();
 
     @Autowired
     public FriendshipServiceImpl(
             FriendshipRepo friendshipRepo,
             UserRepo userRepo,
-            NotificationService notificationServise,
+            NotificationService notificationService,
             ModelMapper modelMapper) {
         this.friendshipRepo = friendshipRepo;
         this.userRepo = userRepo;
-        this.notificationServise = notificationServise;
+        this.notificationServise = notificationService;
         this.modelMapper = modelMapper;
     }
-
-    private final ModelMapper modelMapper;
-
-    private final Long ONE_WEEK = 1L;
-    private final Function<Friendship, Long> getFriendId = friendship -> friendship.getFriend().getId();
 
     @Override
     public List<FriendCardDto> getAllMutualFriendsByUserId(Long userId, Long targetUserId) {
@@ -159,6 +158,18 @@ public class FriendshipServiceImpl implements FriendshipService {
     }
 
     @Override
+    public Optional<FriendshipVO> findFriendshipByParticipantsId(Long userId, Long friendId) {
+        Optional<Friendship> friendship = friendshipRepo.findFriendshipByEitherUserId(userId, friendId);
+        return friendship.map(f -> modelMapper.map(f, FriendshipVO.class));
+    }
+
+    @Override
+    public Optional<FriendshipVO> findFriendshipById(Long friendshipId) {
+        Optional<Friendship> friendship = friendshipRepo.findFriendshipById(friendshipId);
+        return friendship.map(f -> modelMapper.map(f, FriendshipVO.class));
+    }
+
+    @Override
     public List<RequestedFriendshipDto> getAllFriendshipRequestsForUserById(Long recipientId) {
         return friendshipRepo.getFriendshipRequestsByUserId(recipientId).stream()
                 .map(friendship -> modelMapper.map(friendship, RequestedFriendshipDto.class))
@@ -174,6 +185,7 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .map(friendship -> {
                     FriendCardDto friendCard = modelMapper.map(friendship.getFriend(), FriendCardDto.class);
                     friendCard.setMutualFriends(getAmountOfMutualFriends(userId, getFriendId.apply(friendship)));
+                    friendCard.setFriendshipId(Optional.ofNullable(friendship.getId()));
                     return friendCard;
                 })
                 .toList();

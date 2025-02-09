@@ -10,6 +10,8 @@ import java.util.Optional;
 
 public interface FriendshipRepo extends JpaRepository<Friendship, Long> {
 
+    Optional<Friendship> findFriendshipById(Long id);
+
     List<Friendship> getAllFriendshipsByUserId(Long id);
 
     /**
@@ -29,7 +31,7 @@ public interface FriendshipRepo extends JpaRepository<Friendship, Long> {
      * identified by the provided user ID. The list will contain instances of the Friendship
      * entity, representing the users who have requested to befriend the specified user.
      *
-     * @param userId the ID of the user for whom to retrieve friendship requests
+     * @param recipientId the ID of the user for whom to retrieve friendship requests
      * @return a list of Friendship entities representing all pending friendship requests
      * for the specified user. If no requests are found, an empty list is returned.
      */

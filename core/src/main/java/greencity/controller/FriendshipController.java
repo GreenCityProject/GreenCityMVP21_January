@@ -1,15 +1,16 @@
 package greencity.controller;
 
 import greencity.constant.HttpStatuses;
-import greencity.dto.friendship.FriendCardDto;
-import greencity.dto.friendship.FriendshipResponseDto;
-import greencity.dto.friendship.RequestedFriendshipDto;
+import greencity.dto.friendship.*;
+import greencity.exception.exceptions.WrongIdException;
+import greencity.service.FriendPageService;
 import greencity.service.FriendshipService;
 import greencity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.constraints.NotNull;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
@@ -19,17 +20,24 @@ import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
 import java.util.Objects;
+import java.util.Optional;
 
 @RestController
 @RequestMapping("/friends")
+@Slf4j
 public class FriendshipController {
 
-    FriendshipService friendshipService;
-    UserService userService;
+    private final FriendshipService friendshipService;
+    private final FriendPageService friendPageService;
+    private final UserService userService;
 
     @Autowired
-    public FriendshipController(FriendshipService friendshipService, UserService userService) {
+    public FriendshipController(
+            FriendshipService friendshipService,
+            FriendPageService friendPageService,
+            UserService userService) {
         this.friendshipService = friendshipService;
+        this.friendPageService = friendPageService;
         this.userService = userService;
     }
 
@@ -290,6 +298,26 @@ public class FriendshipController {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
         }
         return  ResponseEntity.ok(friendshipService.getAllFriendshipRequestsForUserById(userId));
+    }
+
+    @Operation(summary = "Get a FriendPageDto for a target user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
+            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
+    })
+    @GetMapping("/{userId}/friendPage/{targetUserId}/")
+    public ResponseEntity<FriendPageDto> getFriendPage(
+            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
+            @PathVariable("targetUserId") @NotNull(message = "User ID must not be null.") Long targetUserId
+    ) {
+        Optional<FriendshipVO> friendship = friendshipService.findFriendshipByParticipantsId(userId, targetUserId);
+        try {
+            return ResponseEntity.ok(friendPageService.assembleFriendPage(targetUserId, friendship.map(FriendshipVO::getId)));
+        } catch (WrongIdException e) {
+            return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
+        }
     }
 
     protected boolean isNotCurrentUser(Long id) {

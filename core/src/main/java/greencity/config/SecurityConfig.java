@@ -182,6 +182,7 @@ public class SecurityConfig {
                                 "/friends/{userId}/areFriends/{friendId}/",
                                 "/friends/{userId}/mutual/{targetUserId}/",
                                 "/friends/{userId}/requested/",
+                                "/friends//{userId}/friendPage/{targetUserId}/",
                                 "/newsSubscriber/unsubscribe",
                                 "/social-networks/image",
                                 "/user",

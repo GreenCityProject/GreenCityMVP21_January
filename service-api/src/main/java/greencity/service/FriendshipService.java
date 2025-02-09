@@ -2,6 +2,7 @@ package greencity.service;
 
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.FriendCardDto;
+import greencity.dto.friendship.FriendshipVO;
 import greencity.dto.friendship.RequestedFriendshipDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.FriendshipStatus;
@@ -122,5 +123,8 @@ public interface FriendshipService {
      */
     boolean blockFriendshipRequestsFromUserById(Long senderId, Long recipientId);
 
+    Optional<FriendshipVO> findFriendshipByParticipantsId(Long userId, Long friendId);
+
+    Optional<FriendshipVO> findFriendshipById(Long friendshipId);
 }
 
