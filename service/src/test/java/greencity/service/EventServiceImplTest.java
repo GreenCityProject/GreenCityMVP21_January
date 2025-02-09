@@ -340,6 +340,16 @@ class EventServiceImplTest {
         Event event2 = new Event();
         event2.setId(2L);
 
+        EventDateInfo eventDateInfo = new EventDateInfo();
+        eventDateInfo.setId(1L);
+        eventDateInfo.setEvent(event1);
+
+        EventDateInfo eventDateInfo2 = new EventDateInfo();
+        eventDateInfo2.setId(2L);
+        eventDateInfo2.setEvent(event2);
+
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(eventDateInfo));
+
         List<Event> content = List.of(event1, event2);
         Page<Event> events = new PageImpl<>(content);
         Pageable pageable = PageRequest.of(0, 3);
@@ -367,6 +377,4 @@ class EventServiceImplTest {
         verify(participationRepo, times(2)).findUsersByEventId(anyLong());
         verify(modelMapper, times(2)).map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class));
     }
-
-
 }
