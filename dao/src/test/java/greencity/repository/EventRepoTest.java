@@ -93,10 +93,12 @@ public class EventRepoTest {
 
         eventDateInfoRepo.save(eventDateInfo);
 
-        List<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "PAST");
+        Pageable pageable = PageRequest.of(0, 1);
 
-        assertEquals(1, events.size());
-        assertEquals("Past Event", events.get(0).getTitle());
+        Page<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "PAST", pageable);
+
+        assertEquals(1, events.getContent().size());
+        assertEquals("Past Event", events.getContent().get(0).getTitle());
     }
 
     @Test
@@ -122,10 +124,12 @@ public class EventRepoTest {
 
         eventDateInfoRepo.save(eventDateInfo);
 
-        List<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "LIVE");
+        Pageable pageable = PageRequest.of(0, 1);
 
-        assertEquals(1, events.size());
-        assertEquals("Live Event", events.get(0).getTitle());
+        Page<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "LIVE", pageable);
+
+        assertEquals(1, events.getContent().size());
+        assertEquals("Live Event", events.getContent().get(0).getTitle());
     }
 
     @Test
@@ -150,10 +154,12 @@ public class EventRepoTest {
 
         eventDateInfoRepo.save(eventDateInfo);
 
-        List<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "UPCOMING");
+        Pageable pageable = PageRequest.of(0, 1);
 
-        assertEquals(1, events.size());
-        assertEquals("Upcoming Event", events.get(0).getTitle());
+        Page<Event> events = eventRepo.findUserEventsByTime(author.getId(), now, "UPCOMING", pageable);
+
+        assertEquals(1, events.getContent().size());
+        assertEquals("Upcoming Event", events.getContent().get(0).getTitle());
     }
 
     @Test

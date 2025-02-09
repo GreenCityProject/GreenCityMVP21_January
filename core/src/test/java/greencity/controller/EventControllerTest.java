@@ -33,6 +33,7 @@ import java.security.Principal;
 import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -281,5 +282,169 @@ class EventControllerTest {
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andReturn();
+    }
+
+    @Test
+    void getPastEventsByUserTest() throws Exception {
+        EventProfilePreviewDto eventProfilePreviewDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Past Event")
+                .creationDate(ZonedDateTime.now().minusDays(5))
+                .eventDate(LocalDate.now().minusDays(3))
+                .eventTimeStart(LocalDateTime.now().minusHours(2))
+                .author(new AuthorDto(1L, "John Doe"))
+                .location("Online")
+                .initiativeTypes(List.of(new InitiativeTypeResponseDto(3L, "Economic")))
+                .isOpen(true)
+                .mainImage(new ImageResponseDto(1L, "https://example.com/image.jpg"))
+                .rating(4.5)
+                .participants(List.of(new UserProfilePictureDto(1L, "Maria", "https://example.com/user1.jpg")))
+                .build();
+
+        EventProfilePreviewPageable result = new EventProfilePreviewPageable(
+                List.of(eventProfilePreviewDto),
+                0, 1, 1L, 1, true);
+
+        when(eventService.getAllUserPastEvents(anyString(), any(Pageable.class))).thenReturn(result);
+
+        MvcResult mvcResult = mockMvc.perform(get("/events/myEvents/past")
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "id,desc"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+        EventProfilePreviewPageable response = objectMapper2.readValue(jsonResponse, EventProfilePreviewPageable.class);
+
+        assertEquals(1, response.getContent().size());
+        assertEquals(0, response.getPageNo());
+        assertEquals(1, response.getPageSize());
+        assertEquals(1L, response.getTotalElements());
+        assertEquals(1, response.getTotalPages());
+        assertTrue(response.isLast());
+
+        verify(eventService, times(1)).getAllUserPastEvents(anyString(), any(Pageable.class));
+    }
+
+    @Test
+    void getLiveEventsByUserTest() throws Exception {
+        EventProfilePreviewDto eventProfilePreviewDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Live Event")
+                .creationDate(ZonedDateTime.now().minusDays(1))
+                .eventDate(LocalDate.now())
+                .eventTimeStart(LocalDateTime.now().plusHours(1))
+                .author(new AuthorDto(1L, "John Doe"))
+                .location("Online")
+                .initiativeTypes(List.of(new InitiativeTypeResponseDto(3L, "Economic")))
+                .isOpen(true)
+                .mainImage(new ImageResponseDto(1L, "https://example.com/image.jpg"))
+                .rating(4.5)
+                .participants(List.of(new UserProfilePictureDto(1L, "Maria", "https://example.com/user1.jpg")))
+                .build();
+
+        EventProfilePreviewPageable result = new EventProfilePreviewPageable(
+                List.of(eventProfilePreviewDto),
+                0, 1, 1L, 1, true);
+
+        when(eventService.getAllUserLiveEvents(anyString(), any(Pageable.class))).thenReturn(result);
+
+        MvcResult mvcResult = mockMvc.perform(get("/events/myEvents/live")
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "id,desc"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+        EventProfilePreviewPageable response = objectMapper2.readValue(jsonResponse, EventProfilePreviewPageable.class);
+
+        assertEquals(1, response.getContent().size());
+        assertEquals(0, response.getPageNo());
+        assertEquals(1, response.getPageSize());
+        assertEquals(1L, response.getTotalElements());
+        assertEquals(1, response.getTotalPages());
+        assertTrue(response.isLast());
+
+        verify(eventService, times(1)).getAllUserLiveEvents(anyString(), any(Pageable.class));
+    }
+
+    @Test
+    void getUpcomingEventsByUserTest() throws Exception {
+        EventProfilePreviewDto eventProfilePreviewDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Upcoming Event")
+                .creationDate(ZonedDateTime.now().minusDays(2))
+                .eventDate(LocalDate.now().plusDays(5))
+                .eventTimeStart(LocalDateTime.now().plusDays(1).plusHours(2))
+                .author(new AuthorDto(1L, "John Doe"))
+                .location("Kharkiv")
+                .initiativeTypes(List.of(new InitiativeTypeResponseDto(3L, "Economic")))
+                .isOpen(true)
+                .mainImage(new ImageResponseDto(1L, "https://example.com/image.jpg"))
+                .rating(4.8)
+                .participants(List.of(new UserProfilePictureDto(1L, "Maria", "https://example.com/user1.jpg")))
+                .build();
+
+        EventProfilePreviewPageable result = new EventProfilePreviewPageable(
+                List.of(eventProfilePreviewDto),
+                0, 1, 1L, 1, true);
+
+        when(eventService.getAllUserUpcomingEvents(anyString(), any(Pageable.class))).thenReturn(result);
+
+        MvcResult mvcResult = mockMvc.perform(get("/events/myEvents/upcoming")
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "id,desc"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+        EventProfilePreviewPageable response = objectMapper2.readValue(jsonResponse, EventProfilePreviewPageable.class);
+
+        assertEquals(1, response.getContent().size());
+        assertEquals(0, response.getPageNo());
+        assertEquals(1, response.getPageSize());
+        assertEquals(1L, response.getTotalElements());
+        assertEquals(1, response.getTotalPages());
+        assertTrue(response.isLast());
+
+        verify(eventService, times(1)).getAllUserUpcomingEvents(anyString(), any(Pageable.class));
+    }
+
+    @Test
+    void getUpcomingEventsByUser_EmptyListTest() throws Exception {
+        EventProfilePreviewPageable result = new EventProfilePreviewPageable(
+                Collections.emptyList(),
+                0, 1, 0L, 0, true);
+
+        when(eventService.getAllUserUpcomingEvents(anyString(), any(Pageable.class)))
+                .thenReturn(result);
+
+        MvcResult mvcResult = mockMvc.perform(get("/events/myEvents/upcoming")
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "id,desc"))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+        EventProfilePreviewPageable response = objectMapper2.readValue(jsonResponse, EventProfilePreviewPageable.class);
+
+        assertEquals(0, response.getContent().size());
+        assertEquals(0L, response.getTotalElements());
+        assertEquals(0, response.getTotalPages());
+        assertTrue(response.isLast());
+
+        verify(eventService, times(1)).getAllUserUpcomingEvents(anyString(), any(Pageable.class));
     }
 }

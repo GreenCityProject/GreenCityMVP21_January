@@ -16,6 +16,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.*;
 import java.util.stream.Collectors;
@@ -203,9 +204,37 @@ public class EventServiceImpl implements EventService {
 
     @Override
     public EventProfilePreviewPageable getAllUserEvents(String userEmail, Pageable pageable) {
-        User user = userRepo.findByEmail(userEmail).orElseThrow(() -> new NotFoundException("User not found: " + userEmail));
+        return getUserEvents(userEmail, "ALL", pageable);
+    }
 
-        Page<Event> events = eventRepo.findAllByAuthorOrParticipant(user.getId(), pageable);
+    @Override
+    public EventProfilePreviewPageable getAllUserPastEvents(String userEmail, Pageable pageable) {
+        return getUserEvents(userEmail, "PAST", pageable);
+    }
+
+    @Override
+    public EventProfilePreviewPageable getAllUserLiveEvents(String userEmail, Pageable pageable) {
+        return getUserEvents(userEmail, "LIVE", pageable);
+    }
+
+    @Override
+    public EventProfilePreviewPageable getAllUserUpcomingEvents(String userEmail, Pageable pageable) {
+        return getUserEvents(userEmail, "UPCOMING", pageable);
+    }
+
+    private EventProfilePreviewPageable getUserEvents(String userEmail, String type, Pageable pageable) {
+        User user = userRepo.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userEmail));
+
+        LocalDateTime now = LocalDateTime.now();
+
+        Page<Event> events;
+        if ("ALL".equals(type)) {
+            events = eventRepo.findAllByAuthorOrParticipant(user.getId(), pageable);
+        } else {
+            events = eventRepo.findUserEventsByTime(user.getId(), now, type, pageable);
+        }
+
         List<Event> listOfEvents = events.getContent();
 
         List<EventProfilePreviewDto> content = listOfEvents.stream()
@@ -228,22 +257,10 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public List<EventResponseDto> getAllUserEventsByStatus(String status) {
-        return List.of();
+    public EventProfilePreviewPageable getAllUserEventsByStatus(String status, Pageable pageable) {
+        return null;
     }
 
-    @Override
-    public List<EventResponseDto> getAllUserPastEvents(Long userId) {
-        return List.of();
-    }
 
-    @Override
-    public List<EventResponseDto> getAllUserLiveEvents(Long userId) {
-        return List.of();
-    }
 
-    @Override
-    public List<EventResponseDto> getAllUserUpcomingEvents(Long userId) {
-        return List.of();
-    }
 }

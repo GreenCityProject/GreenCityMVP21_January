@@ -41,4 +41,19 @@ public class EventController {
     public ResponseEntity<EventResponseDto> getEventById(@CurrentUser Principal currentUser, @PathVariable Long id) {
         return ResponseEntity.status(HttpStatus.OK).body(eventService.getEventById(id, currentUser.getName()).get());
     }
+
+    @GetMapping("/myEvents/past")
+    public ResponseEntity<EventProfilePreviewPageable> getPastEventsByUser(@CurrentUser Principal currentUser, @Parameter(hidden = true) Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllUserPastEvents(currentUser.getName(), pageable));
+    }
+
+    @GetMapping("/myEvents/live")
+    public ResponseEntity<EventProfilePreviewPageable> getLiveEventsByUser(@CurrentUser Principal currentUser, @Parameter(hidden = true) Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllUserLiveEvents(currentUser.getName(), pageable));
+    }
+
+    @GetMapping("/myEvents/upcoming")
+    public ResponseEntity<EventProfilePreviewPageable> getUpcomingEventsByUser(@CurrentUser Principal currentUser, @Parameter(hidden = true) Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllUserUpcomingEvents(currentUser.getName(), pageable));
+    }
 }
