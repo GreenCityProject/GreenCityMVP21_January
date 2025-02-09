@@ -206,15 +206,13 @@ public class EventRepoTest {
     }
 
     @Test
-    void testFindAllByAuthorIdAndEventDateInfoIsOnline() {
+    void testFindEventsByAuthorAndFirstDayOnlineStatus() {
 
         Event event1 = new Event();
         event1.setTitle("Online Event");
         event1.setDescription("This is an online event");
         event1.setCreationDate(ZonedDateTime.now());
         event1.setAuthor(author);
-        event1.setOpen(true);
-        event1.setDuration(120);
         eventRepo.save(event1);
 
         Event event2 = new Event();
@@ -222,8 +220,6 @@ public class EventRepoTest {
         event2.setDescription("This is an offline event");
         event2.setCreationDate(ZonedDateTime.now());
         event2.setAuthor(author);
-        event2.setOpen(true);
-        event2.setDuration(90);
         eventRepo.save(event2);
 
         EventDateInfo eventDateInfo1 = new EventDateInfo();
@@ -244,11 +240,11 @@ public class EventRepoTest {
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Event> onlineEvents = eventRepo.findAllByAuthorIdAndEventDateInfoIsOnline(author.getId(), true, pageable);
+        Page<Event> onlineEvents = eventRepo.findEventsByAuthorAndFirstDayOnlineStatus(author.getId(), true, pageable);
         assertEquals(1, onlineEvents.getContent().size());
         assertEquals("Online Event", onlineEvents.getContent().get(0).getTitle());
 
-        Page<Event> offlineEvents = eventRepo.findAllByAuthorIdAndEventDateInfoIsOnline(author.getId(), false, pageable);
+        Page<Event> offlineEvents = eventRepo.findEventsByAuthorAndFirstDayOnlineStatus(author.getId(), false, pageable);
         assertEquals(1, offlineEvents.getContent().size());
         assertEquals("Offline Event", offlineEvents.getContent().get(0).getTitle());
     }

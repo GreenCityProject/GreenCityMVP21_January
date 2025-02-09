@@ -22,7 +22,7 @@ public interface EventService {
 
     EventProfilePreviewPageable getAllUserEvents(String userEmail, Pageable pageable);
 
-    EventProfilePreviewPageable getAllUserEventsByStatus(String status, Pageable pageable);
+    EventProfilePreviewPageable getAllUserEventsByStatus(String userEmail, String status, Pageable pageable);
 
     EventProfilePreviewPageable getAllUserPastEvents(String userEmail, Pageable pageable);
 
