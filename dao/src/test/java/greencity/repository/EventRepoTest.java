@@ -119,7 +119,7 @@ public class EventRepoTest {
         EventDateInfo eventDateInfo = new EventDateInfo();
         eventDateInfo.setEvent(event);
         eventDateInfo.setEventDate(LocalDate.now());
-        eventDateInfo.setEventTimeStart(now);
+        eventDateInfo.setEventTimeStart(now.minusMinutes(1));
         eventDateInfo.setEventTimeEnd(now.plusHours(2));
 
         eventDateInfoRepo.save(eventDateInfo);
