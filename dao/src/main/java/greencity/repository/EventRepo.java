@@ -67,9 +67,10 @@ public interface EventRepo extends JpaRepository<Event, Long> {
         ))
     )
     """)
-    List<Event> findUserEventsByTime(@Param("userId") Long userId,
+    Page<Event> findUserEventsByTime(@Param("userId") Long userId,
                                      @Param("now") LocalDateTime now,
-                                     @Param("type") String type);
+                                     @Param("type") String type,
+                                     Pageable pageable);
 
     List<Event> findAllByAuthorId(Long userId);
 

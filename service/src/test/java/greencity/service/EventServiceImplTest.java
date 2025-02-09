@@ -16,6 +16,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.*;
 
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -216,4 +217,116 @@ class EventServiceImplTest {
         verify(userRepo, times(1)).findByEmail(anyString());
         verify(eventRepo, never()).findAllByAuthorOrParticipant(anyLong(), any(Pageable.class));
     }
+
+    @Test
+    void getAllUserPastEvents_ShouldReturnEventProfilePreviewPageable() {
+        String userEmail = "user@example.com";
+        User user = new User();
+        user.setId(1L);
+        when(userRepo.findByEmail(userEmail)).thenReturn(Optional.of(user));
+
+        Event event1 = new Event();
+        event1.setId(1L);
+        Event event2 = new Event();
+        event2.setId(2L);
+
+        List<Event> content = List.of(event1, event2);
+        Page<Event> events = new PageImpl<>(content);
+        Pageable pageable = PageRequest.of(0, 3);
+
+        when(eventRepo.findUserEventsByTime(eq(user.getId()), any(LocalDateTime.class), eq("PAST"), eq(pageable))).thenReturn(events);
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo()));
+        when(participationRepo.findUsersByEventId(anyLong())).thenReturn(List.of());
+
+        EventProfilePreviewDto mockDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Mock Past Event Dto")
+                .build();
+        when(modelMapper.map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class)))
+                .thenReturn(mockDto);
+
+        EventProfilePreviewPageable result = eventService.getAllUserPastEvents(userEmail, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Mock Past Event Dto", result.getContent().get(0).getTitle());
+
+        verify(userRepo, times(1)).findByEmail(userEmail);
+        verify(eventRepo, times(1)).findUserEventsByTime(eq(user.getId()), any(LocalDateTime.class), eq("PAST"), eq(pageable));
+    }
+
+    @Test
+    void getAllUserLiveEvents_ShouldReturnEventProfilePreviewPageable() {
+        String userEmail = "user@example.com";
+        User user = new User();
+        user.setId(1L);
+        when(userRepo.findByEmail(userEmail)).thenReturn(Optional.of(user));
+
+        Event event1 = new Event();
+        event1.setId(1L);
+        Event event2 = new Event();
+        event2.setId(2L);
+
+        List<Event> content = List.of(event1, event2);
+        Page<Event> events = new PageImpl<>(content);
+        Pageable pageable = PageRequest.of(0, 3);
+
+        when(eventRepo.findUserEventsByTime(eq(user.getId()), any(LocalDateTime.class), eq("LIVE"), eq(pageable))).thenReturn(events);
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo()));
+        when(participationRepo.findUsersByEventId(anyLong())).thenReturn(List.of());
+
+        EventProfilePreviewDto mockDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Mock Live Event Dto")
+                .build();
+        when(modelMapper.map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class)))
+                .thenReturn(mockDto);
+
+        EventProfilePreviewPageable result = eventService.getAllUserLiveEvents(userEmail, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Mock Live Event Dto", result.getContent().get(0).getTitle());
+
+        verify(userRepo, times(1)).findByEmail(userEmail);
+        verify(eventRepo, times(1)).findUserEventsByTime(eq(user.getId()), any(LocalDateTime.class), eq("LIVE"), eq(pageable));
+    }
+
+    @Test
+    void getAllUserUpcomingEvents_ShouldReturnEventProfilePreviewPageable() {
+        String userEmail = "user@example.com";
+        User user = new User();
+        user.setId(1L);
+        when(userRepo.findByEmail(userEmail)).thenReturn(Optional.of(user));
+
+        Event event1 = new Event();
+        event1.setId(1L);
+        Event event2 = new Event();
+        event2.setId(2L);
+
+        List<Event> content = List.of(event1, event2);
+        Page<Event> events = new PageImpl<>(content);
+        Pageable pageable = PageRequest.of(0, 3);
+
+        when(eventRepo.findUserEventsByTime(eq(user.getId()), any(LocalDateTime.class), eq("UPCOMING"), eq(pageable))).thenReturn(events);
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo()));
+        when(participationRepo.findUsersByEventId(anyLong())).thenReturn(List.of());
+
+        EventProfilePreviewDto mockDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Mock Upcoming Event Dto")
+                .build();
+        when(modelMapper.map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class)))
+                .thenReturn(mockDto);
+
+        EventProfilePreviewPageable result = eventService.getAllUserUpcomingEvents(userEmail, pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Mock Upcoming Event Dto", result.getContent().get(0).getTitle());
+
+        verify(userRepo, times(1)).findByEmail(userEmail);
+        verify(eventRepo, times(1)).findUserEventsByTime(eq(user.getId()), any(LocalDateTime.class), eq("UPCOMING"), eq(pageable));
+    }
+
 }

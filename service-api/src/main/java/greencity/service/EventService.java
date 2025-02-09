@@ -22,12 +22,12 @@ public interface EventService {
 
     EventProfilePreviewPageable getAllUserEvents(String userEmail, Pageable pageable);
 
-    List<EventResponseDto> getAllUserEventsByStatus(String status);
+    EventProfilePreviewPageable getAllUserEventsByStatus(String status, Pageable pageable);
 
-    List<EventResponseDto> getAllUserPastEvents(Long userId);
+    EventProfilePreviewPageable getAllUserPastEvents(String userEmail, Pageable pageable);
 
-    List<EventResponseDto> getAllUserLiveEvents(Long userId);
+    EventProfilePreviewPageable getAllUserLiveEvents(String userEmail, Pageable pageable);
 
-    List<EventResponseDto> getAllUserUpcomingEvents(Long userId);
+    EventProfilePreviewPageable getAllUserUpcomingEvents(String userEmail, Pageable pageable);
 
 }

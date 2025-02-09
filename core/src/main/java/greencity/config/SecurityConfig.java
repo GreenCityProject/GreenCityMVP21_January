@@ -159,6 +159,9 @@ public class SecurityConfig {
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,
                                 "/events/myEvents",
+                                "events/myEvents/past",
+                                "events/myEvents/live",
+                                "events/myEvents/upcoming",
                                 "/achievements",
                                 CUSTOM_SHOPPING_LIST_ITEMS,
                                 CUSTOM_SHOPPING_LIST,
