@@ -36,6 +36,7 @@ import java.time.ZonedDateTime;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.Optional;
 
 import static greencity.ModelUtils.getPrincipal;
 import static org.junit.jupiter.api.Assertions.*;
@@ -243,6 +244,41 @@ class EventControllerTest {
                         .param("page", "0")
                         .param("size", "3")
                         .param("sort", "id,desc"))
+                .andExpect(status().isNotFound())
+                .andReturn();
+    }
+
+    @Test
+    void getEventByIdTest() throws Exception {
+        eventResponseDto.setParticipants(List.of(UserProfilePictureDto.builder().id(1L).name("Masha").profilePicturePath("picture").build()));
+        when(eventService.getEventById(anyLong(), anyString())).thenReturn(Optional.of(eventResponseDto));
+
+        MvcResult result = mockMvc.perform(get("/events/1")
+                .principal(principal)
+                .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = result.getResponse().getContentAsString();
+        EventResponseDto response = objectMapper2.readValue(jsonResponse, EventResponseDto.class);
+
+        assertNotNull(jsonResponse);
+        assertEquals(1, response.getParticipants().size());
+
+        verify(eventService, times(1)).getEventById(anyLong(), anyString());
+    }
+
+    @Test
+    void getEventByIdEventNotFoundTest() throws Exception {
+        when(eventService.getEventById(anyLong(), anyString())).thenThrow(new NotFoundException("Event not found"));
+
+        attributes.put("path", "/events/1");
+        attributes.put("message", "Event not found");
+        when(errorAttributes.getErrorAttributes(any(WebRequest.class), any(ErrorAttributeOptions.class))).thenReturn(attributes);
+
+        mockMvc.perform(get("/events/1")
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isNotFound())
                 .andReturn();
     }

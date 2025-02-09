@@ -36,4 +36,9 @@ public class EventController {
     public ResponseEntity<EventProfilePreviewPageable> getEventsByUser(@CurrentUser Principal currentUser, @Parameter(hidden = true) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllUserEvents(currentUser.getName(), pageable));
     }
+
+    @GetMapping("/{id}")
+    public ResponseEntity<EventResponseDto> getEventById(@CurrentUser Principal currentUser, @PathVariable Long id) {
+        return ResponseEntity.status(HttpStatus.OK).body(eventService.getEventById(id, currentUser.getName()).get());
+    }
 }

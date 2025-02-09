@@ -125,6 +125,7 @@ class EventServiceImplTest {
 
     @Test
     void getEventById_ShouldReturnEventResponseDto_WhenEventExists() {
+        eventResponseDto.setJoined(true);
         when(eventRepo.findById(1L)).thenReturn(Optional.of(event));
         when(modelMapper.map(event, EventResponseDto.class)).thenReturn(eventResponseDto);
 
@@ -132,17 +133,15 @@ class EventServiceImplTest {
 
         assertTrue(result.isPresent());
         assertEquals(event.getId(), result.get().getId());
+        assertTrue(result.get().isJoined());
         verify(eventRepo, times(1)).findById(1L);
     }
 
     @Test
-    void getEventById_ShouldReturnEmpty_WhenEventDoesNotExist() {
+    void getEventByIdNotFound() {
         when(eventRepo.findById(1L)).thenReturn(Optional.empty());
 
-        Optional<EventResponseDto> result = eventService.getEventById(1L, "email@gmail.com");
-
-        assertTrue(result.isEmpty());
-        verify(eventRepo, times(1)).findById(1L);
+        assertThrows(NotFoundException.class, () -> eventService.getEventById(1L, "email@gmail.com"));
     }
 
     @Test

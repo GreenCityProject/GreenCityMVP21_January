@@ -1,6 +1,7 @@
 package greencity.service;
 
 import greencity.dto.event.*;
+import greencity.dto.user.UserProfilePictureDto;
 import greencity.entity.*;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.mapping.EventMappingContext;
@@ -181,12 +182,14 @@ public class EventServiceImpl implements EventService {
         if (userRepo.findByEmail(userEmail).isPresent()) {
             assert eventResponseDto != null;
             eventResponseDto.setJoined(checkParticipation(userRepo.findByEmail(userEmail).get().getId(), eventResponseDto.getId()));
+            eventResponseDto.setParticipants(participationRepo.findUsersByEventId(eventResponseDto.getId()).stream().map(
+                    p -> modelMapper.map(p, UserProfilePictureDto.class)).toList());
         }
         if (eventResponseDto != null) {
             return Optional.of(eventResponseDto);
         }
         else {
-            return Optional.empty();
+            throw new NotFoundException("Event not found");
         }
     }
 
