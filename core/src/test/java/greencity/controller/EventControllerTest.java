@@ -21,6 +21,7 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
@@ -452,25 +453,26 @@ class EventControllerTest {
     void getAllUserEventsByStatusTest() throws Exception {
 
         String status = "online";
-        String userEmail = "testuser@example.com";
+        String userEmail = principal.getName();
 
         EventProfilePreviewPageable eventProfilePreviewPageable = new EventProfilePreviewPageable(
                 List.of(new EventProfilePreviewDto()),
                 0, 1, 1L, 1, true);
 
-        when(eventService.getAllUserEventsByStatus(eq(userEmail), eq(status), any(Pageable.class)))
+        Pageable pageable = PageRequest.of(0, 1);
+
+        when(eventService.getAllUserEventsByStatus(userEmail, status, pageable))
                 .thenReturn(eventProfilePreviewPageable);
 
         mockMvc.perform(get("/events/myEvents/status/{status}", status)
-                        .principal(() -> userEmail)
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON)
                         .param("page", "0")
-                        .param("size", "1")
-                        .accept(MediaType.APPLICATION_JSON))
+                        .param("size", "1"))
                 .andExpect(status().isOk())
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.totalElements").value(1))
                 .andExpect(jsonPath("$.totalPages").value(1))
-                .andExpect(jsonPath("$.isLast").value(true));
+                .andExpect(jsonPath("$.last").value(true));
     }
-
 }

@@ -60,7 +60,7 @@ public class EventController {
     @GetMapping("/myEvents/status/{status}")
     public ResponseEntity<EventProfilePreviewPageable> getAllUserEventsByStatus(@CurrentUser Principal currentUser,
                                                                 @PathVariable String status,
-                                                                @RequestParam Pageable pageable) {
+                                                                @Parameter(hidden = true) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllUserEventsByStatus(currentUser.getName(), status, pageable));
     }
 }
