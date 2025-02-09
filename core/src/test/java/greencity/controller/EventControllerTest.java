@@ -447,4 +447,30 @@ class EventControllerTest {
 
         verify(eventService, times(1)).getAllUserUpcomingEvents(anyString(), any(Pageable.class));
     }
+
+    @Test
+    void getAllUserEventsByStatusTest() throws Exception {
+
+        String status = "online";
+        String userEmail = "testuser@example.com";
+
+        EventProfilePreviewPageable eventProfilePreviewPageable = new EventProfilePreviewPageable(
+                List.of(new EventProfilePreviewDto()),
+                0, 1, 1L, 1, true);
+
+        when(eventService.getAllUserEventsByStatus(eq(userEmail), eq(status), any(Pageable.class)))
+                .thenReturn(eventProfilePreviewPageable);
+
+        mockMvc.perform(get("/events/myEvents/status/{status}", status)
+                        .principal(() -> userEmail)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andExpect(jsonPath("$.content").isArray())
+                .andExpect(jsonPath("$.totalElements").value(1))
+                .andExpect(jsonPath("$.totalPages").value(1))
+                .andExpect(jsonPath("$.isLast").value(true));
+    }
+
 }

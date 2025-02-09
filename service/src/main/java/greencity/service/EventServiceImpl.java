@@ -257,10 +257,33 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventProfilePreviewPageable getAllUserEventsByStatus(String status, Pageable pageable) {
-        return null;
-    }
+    @Transactional(readOnly = true)
+    public EventProfilePreviewPageable getAllUserEventsByStatus(String userEmail, String status, Pageable pageable) {
+        User user = userRepo.findByEmail(userEmail)
+                .orElseThrow(() -> new NotFoundException("User not found: " + userEmail));
 
+        boolean isOnline = "online".equalsIgnoreCase(status);
+
+        Page<Event> events = eventRepo.findEventsByAuthorAndFirstDayOnlineStatus(user.getId(), isOnline, pageable);
+
+        List<EventProfilePreviewDto> content = events.getContent().stream()
+                .map(event -> {
+                    EventDateInfo eventDateInfo = eventDateInfoRepo.findByEvent(event).getFirst();
+                    List<User> participants = participationRepo.findUsersByEventId(event.getId());
+                    EventMappingContext context = new EventMappingContext(event, eventDateInfo, participants);
+                    return modelMapper.map(context, EventProfilePreviewDto.class);
+                })
+                .collect(Collectors.toList());
+
+        return new EventProfilePreviewPageable(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
+    }
 
 
 }

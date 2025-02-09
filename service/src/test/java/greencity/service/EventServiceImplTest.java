@@ -328,4 +328,45 @@ class EventServiceImplTest {
         verify(eventRepo, times(1)).findUserEventsByTime(eq(user.getId()), any(LocalDateTime.class), eq("UPCOMING"), eq(pageable));
     }
 
+    @Test
+    void getAllUserEventsByStatus_ShouldReturnEventProfilePreviewPageable() {
+        String userEmail = "user@example.com";
+        User user = new User();
+        user.setId(1L);
+        when(userRepo.findByEmail(userEmail)).thenReturn(Optional.of(user));
+
+        Event event1 = new Event();
+        event1.setId(1L);
+        Event event2 = new Event();
+        event2.setId(2L);
+
+        List<Event> content = List.of(event1, event2);
+        Page<Event> events = new PageImpl<>(content);
+        Pageable pageable = PageRequest.of(0, 3);
+
+        boolean isOnline = true;
+        when(eventRepo.findEventsByAuthorAndFirstDayOnlineStatus(eq(user.getId()), eq(isOnline), eq(pageable)))
+                .thenReturn(events);
+
+        EventProfilePreviewDto mockDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Mock Event Dto")
+                .build();
+        when(modelMapper.map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class)))
+                .thenReturn(mockDto);
+
+        EventProfilePreviewPageable result = eventService.getAllUserEventsByStatus(userEmail, "online", pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Mock Event Dto", result.getContent().get(0).getTitle());
+
+        verify(userRepo, times(1)).findByEmail(userEmail);
+        verify(eventRepo, times(1)).findEventsByAuthorAndFirstDayOnlineStatus(eq(user.getId()), eq(isOnline), eq(pageable));
+        verify(eventDateInfoRepo, times(2)).findByEvent(any(Event.class));
+        verify(participationRepo, times(2)).findUsersByEventId(anyLong());
+        verify(modelMapper, times(2)).map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class));
+    }
+
+
 }
