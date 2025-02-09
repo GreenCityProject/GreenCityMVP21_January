@@ -239,7 +239,8 @@ public class EventServiceImpl implements EventService {
 
         List<EventProfilePreviewDto> content = listOfEvents.stream()
                 .map(event -> {
-                    EventDateInfo eventDateInfo = eventDateInfoRepo.findByEvent(event).getFirst();
+                    EventDateInfo eventDateInfo = eventDateInfoRepo.findByEvent(event).stream()
+                            .min(Comparator.comparing(EventDateInfo::getEventDate)).orElse(null);
                     List<User> participants = participationRepo.findUsersByEventId(event.getId());
                     EventMappingContext context = new EventMappingContext(event, eventDateInfo, participants);
                     return modelMapper.map(context, EventProfilePreviewDto.class);
