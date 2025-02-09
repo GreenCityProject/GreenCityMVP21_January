@@ -205,55 +205,53 @@ public class EventRepoTest {
         assertTrue(events.stream().anyMatch(event -> event.getTitle().equals("Offline Event")));
     }
 
-//    @Test
-//    void testFindAllByAuthorIdAndEventDateInfoIsOnline() {
-//        // Створення подій для автора
-//        Event event1 = new Event();
-//        event1.setTitle("Online Event");
-//        event1.setDescription("This is an online event");
-//        event1.setCreationDate(ZonedDateTime.now());
-//        event1.setAuthor(author);
-//        event1.setOpen(true);
-//        event1.setDuration(120);
-//        eventRepo.save(event1);
-//
-//        Event event2 = new Event();
-//        event2.setTitle("Offline Event");
-//        event2.setDescription("This is an offline event");
-//        event2.setCreationDate(ZonedDateTime.now());
-//        event2.setAuthor(author);
-//        event2.setOpen(true);
-//        event2.setDuration(90);
-//        eventRepo.save(event2);
-//
-//        // Додавання інформації про події з параметром isOnline
-//        EventDateInfo eventDateInfo1 = new EventDateInfo();
-//        eventDateInfo1.setEvent(event1);
-//        eventDateInfo1.setEventDate(LocalDate.now());
-//        eventDateInfo1.setEventTimeStart(LocalDateTime.now().minusHours(1));
-//        eventDateInfo1.setEventTimeEnd(LocalDateTime.now().plusHours(1));
-//        eventDateInfo1.setOnline(true);
-//        eventDateInfoRepo.save(eventDateInfo1);
-//
-//        EventDateInfo eventDateInfo2 = new EventDateInfo();
-//        eventDateInfo2.setEvent(event2);
-//        eventDateInfo2.setEventDate(LocalDate.now());
-//        eventDateInfo2.setEventTimeStart(LocalDateTime.now().minusHours(1));
-//        eventDateInfo2.setEventTimeEnd(LocalDateTime.now().plusHours(1));
-//        eventDateInfo2.setOnline(false);
-//        eventDateInfoRepo.save(eventDateInfo2);
-//
-//        // Перевірка методу для подій онлайн
-//        List<Event> onlineEvents = eventRepo.findAllByAuthorIdAndEventDateInfoIsOnline(author.getId(), true);
-//        assertEquals(1, onlineEvents.size());
-//        assertEquals("Online Event", onlineEvents.get(0).getTitle());
-//
-//        // Перевірка методу для подій офлайн
-//        List<Event> offlineEvents = eventRepo.findAllByAuthorIdAndEventDateInfoIsOnline(author.getId(), false);
-//        assertEquals(1, offlineEvents.size());
-//        assertEquals("Offline Event", offlineEvents.get(0).getTitle());
-//    }
+    @Test
+    void testFindAllByAuthorIdAndEventDateInfoIsOnline() {
 
+        Event event1 = new Event();
+        event1.setTitle("Online Event");
+        event1.setDescription("This is an online event");
+        event1.setCreationDate(ZonedDateTime.now());
+        event1.setAuthor(author);
+        event1.setOpen(true);
+        event1.setDuration(120);
+        eventRepo.save(event1);
+
+        Event event2 = new Event();
+        event2.setTitle("Offline Event");
+        event2.setDescription("This is an offline event");
+        event2.setCreationDate(ZonedDateTime.now());
+        event2.setAuthor(author);
+        event2.setOpen(true);
+        event2.setDuration(90);
+        eventRepo.save(event2);
+
+        EventDateInfo eventDateInfo1 = new EventDateInfo();
+        eventDateInfo1.setEvent(event1);
+        eventDateInfo1.setEventDate(LocalDate.now());
+        eventDateInfo1.setEventTimeStart(LocalDateTime.now().minusHours(1));
+        eventDateInfo1.setEventTimeEnd(LocalDateTime.now().plusHours(1));
+        eventDateInfo1.setOnline(true);
+        eventDateInfoRepo.save(eventDateInfo1);
+
+        EventDateInfo eventDateInfo2 = new EventDateInfo();
+        eventDateInfo2.setEvent(event2);
+        eventDateInfo2.setEventDate(LocalDate.now());
+        eventDateInfo2.setEventTimeStart(LocalDateTime.now().minusHours(1));
+        eventDateInfo2.setEventTimeEnd(LocalDateTime.now().plusHours(1));
+        eventDateInfo2.setOnline(false);
+        eventDateInfoRepo.save(eventDateInfo2);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Event> onlineEvents = eventRepo.findAllByAuthorIdAndEventDateInfoIsOnline(author.getId(), true, pageable);
+        assertEquals(1, onlineEvents.getContent().size());
+        assertEquals("Online Event", onlineEvents.getContent().get(0).getTitle());
+
+        Page<Event> offlineEvents = eventRepo.findAllByAuthorIdAndEventDateInfoIsOnline(author.getId(), false, pageable);
+        assertEquals(1, offlineEvents.getContent().size());
+        assertEquals("Offline Event", offlineEvents.getContent().get(0).getTitle());
+    }
 
     @Test
     void testFindById() {
