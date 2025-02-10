@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -130,7 +131,7 @@ public class ParticipationServiceImplTest {
         when(userRepo.findById(any(Long.class))).thenReturn(Optional.of(user));
         when(eventRepo.findById(any(Long.class))).thenReturn(Optional.of(event));
         when(participationRepo.findById(any(ParticipationKey.class))).thenReturn(Optional.empty());
-        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo().setEventTimeStart(LocalDateTime.of(2025, 3, 3, 12, 30))));
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo().setEventDate(LocalDate.of(2025, 3, 3)).setEventTimeStart(LocalDateTime.of(2025, 3, 3, 12, 30))));
 
         Exception exception = Assertions.assertThrows(NotFoundException.class, () -> participationService.removeParticipation(1L, 1L));
         verify(participationRepo, times(0)).delete(any(Participation.class));

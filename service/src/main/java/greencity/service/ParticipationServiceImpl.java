@@ -16,7 +16,9 @@ import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -45,13 +47,22 @@ public class ParticipationServiceImpl implements ParticipationService {
         Event event = eventRepo.findById(eventId)
                 .orElseThrow(() -> new NotFoundException("Event not found with id: " + eventId));
 
-        if (eventDateInfoRepo.findByEvent(event).getLast().getEventTimeStart().isAfter(LocalDateTime.now())) {
-            ParticipationKey participationKey = new ParticipationKey(user, event);
-            Participation participation = participationRepo.findById(participationKey)
-                    .orElseThrow(() -> new NotFoundException("Participation not found"));
-            participationRepo.delete(participation);
-        } else {
-            throw new BadRequestException("You cannot remove the participation from the event that is in the past");
+        List<EventDateInfo> dayInfos = eventDateInfoRepo.findByEvent(event);
+
+        if (!dayInfos.isEmpty()) {
+            Optional<LocalDateTime> eventDateLatest = eventDateInfoRepo.findByEvent(event).stream()
+                    .map(EventDateInfo::getEventTimeStart)
+                    .max(Comparator.naturalOrder());
+            if (eventDateLatest.isPresent()) {
+                if (eventDateLatest.get().isAfter(LocalDateTime.now())) {
+                    ParticipationKey participationKey = new ParticipationKey(user, event);
+                    Participation participation = participationRepo.findById(participationKey)
+                            .orElseThrow(() -> new NotFoundException("Participation not found"));
+                    participationRepo.delete(participation);
+                } else {
+                    throw new BadRequestException("You cannot remove the participation from the event that is in the past");
+                }
+            }
         }
     }
 
