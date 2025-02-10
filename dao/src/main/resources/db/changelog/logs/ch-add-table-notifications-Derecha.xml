@@ -1,0 +1,74 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+    <changeSet id="notifications-1-derecha" author="Mykhaylo Derecha">
+
+        <createTable tableName="notifications">
+            <column name="id" type="BIGINT">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="sender_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="receiver_id" type="BIGINT">
+                <constraints nullable="false" />
+            </column>
+            <column name="viewed_status" type="boolean" defaultValue="false">
+                <constraints nullable="false" />
+            </column>
+            <column name="message" type="varchar(255)">
+                <constraints nullable="true" />
+            </column>
+            <column name="description" type="varchar(255)">
+                <constraints nullable="false" />
+            </column>
+            <column name="created_at" type="timestamp" defaultValueComputed="CURRENT_TIMESTAMP">
+                <constraints nullable="false" />
+            </column>
+            <column name="viewed_at" type="timestamp">
+                <constraints nullable="true" />
+            </column>
+            <column name="section" type="varchar(255)" defaultValue="GreenCity">
+                <constraints nullable="false" />
+            </column>
+        </createTable>
+
+    </changeSet>
+
+    <changeSet id="notifications-2-derecha" author="Mykhaylo Derecha">
+
+        <addForeignKeyConstraint
+                baseTableName="notifications"
+                baseColumnNames="sender_id"
+                constraintName="fk_notifications_sender"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+                onUpdate="CASCADE"
+        />
+
+        <addForeignKeyConstraint
+                baseTableName="notifications"
+                baseColumnNames="receiver_id"
+                constraintName="fk_notifications_receiver"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                onDelete="CASCADE"
+                onUpdate="CASCADE"/>
+
+    </changeSet>
+
+    <changeSet id="notifications-3-derecha" author="Mykhaylo Derecha">
+
+        <createIndex indexName="idx_viewed_status" tableName="notifications">
+            <column name="viewed_status"/>
+        </createIndex>
+
+        <createIndex indexName="idx_section" tableName="notifications">
+            <column name="section"/>
+        </createIndex>
+
+    </changeSet>
+
+</databaseChangeLog>
