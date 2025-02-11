@@ -1,5 +1,6 @@
 package greencity.controller;
 
+import greencity.dto.event.AddEventCommentDtoRequest;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
@@ -19,9 +20,8 @@ public class EventCommentController {
     @PostMapping
     public ResponseEntity<AddEventCommentDtoResponse> addComment(
             @PathVariable Long eventId,
-            @RequestBody @Valid EventCommentRequestDto requestDto,
-            @RequestParam Long userId) {
-        return ResponseEntity.ok(eventCommentService.addComment(eventId, userId, requestDto));
+            @RequestBody @Valid AddEventCommentDtoRequest requestDto) {
+        return ResponseEntity.ok(eventCommentService.addComment(eventId, requestDto.getUserId(), requestDto));
     }
 
     @GetMapping("/count")
@@ -33,4 +33,13 @@ public class EventCommentController {
     public ResponseEntity<EventCommentResponseDto> getComment(@PathVariable Long commentId) {
         return ResponseEntity.ok(eventCommentService.getCommentById(commentId));
     }
+
+    @PostMapping("/{commentId}/reply")
+    public ResponseEntity<AddEventCommentDtoResponse> replyToComment(
+            @PathVariable Long commentId,
+            @RequestBody @Valid EventCommentRequestDto requestDto,
+            @RequestParam Long userId) {
+        return ResponseEntity.ok(eventCommentService.replyToComment(commentId, userId, requestDto));
+    }
+
 }
