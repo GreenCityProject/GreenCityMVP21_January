@@ -217,6 +217,12 @@ public class UserServiceImpl implements UserService {
             listOfUsers.getTotalPages());
     }
 
+    @Override
+    public Optional<UserVO> findByFullName(String fullName) {
+        Optional<User> user = userRepo.findByName(fullName);
+        return user.map(u -> modelMapper.map(u, UserVO.class));
+    }
+
     private UserFilterDto createUserFilterDto(String criteria, String role, String status) {
         if (status != null) {
             status = status.equals("all") ? null : status;
