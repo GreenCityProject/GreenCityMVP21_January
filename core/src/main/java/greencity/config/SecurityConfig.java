@@ -227,6 +227,7 @@ public class SecurityConfig {
                                 "/custom/shopping-list-items/{userId}/{habitId}/custom-shopping-list-items")
                         .hasAnyRole(USER, ADMIN, MODERATOR, UBS_EMPLOYEE)
                         .requestMatchers(HttpMethod.PUT,
+                                "/events/{eventId}",
                                 "/habit/statistic/{id}",
                                 "/econews/update",
                                 "/ownSecurity",

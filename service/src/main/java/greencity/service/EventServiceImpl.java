@@ -33,12 +33,13 @@ public class EventServiceImpl implements EventService {
     private final EventDateInfoRepo eventDateInfoRepo;
     private final EmailService emailService;
     private final ParticipationRepo participationRepo;
+    private final EventDateInfoService eventDateInfoService;
 
-    private void validateEventRequest(EventRequestDto eventRequestDto) {
-        if (eventRequestDto.getEventDays() == null || eventRequestDto.getEventDays().isEmpty()) {
+    private <T extends EventDateInfoDto> void validateEventRequest(List<T> eventDays) {
+        if (eventDays == null || eventDays.isEmpty()) {
             throw new IllegalArgumentException("Event must have at least one event day.");
         }
-        for (EventDateInfoRequestDto e : eventRequestDto.getEventDays()) {
+        for (T e : eventDays) {
             if (e.getIsOnline() && e.getUrl() == null) {
                 throw new IllegalArgumentException("If event is online it has to have the url");
             }
@@ -68,6 +69,34 @@ public class EventServiceImpl implements EventService {
             if (mainImage == null) {
                 if (eventRequestDto.getImages() != null && !eventRequestDto.getImages().isEmpty()) {
                     mainImage = imageRepo.findByImagePath(eventRequestDto.getImages().get(0).getImagePath()).orElse(null);
+                } else {
+                    mainImage = imageRepo.findById(1L).orElse(null);
+                }
+            }
+        }
+        return mainImage;
+    }
+
+    private Image handleUpdateImages(EventUpdateDto eventUpdateDto) {
+        Set<Image> images = new HashSet<>();
+        Image mainImage = null;
+
+        if (eventUpdateDto.getImages() == null || eventUpdateDto.getImages().isEmpty()) {
+            Image defaultImage = imageRepo.findById(1L).orElseThrow(() -> new EntityNotFoundException("Default image not found"));
+            images.add(defaultImage);
+            mainImage = defaultImage;
+        } else {
+            for (ImageRequestDto imageRequestDto : eventUpdateDto.getImages()) {
+                Image image = saveImage(imageRequestDto.getImagePath());
+                images.add(image);
+            }
+            if (eventUpdateDto.getMainImage() != null) {
+                mainImage = saveImage(eventUpdateDto.getMainImage().getImagePath());
+            }
+
+            if (mainImage == null) {
+                if (eventUpdateDto.getImages() != null && !eventUpdateDto.getImages().isEmpty()) {
+                    mainImage = imageRepo.findByImagePath(eventUpdateDto.getImages().get(0).getImagePath()).orElse(null);
                 } else {
                     mainImage = imageRepo.findById(1L).orElse(null);
                 }
@@ -109,7 +138,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional
     public EventResponseDto createEvent(EventRequestDto eventRequestDto) {
-        validateEventRequest(eventRequestDto);
+        validateEventRequest(eventRequestDto.getEventDays());
 
         Event event = modelMapper.map(eventRequestDto, Event.class);
         User author = userRepo.findByEmail(eventRequestDto.getAuthorEmail()).orElse(null);
@@ -165,8 +194,45 @@ public class EventServiceImpl implements EventService {
     }
 
     @Override
-    public EventResponseDto updateEvent(Long id, EventRequestDto eventRequestDto) {
-        return null;
+    @Transactional
+    public EventResponseDto updateEvent(Long id, EventUpdateDto eventUpdateDto, String email) {
+        validateEventRequest(eventUpdateDto.getEventDays());
+        Event existingEvent = eventRepo.findById(id).orElseThrow(() -> new NotFoundException("Event not found: " + id));
+        User author = userRepo.findByEmail(eventUpdateDto.getAuthorEmail()).orElseThrow(() -> new NotFoundException("Author not found: " + eventUpdateDto.getAuthorEmail()));
+
+        existingEvent.setTitle(eventUpdateDto.getTitle());
+        existingEvent.setDescription(eventUpdateDto.getDescription());
+
+        Image mainImage = handleUpdateImages(eventUpdateDto);
+        Set<Image> images = (eventUpdateDto.getImages() == null || eventUpdateDto.getImages().isEmpty())
+                ? Set.of(Objects.requireNonNull(imageRepo.findById(1L).orElse(null))) : eventUpdateDto.getImages().stream()
+                .map(i -> modelMapper.map(i, Image.class))
+                .map(image -> saveImage(image.getImagePath()))
+                .collect(Collectors.toSet());
+
+        existingEvent.setImages(images);
+        existingEvent.setMainImage(mainImage);
+
+        List<EventDateInfoUpdateDto> eventDateInfoUpdateDtos = eventUpdateDto.getEventDays();
+
+        for (EventDateInfoUpdateDto eventDateInfoUpdateDto : eventDateInfoUpdateDtos) {
+            eventDateInfoService.updateEventDateInfo(eventDateInfoUpdateDto.getId(), eventDateInfoUpdateDto);
+        }
+
+        List<InitiativeType> initiativeTypes = eventUpdateDto.getInitiativeTypes().stream()
+                .map(i -> initiativeTypeRepo.findByName(i.getName())
+                        .orElseThrow(() -> new EntityNotFoundException("Initiative type not found: " + i.getName())))
+                .collect(Collectors.toList());
+        existingEvent.setInitiativeTypes(initiativeTypes);
+
+        EventResponseDto eventResponseDto = modelMapper.map(existingEvent, EventResponseDto.class);
+        List<EventDateInfoResponseDto> eventDays = eventDateInfoRepo.findByEvent(existingEvent).stream()
+                .map(e -> modelMapper.map(e, EventDateInfoResponseDto.class))
+                .sorted(Comparator.comparing(EventDateInfoResponseDto::getEventTimeStart))
+                .toList();
+        eventResponseDto.setEventDays(eventDays);
+
+        return eventResponseDto;
     }
 
     @Override
@@ -185,11 +251,14 @@ public class EventServiceImpl implements EventService {
             eventResponseDto.setJoined(checkParticipation(userRepo.findByEmail(userEmail).get().getId(), eventResponseDto.getId()));
             eventResponseDto.setParticipants(participationRepo.findUsersByEventId(eventResponseDto.getId()).stream().map(
                     p -> modelMapper.map(p, UserProfilePictureDto.class)).toList());
+            eventResponseDto.setEventDays(eventDateInfoRepo.findByEvent(eventRepo.findById(id).get())
+                    .stream().map(e -> modelMapper.map(e, EventDateInfoResponseDto.class))
+                    .sorted(Comparator.comparing(EventDateInfoResponseDto::getEventTimeStart))
+                    .toList());
         }
         if (eventResponseDto != null) {
             return Optional.of(eventResponseDto);
-        }
-        else {
+        } else {
             throw new NotFoundException("Event not found");
         }
     }
@@ -285,6 +354,4 @@ public class EventServiceImpl implements EventService {
                 events.isLast()
         );
     }
-
-
 }

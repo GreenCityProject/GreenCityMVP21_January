@@ -12,8 +12,10 @@ import java.time.LocalDateTime;
 @Builder
 @AllArgsConstructor
 @NoArgsConstructor
-@ConsistentDateTime
-public class EventDateInfoRequestDto implements EventDateInfoDto{
+//@ConsistentDateTime
+public class EventDateInfoUpdateDto implements EventDateInfoDto{
+    @NotNull
+    private Long id;
 
     @NotNull(message = "Event date is mandatory.")
     @FutureOrPresent(message = "Event date cannot be in the past.")
@@ -40,5 +42,4 @@ public class EventDateInfoRequestDto implements EventDateInfoDto{
     @Size(max = 2083, message = "URL length cannot exceed 2083 characters.")
     @Pattern(regexp = "^(https?|ftp)://[^\\s/$.?#].[^\\s]*$", message = "Invalid URL format.")
     private String url;
-
 }

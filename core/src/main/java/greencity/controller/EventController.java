@@ -63,4 +63,13 @@ public class EventController {
                                                                 @Parameter(hidden = true) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllUserEventsByStatus(currentUser.getName(), status, pageable));
     }
+
+    @PutMapping("/{eventId}")
+    public ResponseEntity<?> update(@Valid @RequestBody EventUpdateDto eventUpdateDto, BindingResult result, @CurrentUser Principal currentUser, @PathVariable Long eventId) {
+        if (result.hasErrors()) {
+            return ResponseEntity.badRequest().body(result.getAllErrors());
+        }
+        eventUpdateDto.setAuthorEmail(currentUser.getName());
+        return ResponseEntity.status(HttpStatus.OK).body(eventService.updateEvent(eventId, eventUpdateDto, currentUser.getName()));
+    }
 }
