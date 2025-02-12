@@ -1,5 +1,6 @@
 package greencity.dto.event;
 
+import com.fasterxml.jackson.annotation.JsonProperty;
 import jakarta.validation.Valid;
 import jakarta.validation.constraints.Max;
 import jakarta.validation.constraints.NotBlank;
@@ -46,6 +47,8 @@ public class EventUpdateDto {
             message = "The number of initiative types must be between 1 and 3"
     )
     private List<InitiativeTypeRequestDto> initiativeTypes;
+
+    @JsonProperty("isOpen")
     private boolean isOpen = true;
 
     @Size(

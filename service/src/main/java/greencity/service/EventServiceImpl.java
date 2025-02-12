@@ -225,12 +225,17 @@ public class EventServiceImpl implements EventService {
                 .collect(Collectors.toList());
         existingEvent.setInitiativeTypes(initiativeTypes);
 
-        EventResponseDto eventResponseDto = modelMapper.map(existingEvent, EventResponseDto.class);
         List<EventDateInfoResponseDto> eventDays = eventDateInfoRepo.findByEvent(existingEvent).stream()
                 .map(e -> modelMapper.map(e, EventDateInfoResponseDto.class))
                 .sorted(Comparator.comparing(EventDateInfoResponseDto::getEventTimeStart))
                 .toList();
+        existingEvent.setDuration(eventDays.size());
+        existingEvent.setOpen(eventUpdateDto.isOpen());
+        EventResponseDto eventResponseDto = modelMapper.map(existingEvent, EventResponseDto.class);
         eventResponseDto.setEventDays(eventDays);
+        eventResponseDto.setParticipants(participationRepo.findUsersByEventId(eventResponseDto.getId()).stream().map(
+                p -> modelMapper.map(p, UserProfilePictureDto.class)).toList());
+        eventResponseDto.setJoined(checkParticipation(userRepo.findByEmail(email).get().getId(), eventResponseDto.getId()));
 
         return eventResponseDto;
     }
