@@ -37,6 +37,7 @@ public class EventServiceImpl implements EventService {
     private final EmailService emailService;
     private final ParticipationRepo participationRepo;
     private final EventDateInfoService eventDateInfoService;
+    private final EventLikesRepo eventLikesRepo;
 
     private <T extends EventDateInfoDto> void validateEventRequest(List<T> eventDays) {
         if (eventDays == null || eventDays.isEmpty()) {
@@ -215,6 +216,7 @@ public class EventServiceImpl implements EventService {
         eventResponseDto.setParticipants(participationRepo.findUsersByEventId(eventResponseDto.getId()).stream().map(
                 p -> modelMapper.map(p, UserProfilePictureDto.class)).toList());
         eventResponseDto.setJoined(checkParticipation(userRepo.findByEmail(email).get().getId(), eventResponseDto.getId()));
+        eventResponseDto.setLikes(eventLikesRepo.countLikesByEventId(existingEvent.getId()));
 
         return eventResponseDto;
     }
