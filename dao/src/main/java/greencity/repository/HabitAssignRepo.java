@@ -293,4 +293,13 @@ public interface HabitAssignRepo extends JpaRepository<HabitAssign, Long>,
             + " WHERE ha.id = :habitAssignId AND ha.user.id = :userId")
     void updateProgressNotificationHasDisplayed(@Param("habitAssignId") Long habitAssignId,
         @Param("userId") Long userId);
+
+    /**
+     * Method to find the IDs of Users that have been assigned the same Habit.
+     *
+     * @param habitId the {@link HabitAssign} id.
+     * @return List of User IDs that have the same Habit.
+     */
+    @Query("SELECT ha.user.id FROM HabitAssign ha WHERE ha.habit.id = :habitId")
+    List<Long> findUserIdsByHabitId(@Param("habitId") Long habitId);
 }

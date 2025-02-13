@@ -1,6 +1,7 @@
 package greencity.controller;
 
 import greencity.constant.HttpStatuses;
+import greencity.dto.PageableDto;
 import greencity.dto.friendship.*;
 import greencity.exception.exceptions.WrongIdException;
 import greencity.service.FriendPageService;
@@ -12,6 +13,7 @@ import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.constraints.NotNull;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.security.core.Authentication;
@@ -312,12 +314,33 @@ public class FriendshipController {
             @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
             @PathVariable("targetUserId") @NotNull(message = "User ID must not be null.") Long targetUserId
     ) {
+        if(isNotCurrentUser(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
         Optional<FriendshipVO> friendship = friendshipService.findFriendshipByParticipantsId(userId, targetUserId);
         try {
             return ResponseEntity.ok(friendPageService.assembleFriendPage(targetUserId, friendship.map(FriendshipVO::getId)));
         } catch (WrongIdException e) {
             return ResponseEntity.status(HttpStatus.NOT_FOUND).build();
         }
+    }
+
+    @Operation(summary = "Get a FriendPageDto for a target user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
+            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
+    })
+    @GetMapping("/{userId}/recommendedFriends/")
+    public ResponseEntity<PageableDto<FriendCardDto>> getRecommendedFriends(
+            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
+            Pageable pageable) {
+        if(isNotCurrentUser(userId)) {
+            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+        }
+
+        return  ResponseEntity.ok(friendshipService.recommendFriendsForUser(pageable, userId));
     }
 
     protected boolean isNotCurrentUser(Long id) {

@@ -1,6 +1,8 @@
 package greencity.repository;
 
 import greencity.entity.Friendship;
+import greencity.entity.User;
+import greencity.enums.FriendshipStatus;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.data.repository.query.Param;
@@ -10,8 +12,34 @@ import java.util.Optional;
 
 public interface FriendshipRepo extends JpaRepository<Friendship, Long> {
 
+    /**
+     * Retrieves a list of users who have friends in common with the user identified by the provided user ID.
+     *
+     * @param userId the ID of the user for whom to find common friends.
+     * @return a list of {@link User} entities that have mutual friendships with the specified user.
+     */
+    @Query("SELECT DISTINCT f.user FROM Friendship f " +
+            "WHERE f.friend.id IN (SELECT f2.friend.id FROM Friendship f2 WHERE f2.user.id = :userId) " +
+            "AND f.user.id != :userId AND f.status = :status ")
+
+    List<User> findUsersWithCommonFriendsInStatus(@Param("userId") Long userId, @Param("status") FriendshipStatus status);
+
+    /**
+     * Retrieves a {@link Friendship} by its unique identifier.
+     *
+     * @param id the unique identifier of the {@link Friendship} to be retrieved.
+     * @return an {@link Optional} containing the {@link Friendship} if found,
+     *         or an empty {@link Optional} if no friendship exists with the provided id.
+     */
     Optional<Friendship> findFriendshipById(Long id);
 
+    /**
+     * Retrieves a list of all {@link Friendship} entities associated with the specified user.
+     *
+     * @param id the unique identifier of the {@link User} whose friendships are to be retrieved.
+     * @return a list of {@link Friendship} instances related to the specified user.
+     *         If the user has no friendships, an empty list is returned.
+     */
     List<Friendship> getAllFriendshipsByUserId(Long id);
 
     /**
