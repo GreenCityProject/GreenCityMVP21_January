@@ -29,4 +29,5 @@ public class EventResponseDto {
     private ImageResponseDto mainImage;
     private double rating;
     private boolean isJoined;
+    private int likes;
 }

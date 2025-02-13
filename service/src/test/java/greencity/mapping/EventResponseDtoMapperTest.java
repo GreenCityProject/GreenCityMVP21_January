@@ -42,6 +42,7 @@ public class EventResponseDtoMapperTest {
                 .author(author)
                 .creationDate(ZonedDateTime.now())
                 .comments(List.of(comment))
+                .likes(10)
                 .build();
 
         EventResponseDto eventResponseDto = mapper.convert(event);
@@ -57,5 +58,6 @@ public class EventResponseDtoMapperTest {
         assertEquals(event.getAuthor().getId(), eventResponseDto.getAuthor().getId());
         assertEquals(event.getAuthor().getName(), eventResponseDto.getAuthor().getName());
         assertEquals(1, eventResponseDto.getComments().size());
+        assertEquals(event.getLikes(), eventResponseDto.getLikes());
     }
 }
