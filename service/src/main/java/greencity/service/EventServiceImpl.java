@@ -49,57 +49,26 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    private Image handleImages(EventRequestDto eventRequestDto) {
+    private Image handleImages(List<ImageRequestDto> imagesDto, ImageRequestDto mainImageDto) {
         Set<Image> images = new HashSet<>();
         Image mainImage = null;
 
-        if (eventRequestDto.getImages() == null || eventRequestDto.getImages().isEmpty()) {
-            Image defaultImage = imageRepo.findById(1L).orElseThrow(() -> new EntityNotFoundException("Default image not found"));
+        if (imagesDto == null || imagesDto.isEmpty()) {
+            Image defaultImage = imageRepo.findById(1L)
+                    .orElseThrow(() -> new EntityNotFoundException("Default image not found"));
             images.add(defaultImage);
             mainImage = defaultImage;
         } else {
-            for (ImageRequestDto imageRequestDto : eventRequestDto.getImages()) {
+            for (ImageRequestDto imageRequestDto : imagesDto) {
                 Image image = saveImage(imageRequestDto.getImagePath());
                 images.add(image);
             }
-            if (eventRequestDto.getMainImage() != null) {
-                mainImage = saveImage(eventRequestDto.getMainImage().getImagePath());
+            if (mainImageDto != null) {
+                mainImage = saveImage(mainImageDto.getImagePath());
             }
 
             if (mainImage == null) {
-                if (eventRequestDto.getImages() != null && !eventRequestDto.getImages().isEmpty()) {
-                    mainImage = imageRepo.findByImagePath(eventRequestDto.getImages().get(0).getImagePath()).orElse(null);
-                } else {
-                    mainImage = imageRepo.findById(1L).orElse(null);
-                }
-            }
-        }
-        return mainImage;
-    }
-
-    private Image handleUpdateImages(EventUpdateDto eventUpdateDto) {
-        Set<Image> images = new HashSet<>();
-        Image mainImage = null;
-
-        if (eventUpdateDto.getImages() == null || eventUpdateDto.getImages().isEmpty()) {
-            Image defaultImage = imageRepo.findById(1L).orElseThrow(() -> new EntityNotFoundException("Default image not found"));
-            images.add(defaultImage);
-            mainImage = defaultImage;
-        } else {
-            for (ImageRequestDto imageRequestDto : eventUpdateDto.getImages()) {
-                Image image = saveImage(imageRequestDto.getImagePath());
-                images.add(image);
-            }
-            if (eventUpdateDto.getMainImage() != null) {
-                mainImage = saveImage(eventUpdateDto.getMainImage().getImagePath());
-            }
-
-            if (mainImage == null) {
-                if (eventUpdateDto.getImages() != null && !eventUpdateDto.getImages().isEmpty()) {
-                    mainImage = imageRepo.findByImagePath(eventUpdateDto.getImages().get(0).getImagePath()).orElse(null);
-                } else {
-                    mainImage = imageRepo.findById(1L).orElse(null);
-                }
+                mainImage = imageRepo.findByImagePath(imagesDto.get(0).getImagePath()).orElse(null);
             }
         }
         return mainImage;
@@ -135,6 +104,18 @@ public class EventServiceImpl implements EventService {
         }
     }
 
+    public Set<Image> createSetOfImages(List<ImageRequestDto> imagesDto){
+
+        Set<Image> setOfImages = (imagesDto == null || imagesDto.isEmpty())
+                ? Set.of(Objects.requireNonNull(imageRepo.findById(1L).orElse(null))) : imagesDto.stream()
+                .map(i -> modelMapper.map(i, Image.class))
+                .map(image -> saveImage(image.getImagePath()))
+                .collect(Collectors.toSet());
+
+        return setOfImages;
+
+    }
+
     @Override
     @Transactional
     public EventResponseDto createEvent(EventRequestDto eventRequestDto) {
@@ -143,12 +124,8 @@ public class EventServiceImpl implements EventService {
         Event event = modelMapper.map(eventRequestDto, Event.class);
         User author = userRepo.findByEmail(eventRequestDto.getAuthorEmail()).orElse(null);
 
-        Image mainImage = handleImages(eventRequestDto);
-        Set<Image> images = (eventRequestDto.getImages() == null || eventRequestDto.getImages().isEmpty())
-                ? Set.of(Objects.requireNonNull(imageRepo.findById(1L).orElse(null))) : eventRequestDto.getImages().stream()
-                .map(i -> modelMapper.map(i, Image.class))
-                .map(image -> saveImage(image.getImagePath()))
-                .collect(Collectors.toSet());
+        Image mainImage = handleImages(eventRequestDto.getImages(), eventRequestDto.getMainImage());
+        Set<Image> images = createSetOfImages(eventRequestDto.getImages());
 
         event.setImages(images);
 
@@ -203,12 +180,8 @@ public class EventServiceImpl implements EventService {
         existingEvent.setTitle(eventUpdateDto.getTitle());
         existingEvent.setDescription(eventUpdateDto.getDescription());
 
-        Image mainImage = handleUpdateImages(eventUpdateDto);
-        Set<Image> images = (eventUpdateDto.getImages() == null || eventUpdateDto.getImages().isEmpty())
-                ? Set.of(Objects.requireNonNull(imageRepo.findById(1L).orElse(null))) : eventUpdateDto.getImages().stream()
-                .map(i -> modelMapper.map(i, Image.class))
-                .map(image -> saveImage(image.getImagePath()))
-                .collect(Collectors.toSet());
+        Image mainImage = handleImages(eventUpdateDto.getImages(), eventUpdateDto.getMainImage());
+        Set<Image> images = createSetOfImages(eventUpdateDto.getImages());
 
         existingEvent.setImages(images);
         existingEvent.setMainImage(mainImage);
