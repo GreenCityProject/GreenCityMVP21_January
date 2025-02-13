@@ -88,10 +88,19 @@ public class EventServiceImpl implements EventService {
     }
 
     private void saveEventDateInfo(EventRequestDto eventRequestDto, Event savedEvent) {
-        for (EventDateInfoRequestDto infoRequestDto : eventRequestDto.getEventDays()) {
+        List<EventDateInfoRequestDto> dtos = eventRequestDto.getEventDays().stream()
+                .sorted(Comparator.comparing(EventDateInfoRequestDto::getEventTimeStart))
+                .toList();
+
+        int count = 1;
+
+        for (EventDateInfoRequestDto infoRequestDto : dtos) {
             EventDateInfo eventDateInfo = modelMapper.map(infoRequestDto, EventDateInfo.class);
             eventDateInfo.setEvent(savedEvent);
+            eventDateInfo.setNumOfDayInEvent(count);
             eventDateInfoRepo.save(eventDateInfo);
+
+            count++;
         }
     }
 
