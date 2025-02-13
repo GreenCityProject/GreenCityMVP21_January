@@ -18,5 +18,5 @@ public class EventCommentResponseDto {
     private LocalDateTime modifiedDate;
     private UserProfilePictureDto author;
     private int likes;
-    private long parentCommentId;
+    private Long parentCommentId;
 }

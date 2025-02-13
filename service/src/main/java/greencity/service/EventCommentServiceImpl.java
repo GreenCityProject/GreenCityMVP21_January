@@ -1,9 +1,9 @@
 package greencity.service;
 
-import greencity.dto.event.AddEventCommentDtoRequest;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
+import greencity.dto.notification.NotificationRequestDto;
 import greencity.dto.user.UserVO;
 import greencity.entity.Event;
 import greencity.entity.EventComment;
@@ -13,7 +13,6 @@ import greencity.repository.EventRepo;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
-import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -26,13 +25,14 @@ import java.util.regex.Pattern;
 @Service
 @AllArgsConstructor
 public class EventCommentServiceImpl implements EventCommentService {
-    private EventRepo eventRepo;
-    private EventCommentRepo eventCommentRepo;
-    private ModelMapper modelMapper;
-    private UserService userService;
+    private final EventRepo eventRepo;
+    private final EventCommentRepo eventCommentRepo;
+    private final ModelMapper modelMapper;
+    private final UserService userService;
+    private final NotificationService notificationService;
 
     @Override
-    public AddEventCommentDtoResponse addComment(Long eventId, Long userId, AddEventCommentDtoRequest requestDto) {
+    public AddEventCommentDtoResponse addComment(Long eventId, Long userId, EventCommentRequestDto requestDto) {
         Event event = eventRepo.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
@@ -54,7 +54,30 @@ public class EventCommentServiceImpl implements EventCommentService {
 
         eventComment = eventCommentRepo.save(eventComment);
 
+        if (!event.getAuthor().equals(user) && !event.getAuthor().getId().equals(user.getId())) {
+            notificationService.addNotification(new NotificationRequestDto(
+                    user.getId(),
+                    event.getAuthor().getId(),
+                    "New comment on your event: " + event.getTitle(),
+                    "A new comment has been added to your event.",
+                    "GreenCity",
+                    "/events/" + eventId));
+        }
+
         List<User> mentionedUsers = extractMentionedUsers(requestDto.getText());
+        for (User mentionedUser : mentionedUsers) {
+            if (!mentionedUser.getId().equals(user.getId())) {
+                notificationService.addNotification(new NotificationRequestDto(
+                        user.getId(),
+                        mentionedUser.getId(),
+                        "You were mentioned in a comment on: " + event.getTitle(),
+                        "Someone mentioned you in a comment.",
+                        "GreenCity",
+                        "/events/" + eventId));
+            }
+        }
+
+
 
         return AddEventCommentDtoResponse.builder()
                 .id(eventComment.getId())
@@ -67,11 +90,13 @@ public class EventCommentServiceImpl implements EventCommentService {
     private List<User> extractMentionedUsers(String text) {
         List<User> mentionedUsers = new ArrayList<>();
 
-        Pattern pattern = Pattern.compile("[@#]([\\w\\s]+)");
+        Pattern pattern = Pattern.compile("[@#]([\\w_]+)");
         Matcher matcher = pattern.matcher(text);
 
         while (matcher.find()) {
-            String fullName = matcher.group(1).trim();
+            String taggedName = matcher.group(1).trim();
+
+            String fullName = taggedName.replace("_", " ");
 
             Optional<UserVO> mentionedUserVO = userService.findByFullName(fullName);
 
@@ -98,10 +123,6 @@ public class EventCommentServiceImpl implements EventCommentService {
         }
         User user = modelMapper.map(userVO, User.class);
 
-        if (!event.getAuthor().getId().equals(user.getId())) {
-            throw new AccessDeniedException("Only the event organizer can reply to a comment.");
-        }
-
         EventComment replyComment = EventComment.builder()
                 .text(requestDto.getText())
                 .user(user)
@@ -113,6 +134,16 @@ public class EventCommentServiceImpl implements EventCommentService {
                 .build();
 
         replyComment = eventCommentRepo.save(replyComment);
+
+        if (!parentComment.getUser().equals(user)) {
+            notificationService.addNotification(new NotificationRequestDto(
+                    user.getId(),
+                    parentComment.getUser().getId(),
+                    "Someone replied to your comment on: " + event.getTitle(),
+                    "You received a reply to your comment.",
+                    "GreenCity",
+                    "/events/" + event.getId()));
+        }
 
         return AddEventCommentDtoResponse.builder()
                 .id(replyComment.getId())
@@ -145,9 +176,14 @@ public class EventCommentServiceImpl implements EventCommentService {
     }
 
     @Override
-    public EventCommentResponseDto getCommentById(Long commentId) {
+    public EventCommentResponseDto getCommentById(Long eventId, Long commentId) {
         EventComment comment = eventCommentRepo.findById(commentId)
                 .orElseThrow(() -> new EntityNotFoundException("Comment not found with id: " + commentId));
+
+        if (!comment.getEvent().getId().equals(eventId)) {
+            throw new EntityNotFoundException("Comment with id " + commentId + " does not belong to event " + eventId);
+        }
+
         return modelMapper.map(comment, EventCommentResponseDto.class);
     }
 
