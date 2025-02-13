@@ -3,6 +3,8 @@ package greencity.service;
 import greencity.dto.event.*;
 import greencity.dto.user.UserProfilePictureDto;
 import greencity.entity.*;
+import greencity.enums.Role;
+import greencity.exception.exceptions.BadRequestException;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.mapping.EventMappingContext;
 import greencity.repository.*;
@@ -13,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
 
@@ -174,8 +177,11 @@ public class EventServiceImpl implements EventService {
     @Transactional
     public EventResponseDto updateEvent(Long id, EventUpdateDto eventUpdateDto, String email) {
         validateEventRequest(eventUpdateDto.getEventDays());
+        validateUser(email, id);
+        validateDate(id);
+
         Event existingEvent = eventRepo.findById(id).orElseThrow(() -> new NotFoundException("Event not found: " + id));
-        User author = userRepo.findByEmail(eventUpdateDto.getAuthorEmail()).orElseThrow(() -> new NotFoundException("Author not found: " + eventUpdateDto.getAuthorEmail()));
+        userRepo.findByEmail(eventUpdateDto.getAuthorEmail()).orElseThrow(() -> new NotFoundException("Author not found: " + eventUpdateDto.getAuthorEmail()));
 
         existingEvent.setTitle(eventUpdateDto.getTitle());
         existingEvent.setDescription(eventUpdateDto.getDescription());
@@ -331,5 +337,38 @@ public class EventServiceImpl implements EventService {
                 events.getTotalPages(),
                 events.isLast()
         );
+    }
+
+    private void validateUser(String userEmail, Long id) {
+        User user = userRepo.findByEmail(userEmail).orElse(null);
+        Event event = eventRepo.findById(id).orElse(null);
+        if (user == null) {
+            throw new NotFoundException("User not found");
+        } else if (!(Objects.equals(user.getId(), event.getAuthor().getId()) || user.getRole().equals(Role.ROLE_ADMIN))) {
+            throw new AccessDeniedException("You have no permission to update this event");
+        }
+    }
+
+    private boolean validateDate(Long eventId) {
+        Event event = eventRepo.findById(eventId).orElse(null);
+        if (event == null) {
+            throw new NotFoundException("Event not found");
+        }
+
+        List<EventDateInfo> eventDateInfos = eventDateInfoRepo.findByEvent(event);
+        if (eventDateInfos.isEmpty()) {
+            return false;
+        }
+
+        LocalDateTime latestEventDate = eventDateInfos.stream()
+                .map(EventDateInfo::getEventTimeStart)
+                .max(Comparator.naturalOrder())
+                .orElse(null);
+
+        if (latestEventDate != null && latestEventDate.isAfter(LocalDateTime.now())) {
+            return true;
+        }
+
+        throw new BadRequestException("You cannot edit the event that is in the past");
     }
 }
