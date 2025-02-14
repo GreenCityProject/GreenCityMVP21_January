@@ -13,9 +13,9 @@ import org.springframework.boot.web.error.ErrorAttributeOptions;
 import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.http.HttpHeaders;
 import org.springframework.http.HttpStatus;
+import org.springframework.http.HttpStatusCode;
 import org.springframework.http.ResponseEntity;
 import org.springframework.http.converter.HttpMessageNotReadableException;
-import org.springframework.security.core.AuthenticationException;
 import org.springframework.web.bind.MethodArgumentNotValidException;
 import org.springframework.web.bind.annotation.ExceptionHandler;
 import org.springframework.web.bind.annotation.RestControllerAdvice;
@@ -27,10 +27,7 @@ import org.springframework.web.servlet.mvc.method.annotation.ResponseEntityExcep
 import jakarta.validation.ConstraintViolation;
 import jakarta.validation.ConstraintViolationException;
 import java.time.format.DateTimeParseException;
-import java.util.Collections;
-import java.util.HashMap;
-import java.util.List;
-import java.util.Map;
+import java.util.*;
 import java.util.stream.Collectors;
 
 /**
@@ -580,6 +577,8 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
 
+
+
     /**
      * Customize the response for WrongIdException.
      *
@@ -595,18 +594,45 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(exceptionResponse);
     }
 
-    protected ResponseEntity<Object> handleMethodArgumentNotValid(
-        MethodArgumentNotValidException ex) {
-        List<ValidationExceptionDto> collect =
-            ex.getBindingResult().getFieldErrors().stream()
-                .map(ValidationExceptionDto::new)
-                .collect(Collectors.toList());
+    @Override
+    protected ResponseEntity<Object> handleMethodArgumentNotValid(MethodArgumentNotValidException ex,
+                                                                  HttpHeaders headers,
+                                                                  HttpStatusCode status,
+                                                                  WebRequest request) {
+        Map<String, Object> response = new LinkedHashMap<>();
+        response.put("message", "Validation failed");
+        response.put("errors", ex.getBindingResult().getFieldErrors().stream()
+                .map(error -> Map.of(
+                        "field", error.getField(),
+                        "message", error.getDefaultMessage()
+                ))
+                .collect(Collectors.toList()));
+
         log.trace(ex.getMessage(), ex);
-        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(collect);
+        return ResponseEntity.status(HttpStatus.BAD_REQUEST).body(response);
     }
 
     private Map<String, Object> getErrorAttributes(WebRequest webRequest) {
         return new HashMap<>(errorAttributes.getErrorAttributes(webRequest,
                 ErrorAttributeOptions.of(ErrorAttributeOptions.Include.MESSAGE)));
+    }
+
+    @ExceptionHandler(UnsupportedMediaTypeException.class)
+    public final ResponseEntity<Object> handleUnsupportedMediaTypeException(
+            UnsupportedMediaTypeException ex, WebRequest request) {
+        log.info(ex.getMessage());
+        ExceptionResponse exceptionResponse = new ExceptionResponse(getErrorAttributes(request));
+        exceptionResponse.setMessage(ex.getMessage());
+        return ResponseEntity.status(HttpStatus.UNSUPPORTED_MEDIA_TYPE).body(exceptionResponse);
+
+    }
+
+    @ExceptionHandler(IllegalArgumentException.class)
+    public ResponseEntity<String> handleIllegalArgumentException(IllegalArgumentException ex) {
+
+        String errorMessage = "Invalid argument provided: " + ex.getMessage();
+
+        return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
+
     }
 }

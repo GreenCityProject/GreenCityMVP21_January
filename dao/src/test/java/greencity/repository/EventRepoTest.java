@@ -1,0 +1,161 @@
+package greencity.repository;
+
+import greencity.entity.Event;
+import greencity.entity.User;
+import greencity.enums.Role;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.Test;
+import org.springframework.beans.factory.annotation.Autowired;
+import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.test.context.TestPropertySource;
+
+import java.time.LocalDateTime;
+import java.time.ZonedDateTime;
+import java.util.List;
+import java.util.Optional;
+
+import static org.junit.jupiter.api.Assertions.assertEquals;
+import static org.junit.jupiter.api.Assertions.assertTrue;
+
+@DataJpaTest
+@TestPropertySource(properties = {
+        "spring.test.database.replace=NONE",
+        "spring.datasource.url=jdbc:h2:mem:test;MODE=PostgreSQL;DATABASE_TO_LOWER=TRUE;DEFAULT_NULL_ORDERING=HIGH",
+        "spring.datasource.username=sa",
+        "spring.datasource.password=",
+        "spring.jpa.hibernate.ddl-auto=update",
+        "spring.sql.init.mode=never",
+        "spring.liquibase.enabled=false"
+})
+public class EventRepoTest {
+
+    @Autowired
+    private EventRepo eventRepo;
+
+    @Autowired
+    private UserRepo userRepo;
+
+    private User author;
+
+    @BeforeEach
+    void setUp() {
+        userRepo.deleteAll();
+        eventRepo.deleteAll();
+
+        author = new User();
+        author.setFirstName("John");
+        author.setEmail("john.doe@mail.com");
+        author.setDateOfRegistration(LocalDateTime.now());
+        author.setName("John Doe");
+        author.setRefreshTokenKey("token");
+        author.setRole(Role.ROLE_USER);
+        userRepo.save(author);
+    }
+
+    @Test
+    void testFindById() {
+        Event event = new Event();
+        event.setTitle("Sample Event");
+        event.setDescription("Event description");
+        event.setCreationDate(ZonedDateTime.now());
+        event.setAuthor(author);
+        event.setOpen(true);
+        event.setDuration(60);
+        eventRepo.save(event);
+
+        Optional<Event> foundEvent = eventRepo.findById(event.getId());
+
+        assertTrue(foundEvent.isPresent());
+        assertEquals(event.getId(), foundEvent.get().getId());
+        assertEquals(event.getTitle(), foundEvent.get().getTitle());
+    }
+
+    @Test
+    void testFindById_NotFound() {
+        Optional<Event> foundEvent = eventRepo.findById(999L);
+        assertTrue(foundEvent.isEmpty());
+    }
+
+    @Test
+    void testFindByTitleIgnoreCase() {
+        Event event1 = new Event();
+        event1.setTitle("Spring Boot Event");
+        event1.setDescription("Description 1");
+        event1.setCreationDate(ZonedDateTime.now());
+        event1.setAuthor(author);
+        event1.setOpen(true);
+        event1.setDuration(120);
+        eventRepo.save(event1);
+
+        Event event2 = new Event();
+        event2.setTitle("spring boot event");
+        event2.setDescription("Description 2");
+        event2.setCreationDate(ZonedDateTime.now());
+        event2.setAuthor(author);
+        event2.setOpen(false);
+        event2.setDuration(90);
+        eventRepo.save(event2);
+
+        List<Event> foundEvents = eventRepo.findByTitleIgnoreCase("spring boot event");
+
+        assertEquals(2, foundEvents.size());
+        assertTrue(foundEvents.stream().anyMatch(event -> event.getTitle().equals("Spring Boot Event")));
+        assertTrue(foundEvents.stream().anyMatch(event -> event.getTitle().equals("spring boot event")));
+    }
+
+    @Test
+    void testCountAllOpenEvents() {
+        Event event1 = new Event();
+        event1.setTitle("Open Event 1");
+        event1.setDescription("Open Event Description");
+        event1.setCreationDate(ZonedDateTime.now());
+        event1.setAuthor(author);
+        event1.setOpen(true);
+        event1.setDuration(100);
+        eventRepo.save(event1);
+
+        Event event2 = new Event();
+        event2.setTitle("Closed Event");
+        event2.setDescription("Closed Event Description");
+        event2.setCreationDate(ZonedDateTime.now());
+        event2.setAuthor(author);
+        event2.setOpen(false);
+        event2.setDuration(80);
+        eventRepo.save(event2);
+
+        Long openEventCount = eventRepo.countAllOpenEvents();
+
+        assertEquals(1, openEventCount);
+    }
+
+    @Test
+    void testFindAllByCreationDateBetween() {
+        ZonedDateTime startDate = ZonedDateTime.now().minusDays(1);
+        ZonedDateTime endDate = ZonedDateTime.now().plusDays(1);
+
+        Event event1 = new Event();
+        event1.setTitle("Event within range");
+        event1.setDescription("Description");
+        event1.setCreationDate(ZonedDateTime.now());
+        event1.setAuthor(author);
+        event1.setOpen(true);
+        event1.setDuration(90);
+        eventRepo.save(event1);
+
+        Event event2 = new Event();
+        event2.setTitle("Event outside range");
+        event2.setDescription("Description");
+        event2.setCreationDate(ZonedDateTime.now().minusDays(2));
+        event2.setAuthor(author);
+        event2.setOpen(false);
+        event2.setDuration(60);
+        eventRepo.save(event2);
+
+        List<Event> foundEvents = eventRepo.findAllByCreationDateBetween(startDate, endDate);
+
+        assertEquals(1, foundEvents.size());
+        assertEquals("Event within range", foundEvents.get(0).getTitle());
+    }
+
+
+}

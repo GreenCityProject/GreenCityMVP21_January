@@ -1,0 +1,30 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="Feduniak-1" author="Yurii Feduniak">
+        <createTable tableName="event_comment_likes">
+            <column name="event_comment_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_liked" type="BOOLEAN"/>
+            <column name="is_disliked" type="BOOLEAN"/>
+        </createTable>
+
+
+        <addPrimaryKey columnNames="event_comment_id, user_id" tableName="event_comment_likes"/>
+
+
+        <addForeignKeyConstraint baseTableName="event_comment_likes" baseColumnNames="event_comment_id"
+                                 referencedTableName="event_comment" referencedColumnNames="id"
+                                 constraintName="fk_event_comment_likes_comment"/>
+
+        <addForeignKeyConstraint baseTableName="event_comment_likes" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_event_comment_likes_user"/>
+    </changeSet>
+</databaseChangeLog>

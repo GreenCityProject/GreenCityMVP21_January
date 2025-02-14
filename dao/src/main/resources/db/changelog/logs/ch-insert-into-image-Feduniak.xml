@@ -1,0 +1,31 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<databaseChangeLog
+        xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+        xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+        xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog
+                      http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.1.xsd">
+
+    <changeSet id="Feduniak-9" author="Yurii Feduniak">
+        <insert tableName="image">
+            <column name="id" value="1"/>
+            <column name="image_path" value="https://csb10032000a548f571.blob.core.windows.net/allfiles/56c4a9f3-73db-4e88-9242-23ed1075200aecostore-illustration.png"/>
+        </insert>
+        <insert tableName="image">
+            <column name="id" value="2"/>
+            <column name="image_path" value="https://csb10032000a548f571.blob.core.windows.net/allfiles/3d145400-6711-4c9f-8c23-4ac20342ed92earth-illustration.png"/>
+        </insert>
+        <insert tableName="image">
+            <column name="id" value="3"/>
+            <column name="image_path" value="https://csb10032000a548f571.blob.core.windows.net/allfiles/b9e25bd9-1bc0-4932-b3cc-c5727954cb80finance-illustration.png"/>
+        </insert>
+        <insert tableName="image">
+            <column name="id" value="4"/>
+            <column name="image_path" value="https://csb10032000a548f571.blob.core.windows.net/allfiles/4eca5959-e565-4da0-a0ed-4fb20d8f7760recycle-illustration.png"/>
+        </insert>
+        <insert tableName="image">
+            <column name="id" value="5"/>
+            <column name="image_path" value="https://csb10032000a548f571.blob.core.windows.net/allfiles/3797d5ec-7f60-4ec1-914f-349b3ce7f406cup-illustration.png"/>
+        </insert>
+    </changeSet>
+
+</databaseChangeLog>
