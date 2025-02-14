@@ -3,9 +3,11 @@ package greencity.service;
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.FriendCardDto;
 import greencity.dto.friendship.RequestedFriendshipDto;
+import greencity.dto.notification.NotificationRequestDto;
 import greencity.dto.user.UserVO;
 import greencity.entity.Friendship;
 import greencity.enums.FriendshipStatus;
+import greencity.enums.NotificationSection;
 import greencity.repository.FriendshipRepo;
 import greencity.repository.UserRepo;
 import org.modelmapper.ModelMapper;
@@ -23,7 +25,10 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     private final FriendshipRepo friendshipRepo;
     private final UserRepo userRepo;
-    private final NotificationService notificationServise;
+    private final NotificationService notificationService;
+    private final ModelMapper modelMapper;
+    private final Long ONE_WEEK = 1L;
+    private final Function<Friendship, Long> getFriendId = friendship -> friendship.getFriend().getId();
 
     @Autowired
     public FriendshipServiceImpl(
@@ -33,14 +38,9 @@ public class FriendshipServiceImpl implements FriendshipService {
             ModelMapper modelMapper) {
         this.friendshipRepo = friendshipRepo;
         this.userRepo = userRepo;
-        this.notificationServise = notificationServise;
+        this.notificationService = notificationServise;
         this.modelMapper = modelMapper;
     }
-
-    private final ModelMapper modelMapper;
-
-    private final Long ONE_WEEK = 1L;
-    private final Function<Friendship, Long> getFriendId = friendship -> friendship.getFriend().getId();
 
     @Override
     public List<FriendCardDto> getAllMutualFriendsByUserId(Long userId, Long targetUserId) {
@@ -65,8 +65,8 @@ public class FriendshipServiceImpl implements FriendshipService {
         Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderInsensitive(senderId, recipientId);
         Friendship friendship = friendshipOptional.orElseGet(Friendship::new);
         boolean isNotEligibleForResending = friendshipOptional.isPresent()
-                && friendshipOptional.get().getStatus() != FriendshipStatus.CANCELLED
-                && friendshipOptional.get().getStatus() != FriendshipStatus.DECLINED;
+                                            && friendshipOptional.get().getStatus() != FriendshipStatus.CANCELLED
+                                            && friendshipOptional.get().getStatus() != FriendshipStatus.DECLINED;
 
         if (isNotEligibleForResending || senderId.equals(recipientId)) {
             return false;
@@ -79,7 +79,8 @@ public class FriendshipServiceImpl implements FriendshipService {
         friendship.setRequestedAt(LocalDateTime.now());
         friendship.setFriendshipRequestExpiration(LocalDateTime.now().plusWeeks(ONE_WEEK));
         friendshipRepo.save(friendship);
-        notificationServise.notify("New Friendship Req.");
+
+        sendNotification(senderId, recipientId, "New Friendship Req.");
         return true;
     }
 
@@ -91,7 +92,7 @@ public class FriendshipServiceImpl implements FriendshipService {
         if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.CANCELLED);
             friendshipRepo.save(friendship);
-            notificationServise.notify("Cancel Friendship Req.");
+            sendNotification(senderId, recipientId, "Cancel Friendship Req.");
             return true;
         }
         return false;
@@ -104,7 +105,7 @@ public class FriendshipServiceImpl implements FriendshipService {
         if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.ACCEPTED);
             friendshipRepo.save(friendship);
-            notificationServise.notify("Accepted Friendship Req.");
+            sendNotification(senderId, recipientId, "Accepted Friendship Req.");
             return true;
         }
         return false;
@@ -117,7 +118,7 @@ public class FriendshipServiceImpl implements FriendshipService {
         if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.DECLINED);
             friendshipRepo.save(friendship);
-            notificationServise.notify("Declined Friendship Req.");
+            sendNotification(senderId, recipientId, "Declined Friendship Req.");
             return true;
         }
         return false;
@@ -152,11 +153,12 @@ public class FriendshipServiceImpl implements FriendshipService {
         if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.BLOCKED);
             friendshipRepo.save(friendship);
-            notificationServise.notify("Blocked Friendship Req.");
+            sendNotification(senderId, recipientId, "Blocked Friendship Req.");
             return true;
         }
         return false;
     }
+
 
     @Override
     public List<RequestedFriendshipDto> getAllFriendshipRequestsForUserById(Long recipientId) {
@@ -186,5 +188,15 @@ public class FriendshipServiceImpl implements FriendshipService {
                 new ArrayList<>(friendshipRepo.getAllFriendshipsByUserId(targetUserId).stream().map(getFriendId).toList());
         userFriends.retainAll(targetFriends);
         return userFriends.size();
+    }
+
+    private void sendNotification(Long senderId, Long receiverId, String message) {
+        NotificationRequestDto notification = NotificationRequestDto.builder()
+                .senderId(senderId)
+                .receiverId(receiverId)
+                .message(message)
+                .section(NotificationSection.GreenCity.name())
+                .build();
+        notificationService.addNotification(notification);
     }
 }
