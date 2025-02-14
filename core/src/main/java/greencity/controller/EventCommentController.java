@@ -14,6 +14,7 @@ import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
@@ -134,9 +135,14 @@ public class EventCommentController {
                     content = @Content(schema = @Schema(implementation = EventCommentResponseDto.class))),
             @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
     })
+
     @GetMapping
-    public ResponseEntity<List<EventCommentResponseDto>> getCommentsByEvent(@PathVariable Long eventId) {
-        return ResponseEntity.ok(eventCommentService.getCommentsByEvent(eventId));
+    public ResponseEntity<Page<EventCommentResponseDto>> getCommentsByEvent(
+            @PathVariable Long eventId,
+            @RequestParam(defaultValue = "0") int page,
+            @RequestParam(defaultValue = "10") int size) {
+
+        return ResponseEntity.ok(eventCommentService.getCommentsByEvent(eventId, page, size));
     }
 }
 

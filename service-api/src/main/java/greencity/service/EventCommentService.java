@@ -3,6 +3,7 @@ package greencity.service;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
+import org.springframework.data.domain.Page;
 
 import java.util.List;
 
@@ -16,7 +17,7 @@ public interface EventCommentService {
 
     EventCommentResponseDto updateComment(Long commentId, EventCommentRequestDto requestDto);
 
-    List<EventCommentResponseDto> getCommentsByEvent(Long eventId);
+    Page<EventCommentResponseDto> getCommentsByEvent(Long eventId, int page, int size);
 
     EventCommentResponseDto getCommentById(Long eventId, Long commentId);
 

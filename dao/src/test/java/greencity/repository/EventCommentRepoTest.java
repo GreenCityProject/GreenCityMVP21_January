@@ -8,6 +8,8 @@ import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.boot.test.autoconfigure.orm.jpa.DataJpaTest;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.test.context.TestPropertySource;
 
 import java.time.LocalDateTime;
@@ -99,10 +101,9 @@ public class EventCommentRepoTest {
     }
 
     @Test
-    void findByEventTest() {
-        List<EventComment> result = eventCommentRepo.findByEvent(event);
-
-        assertEquals(2, result.size());
+    void findByEventWithPaginationTest() {
+        Page<EventComment> result = eventCommentRepo.findByEvent(event, PageRequest.of(0, 10));
+        assertEquals(2, result.getContent().size());
     }
 
     @Test
@@ -119,9 +120,8 @@ public class EventCommentRepoTest {
         nonexistentEvent.setTitle("New Event");
         nonexistentEvent.setCreationDate(ZonedDateTime.now());
         nonexistentEvent.setId(9L);
-        List<EventComment> result = eventCommentRepo.findByEvent(nonexistentEvent);
-
-        assertEquals(0, result.size());
+        Page<EventComment> result = eventCommentRepo.findByEvent(nonexistentEvent, PageRequest.of(0, 10));
+        assertEquals(0, result.getContent().size());
     }
 
     @Test

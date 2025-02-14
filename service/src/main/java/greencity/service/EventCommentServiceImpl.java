@@ -13,6 +13,9 @@ import greencity.repository.EventRepo;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageRequest;
+import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
@@ -165,14 +168,14 @@ public class EventCommentServiceImpl implements EventCommentService {
     }
 
     @Override
-    public List<EventCommentResponseDto> getCommentsByEvent(Long eventId) {
+    public Page<EventCommentResponseDto> getCommentsByEvent(Long eventId, int page, int size) {
         Event event = eventRepo.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
-        List<EventComment> eventComments = eventCommentRepo.findByEvent(event);
+        Pageable pageable = PageRequest.of(page, size);
+        Page<EventComment> eventComments = eventCommentRepo.findByEvent(event, pageable);
 
-        return eventComments.stream()
-                .map(eventComment -> modelMapper.map(eventComment, EventCommentResponseDto.class)).toList();
+        return eventComments.map(comment -> modelMapper.map(comment, EventCommentResponseDto.class));
     }
 
     @Override

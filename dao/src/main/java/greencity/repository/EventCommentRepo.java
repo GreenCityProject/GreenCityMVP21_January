@@ -3,6 +3,8 @@ package greencity.repository;
 import greencity.entity.Event;
 import greencity.entity.EventComment;
 import greencity.entity.User;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
@@ -27,7 +29,7 @@ public interface EventCommentRepo extends JpaRepository<EventComment, Long> {
      * @param event the {@link Event} instance.
      * @return list of {@link EventComment} instances.
      */
-    List<EventComment> findByEvent(Event event);
+    Page<EventComment> findByEvent(Event event, Pageable pageable);
 
     /**
      * Method to find all top-level comments (parent comments) for a specific event.

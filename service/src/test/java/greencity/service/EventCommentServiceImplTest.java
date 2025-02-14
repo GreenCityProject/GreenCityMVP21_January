@@ -15,6 +15,9 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.PageImpl;
+import org.springframework.data.domain.PageRequest;
 
 import java.time.LocalDateTime;
 import java.util.List;
@@ -66,22 +69,39 @@ public class EventCommentServiceImplTest {
         responseDto.setAuthor(new UserProfilePictureDto());
 
         when(eventRepo.findById(any(Long.class))).thenReturn(Optional.of(event));
-        when(eventCommentRepo.findByEvent(any(Event.class))).thenReturn(List.of(eventComment, eventComment2));
-        when(modelMapper.map(eventComment, EventCommentResponseDto.class)).thenReturn(responseDto);
 
-        List<EventCommentResponseDto> result = service.getCommentsByEvent(1L);
+        PageRequest pageable = PageRequest.of(0, 10);
+        Page<EventComment> eventCommentPage = new PageImpl<>(List.of(eventComment, eventComment2), pageable, 2);
+        when(eventCommentRepo.findByEvent(any(Event.class), eq(pageable))).thenReturn(eventCommentPage);
 
-        verify(eventCommentRepo, times(1)).findByEvent(any(Event.class));
-        Assertions.assertEquals(2, result.size());
+        when(modelMapper.map(any(EventComment.class), eq(EventCommentResponseDto.class)))
+                .thenAnswer(invocation -> {
+                    EventComment source = invocation.getArgument(0);
+                    return EventCommentResponseDto.builder()
+                            .id(source.getId())
+                            .text(source.getText())
+                            .createdDate(source.getCreatedDate())
+                            .modifiedDate(source.getModifiedDate())
+                            .author(new UserProfilePictureDto())
+                            .likes(0)
+                            .parentCommentId(null)
+                            .build();
+                });
+
+        Page<EventCommentResponseDto> result = service.getCommentsByEvent(1L, 0, 10);
+
+        verify(eventCommentRepo, times(1)).findByEvent(any(Event.class), eq(pageable));
+        Assertions.assertEquals(2, result.getTotalElements());
+        Assertions.assertEquals("text1", result.getContent().get(0).getText());
     }
 
     @Test
     void getCommentsByEventNoEventTest() {
         when(eventRepo.findById(any(Long.class))).thenReturn(Optional.empty());
 
-        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> service.getCommentsByEvent(1L));
+        Exception exception = Assertions.assertThrows(RuntimeException.class, () -> service.getCommentsByEvent(1L, 0, 10));
 
-        verify(eventCommentRepo, times(0)).findByEvent(any(Event.class));
+        verify(eventCommentRepo, times(0)).findByEvent(any(Event.class), any(PageRequest.class));
         Assertions.assertEquals("Event not found with id: 1", exception.getMessage());
     }
 
