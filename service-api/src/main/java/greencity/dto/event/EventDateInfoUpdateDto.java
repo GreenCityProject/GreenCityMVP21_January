@@ -15,7 +15,7 @@ import java.time.LocalDateTime;
 @NoArgsConstructor
 @ConsistentDateTime
 public class EventDateInfoUpdateDto implements EventDateInfoDto{
-    @NotNull
+
     private Long id;
 
     @NotNull(message = "Event date is mandatory.")
@@ -46,4 +46,6 @@ public class EventDateInfoUpdateDto implements EventDateInfoDto{
     @Size(max = 2083, message = "URL length cannot exceed 2083 characters.")
     @Pattern(regexp = "^(https?|ftp)://[^\\s/$.?#].[^\\s]*$", message = "Invalid URL format.")
     private String url;
+
+    private int numOfTheDay;
 }

@@ -117,7 +117,7 @@ public class EventServiceImpl implements EventService {
         }
     }
 
-    public Set<Image> createSetOfImages(List<ImageRequestDto> imagesDto){
+    public Set<Image> createSetOfImages(List<ImageRequestDto> imagesDto) {
 
         Set<Image> setOfImages = (imagesDto == null || imagesDto.isEmpty())
                 ? Set.of(Objects.requireNonNull(imageRepo.findById(1L).orElse(null))) : imagesDto.stream()
@@ -202,11 +202,7 @@ public class EventServiceImpl implements EventService {
         existingEvent.setImages(images);
         existingEvent.setMainImage(mainImage);
 
-        List<EventDateInfoUpdateDto> eventDateInfoUpdateDtos = eventUpdateDto.getEventDays();
-
-        for (EventDateInfoUpdateDto eventDateInfoUpdateDto : eventDateInfoUpdateDtos) {
-            eventDateInfoService.updateEventDateInfo(eventDateInfoUpdateDto.getId(), eventDateInfoUpdateDto);
-        }
+        updateEventDateInfo(eventUpdateDto, id);
 
         List<InitiativeType> initiativeTypes = eventUpdateDto.getInitiativeTypes().stream()
                 .map(i -> initiativeTypeRepo.findByName(i.getName())
@@ -228,6 +224,62 @@ public class EventServiceImpl implements EventService {
         eventResponseDto.setLikes(eventLikesRepo.countLikesByEventId(existingEvent.getId()));
 
         return eventResponseDto;
+    }
+
+    @Transactional
+    protected void updateEventDateInfo(EventUpdateDto eventUpdateDto, Long eventId) {
+        Event existingEvent = eventRepo.findById(eventId)
+                .orElseThrow(() -> new NotFoundException("Event not found: " + eventId));
+
+        List<EventDateInfoUpdateDto> eventDateInfoUpdateDtos = eventUpdateDto.getEventDays()
+                .stream()
+                .sorted(Comparator.comparing(EventDateInfoUpdateDto::getEventTimeStart))
+                .toList();
+
+        Set<Long> updatedIds = new HashSet<>();
+
+        for (EventDateInfoUpdateDto infoUpdateDto : eventDateInfoUpdateDtos) {
+            if (infoUpdateDto.getId() == null) {
+                EventDateInfo eventDateInfo = modelMapper.map(infoUpdateDto, EventDateInfo.class);
+                eventDateInfo.setEvent(existingEvent);
+                eventDateInfoRepo.save(eventDateInfo);
+                updatedIds.add(eventDateInfo.getId());
+                infoUpdateDto.setId(eventDateInfo.getId());
+            }
+        }
+
+        for (EventDateInfoUpdateDto eventDateInfoUpdateDto : eventDateInfoUpdateDtos) {
+            EventDateInfo existingDateInfo = eventDateInfoRepo.findById(eventDateInfoUpdateDto.getId())
+                    .orElseThrow(() -> new NotFoundException("EventDateInfo not found"));
+            if (eventDateInfoUpdateDto.getId() != null
+                    && (existingDateInfo.getEvent().getId().equals(eventId))) {
+                eventDateInfoService.updateEventDateInfo(eventDateInfoUpdateDto.getId(), eventDateInfoUpdateDto);
+            }
+        }
+
+        updatedIds.addAll(eventDateInfoUpdateDtos.stream()
+                .map(EventDateInfoUpdateDto::getId)
+                .filter(Objects::nonNull)
+                .collect(Collectors.toSet()));
+
+        List<EventDateInfo> eventDateInfos = eventDateInfoRepo.findByEvent(existingEvent);
+
+        for (EventDateInfo eventDateInfo : eventDateInfos) {
+            if (!updatedIds.contains(eventDateInfo.getId())) {
+                eventDateInfoRepo.delete(eventDateInfo);
+            }
+        }
+
+        List<EventDateInfo> eventDateInfosUpdated = eventDateInfoRepo.findByEvent(existingEvent);
+        List<EventDateInfo> sortedEventDateInfos = eventDateInfosUpdated.stream()
+                .sorted(Comparator.comparing(EventDateInfo::getEventTimeStart))
+                .toList();
+
+        int count1 = 1;
+
+        for (EventDateInfo eventDateInfo : sortedEventDateInfos) {
+            eventDateInfo.setNumOfDayInEvent(count1++);
+        }
     }
 
     @Override
