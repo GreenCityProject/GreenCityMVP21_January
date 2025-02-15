@@ -8,6 +8,7 @@ import greencity.converters.UserArgumentResolver;
 import greencity.dto.event.*;
 import greencity.dto.user.AuthorDto;
 import greencity.dto.user.UserProfilePictureDto;
+import greencity.exception.exceptions.BadRequestException;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.exception.handler.CustomExceptionHandler;
 import greencity.service.EventService;
@@ -480,12 +481,34 @@ class EventControllerTest {
     void updateTest() throws Exception {
         when(eventService.updateEvent(anyLong(), any(EventUpdateDto.class), anyString())).thenReturn(eventResponseDto);
 
-        MvcResult result = mockMvc.perform(post("/events")
+        EventUpdateDto eventUpdateDto = new EventUpdateDto();
+
+        eventUpdateDto.setAuthorEmail(principal.getName());
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+        eventUpdateDto.setTitle("title");
+        eventUpdateDto.setDescription("descriptionglygluigluyfluyflukyfkytfkytdkytdkytdkytkyt");
+        eventUpdateDto.setInitiativeTypes(List.of(InitiativeTypeRequestDto.builder().name("Economic").build()));
+        eventUpdateDto.setOpen(true);
+        eventUpdateDto.setDuration(1);
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+
+        EventDateInfoUpdateDto eventDateInfoUpdateDto = new EventDateInfoUpdateDto();
+        eventDateInfoUpdateDto.setIsOnline(true);
+        eventDateInfoUpdateDto.setIsAllDay(false);
+        eventDateInfoUpdateDto.setUrl("http://google.com");
+        eventDateInfoUpdateDto.setIsPlace(false);
+        eventDateInfoUpdateDto.setEventDate(LocalDate.of(2025, 12, 15));
+        eventDateInfoUpdateDto.setEventTimeStart(LocalDateTime.of(2025, 12, 15, 14, 30));
+        eventDateInfoUpdateDto.setEventTimeEnd(LocalDateTime.of(2025, 12, 15, 15, 30));
+
+        eventUpdateDto.setEventDays(List.of(eventDateInfoUpdateDto));
+
+        MvcResult result = mockMvc.perform(put("/events/1")
                         .contentType(MediaType.APPLICATION_JSON)
-                        .content(objectMapper2.writeValueAsString(eventRequestDto))
+                        .content(objectMapper2.writeValueAsString(eventUpdateDto))
                         .principal(principal)
                         .accept(MediaType.APPLICATION_JSON))
-                .andExpect(status().isCreated())
+                .andExpect(status().isOk())
                 .andExpect(jsonPath("$.id").value(eventResponseDto.getId()))
                 .andExpect(jsonPath("$.title").value(eventResponseDto.getTitle()))
                 .andExpect(jsonPath("$.description").value(eventResponseDto.getDescription()))
@@ -496,5 +519,108 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.mainImage.imagePath").value(eventResponseDto.getMainImage().getImagePath()))
                 .andReturn();
 
+        String responseContent = result.getResponse().getContentAsString();
+        assertNotNull(responseContent);
+        assertTrue(responseContent.contains("title"));
+        assertTrue(responseContent.contains("description"));
+        assertTrue(responseContent.contains("open"));
+
+        verify(eventService, times(1)).updateEvent(eq(1L), any(EventUpdateDto.class), eq(principal.getName()));
+    }
+
+    @Test
+    void updateNoRequiredFieldTitleTest() throws Exception {
+        EventUpdateDto eventUpdateDto = new EventUpdateDto();
+
+        eventUpdateDto.setAuthorEmail(principal.getName());
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+        eventUpdateDto.setDescription("descriptionglygluigluyfluyflukyfkytfkytdkytdkytdkytkyt");
+        eventUpdateDto.setInitiativeTypes(List.of(InitiativeTypeRequestDto.builder().name("Economic").build()));
+        eventUpdateDto.setOpen(true);
+        eventUpdateDto.setDuration(1);
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+
+        mockMvc.perform(put("/events/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper2.writeValueAsString(eventUpdateDto))
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        verify(eventService, times(0)).updateEvent(eq(1L), any(EventUpdateDto.class), eq(principal.getName()));
+    }
+
+    @Test
+    void updateNoRequiredFieldEventDaysTest() throws Exception {
+        when(eventService.updateEvent(anyLong(), any(EventUpdateDto.class), anyString())).thenThrow(new IllegalArgumentException("Event must have at least one event day."));
+
+        EventUpdateDto eventUpdateDto = new EventUpdateDto();
+
+        eventUpdateDto.setAuthorEmail(principal.getName());
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+        eventUpdateDto.setTitle("title");
+        eventUpdateDto.setDescription("descriptionglygluigluyfluyflukyfkytfkytdkytdkytdkytkyt");
+        eventUpdateDto.setInitiativeTypes(List.of(InitiativeTypeRequestDto.builder().name("Economic").build()));
+        eventUpdateDto.setOpen(true);
+        eventUpdateDto.setDuration(1);
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+
+        MvcResult result = mockMvc.perform(put("/events/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper2.writeValueAsString(eventUpdateDto))
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        assertTrue(responseContent.contains("Event must have at least one event day."), "Error message should be in the response");
+
+        verify(eventService, times(1)).updateEvent(eq(1L), any(EventUpdateDto.class), eq(principal.getName()));
+    }
+
+    @Test
+    void updateInThePastTest() throws Exception {
+        when(eventService.updateEvent(anyLong(), any(EventUpdateDto.class), anyString())).thenThrow(new BadRequestException("You cannot edit the event that is in the past"));
+
+        EventUpdateDto eventUpdateDto = new EventUpdateDto();
+
+        eventUpdateDto.setAuthorEmail(principal.getName());
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+        eventUpdateDto.setTitle("title");
+        eventUpdateDto.setDescription("descriptionglygluigluyfluyflukyfkytfkytdkytdkytdkytkyt");
+        eventUpdateDto.setInitiativeTypes(List.of(InitiativeTypeRequestDto.builder().name("Economic").build()));
+        eventUpdateDto.setOpen(true);
+        eventUpdateDto.setDuration(1);
+        eventUpdateDto.setMainImage(ImageRequestDto.builder().imagePath("imagePath").build());
+
+        EventDateInfoUpdateDto eventDateInfoUpdateDto = new EventDateInfoUpdateDto();
+        eventDateInfoUpdateDto.setIsOnline(true);
+        eventDateInfoUpdateDto.setIsAllDay(false);
+        eventDateInfoUpdateDto.setUrl("http://google.com");
+        eventDateInfoUpdateDto.setIsPlace(false);
+        eventDateInfoUpdateDto.setEventDate(LocalDate.of(2025, 12, 15));
+        eventDateInfoUpdateDto.setEventTimeStart(LocalDateTime.of(2025, 12, 15, 14, 30));
+        eventDateInfoUpdateDto.setEventTimeEnd(LocalDateTime.of(2025, 12, 15, 15, 30));
+
+        eventUpdateDto.setEventDays(List.of(eventDateInfoUpdateDto));
+
+        attributes.put("path", "/events/1");
+        attributes.put("message", "You cannot edit the event that is in the past");
+        when(errorAttributes.getErrorAttributes(any(WebRequest.class), any(ErrorAttributeOptions.class))).thenReturn(attributes);
+
+        MvcResult result = mockMvc.perform(put("/events/1")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper2.writeValueAsString(eventUpdateDto))
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isBadRequest())
+                .andReturn();
+
+        String responseContent = result.getResponse().getContentAsString();
+        assertTrue(responseContent.contains("You cannot edit the event that is in the past"), "Error message should be in the response");
+
+        verify(eventService, times(1)).updateEvent(eq(1L), any(EventUpdateDto.class), eq(principal.getName()));
     }
 }

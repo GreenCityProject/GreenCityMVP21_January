@@ -191,7 +191,6 @@ public class EventServiceImpl implements EventService {
         validateDate(id);
 
         Event existingEvent = eventRepo.findById(id).orElseThrow(() -> new NotFoundException("Event not found: " + id));
-        //userRepo.findByEmail(eventUpdateDto.getAuthorEmail()).orElseThrow(() -> new NotFoundException("Author not found: " + eventUpdateDto.getAuthorEmail()));
 
         existingEvent.setTitle(eventUpdateDto.getTitle());
         existingEvent.setDescription(eventUpdateDto.getDescription());
