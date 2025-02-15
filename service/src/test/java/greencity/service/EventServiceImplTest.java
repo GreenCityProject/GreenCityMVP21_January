@@ -3,6 +3,7 @@ package greencity.service;
 import greencity.ModelUtils;
 import greencity.dto.event.*;
 import greencity.entity.*;
+import greencity.enums.Role;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.mapping.EventMappingContext;
 import greencity.repository.*;
@@ -16,11 +17,10 @@ import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.*;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
-import java.util.List;
-import java.util.Optional;
-import java.util.Set;
+import java.util.*;
 
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
@@ -47,10 +47,16 @@ class EventServiceImplTest {
     private UserRepo userRepo;
 
     @Mock
+    private EventLikesRepo eventLikesRepo;
+
+    @Mock
     private EmailService emailService;
 
     @Mock
     private ParticipationRepo participationRepo;
+
+    @Mock
+    private EventDateInfoService eventDateInfoService;  // Mocking the service
 
     @InjectMocks
     private EventServiceImpl eventService;
@@ -377,4 +383,110 @@ class EventServiceImplTest {
         verify(participationRepo, times(2)).findUsersByEventId(anyLong());
         verify(modelMapper, times(2)).map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class));
     }
+
+    @Test
+    public void testUpdateEventSuccess() {
+
+        String userEmail = "user@example.com";
+        User user = new User();
+        user.setId(1L);
+        user.setEmail(userEmail);
+        user.setRole(Role.ROLE_USER);
+
+        when(userRepo.findByEmail(userEmail)).thenReturn(Optional.of(user));
+
+        Long eventId = 1L;
+        EventUpdateDto eventUpdateDto = new EventUpdateDto();
+        eventUpdateDto.setTitle("New Event Title");
+        eventUpdateDto.setDescription("New Event Description");
+
+        EventDateInfoUpdateDto eventDateInfoUpdateDto = new EventDateInfoUpdateDto();
+        eventDateInfoUpdateDto.setEventDate(LocalDate.now().plusDays(1));
+        eventDateInfoUpdateDto.setEventTimeStart(LocalDateTime.now().plusHours(1));
+        eventDateInfoUpdateDto.setEventTimeEnd(LocalDateTime.now().plusHours(2));
+        eventDateInfoUpdateDto.setIsAllDay(false);
+        eventDateInfoUpdateDto.setIsPlace(true);
+        eventDateInfoUpdateDto.setIsOnline(false);
+        eventDateInfoUpdateDto.setLocation("Sample Location");
+        eventDateInfoUpdateDto.setUrl("http://example.com");
+        eventDateInfoUpdateDto.setNumOfTheDay(1);
+//        eventDateInfoUpdateDto.setId(1L);
+
+        eventUpdateDto.setEventDays(List.of(eventDateInfoUpdateDto));
+
+        InitiativeTypeRequestDto initiativeTypeRequestDto = new InitiativeTypeRequestDto();
+        initiativeTypeRequestDto.setName("Environmental");
+
+        eventUpdateDto.setInitiativeTypes(List.of(initiativeTypeRequestDto));
+
+        Event existingEvent = new Event();
+        existingEvent.setId(eventId);
+        existingEvent.setTitle("Old Event Title");
+        existingEvent.setCreationDate(ZonedDateTime.now());
+        existingEvent.setDescription("Old Event Description");
+        existingEvent.setDuration(120);
+        existingEvent.setLikes(100);
+        existingEvent.setRating(4.5);
+        existingEvent.setAuthor(user);
+
+        InitiativeType initiativeType = new InitiativeType();
+        initiativeType.setId(1L);
+        initiativeType.setName("Social");
+
+        existingEvent.setInitiativeTypes(List.of(initiativeType));
+
+        Image image1 = new Image();
+        image1.setId(1L);
+        Image image2 = new Image();
+        image2.setId(2L);
+        Set<Image> images = new HashSet<>();
+        images.add(image1);
+        images.add(image2);
+
+        existingEvent.setImages(images);
+
+        Image mainImage = new Image();
+        mainImage.setId(3L);
+
+        existingEvent.setMainImage(mainImage);
+
+        InitiativeType environmentalInitiativeType = new InitiativeType();
+        environmentalInitiativeType.setId(2L);
+        environmentalInitiativeType.setName("Environmental");
+
+        when(initiativeTypeRepo.findByName("Environmental")).thenReturn(Optional.of(environmentalInitiativeType));
+        when(eventRepo.findById(eventId)).thenReturn(Optional.of(existingEvent));
+
+        Image defaultImage = new Image();
+        defaultImage.setId(1L);
+        when(imageRepo.findById(1L)).thenReturn(Optional.of(defaultImage));
+
+        EventDateInfo eventDateInfo = new EventDateInfo();
+        eventDateInfo.setId(1L);
+        eventDateInfo.setEvent(existingEvent);
+
+        when(eventDateInfoRepo.findById(1L)).thenReturn(Optional.of(eventDateInfo));
+        when(modelMapper.map(any(Event.class), eq(EventResponseDto.class)))
+                .thenReturn(new EventResponseDto());
+        when(eventLikesRepo.countLikesByEventId(eventId)).thenReturn(150);
+
+        EventResponseDto result = eventService.updateEvent(eventId, eventUpdateDto, userEmail);
+
+        EventDateInfo updatedDateInfo = eventDateInfoRepo.findById(1L).orElseThrow();
+
+        assertNotNull(result);
+
+        assertEquals("New Event Title", existingEvent.getTitle());
+        assertEquals("New Event Description", existingEvent.getDescription());
+        assertEquals("Sample Location", updatedDateInfo.getLocation());
+
+        verify(eventRepo, times(4)).findById(eventId);
+        verify(imageRepo, times(2)).findById(1L);
+        verify(eventDateInfoRepo).findById(1L);
+        verify(eventDateInfoService).updateEventDateInfo(anyLong(), any(EventDateInfoUpdateDto.class));
+        verify(initiativeTypeRepo).findByName("Environmental");
+        verify(eventLikesRepo).countLikesByEventId(eventId);
+    }
+
+
 }
