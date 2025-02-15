@@ -475,4 +475,26 @@ class EventControllerTest {
                 .andExpect(jsonPath("$.totalPages").value(1))
                 .andExpect(jsonPath("$.last").value(true));
     }
+
+    @Test
+    void updateTest() throws Exception {
+        when(eventService.updateEvent(anyLong(), any(EventUpdateDto.class), anyString())).thenReturn(eventResponseDto);
+
+        MvcResult result = mockMvc.perform(post("/events")
+                        .contentType(MediaType.APPLICATION_JSON)
+                        .content(objectMapper2.writeValueAsString(eventRequestDto))
+                        .principal(principal)
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isCreated())
+                .andExpect(jsonPath("$.id").value(eventResponseDto.getId()))
+                .andExpect(jsonPath("$.title").value(eventResponseDto.getTitle()))
+                .andExpect(jsonPath("$.description").value(eventResponseDto.getDescription()))
+                .andExpect(jsonPath("$.open").value(eventResponseDto.isOpen()))
+                .andExpect(jsonPath("$.duration").value(eventResponseDto.getDuration()))
+                .andExpect(jsonPath("$.author.name").value(eventResponseDto.getAuthor().getName()))
+                .andExpect(jsonPath("$.author.id").value(eventResponseDto.getAuthor().getId()))
+                .andExpect(jsonPath("$.mainImage.imagePath").value(eventResponseDto.getMainImage().getImagePath()))
+                .andReturn();
+
+    }
 }
