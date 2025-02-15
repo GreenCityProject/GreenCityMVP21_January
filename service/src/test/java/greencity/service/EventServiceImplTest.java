@@ -468,6 +468,8 @@ class EventServiceImplTest {
         eventDateInfo.setId(1L);
         eventDateInfo.setEvent(existingEvent);
         eventDateInfo.setLocation("Sample Location");
+        eventDateInfo.setEventTimeStart(LocalDateTime.now().plusHours(1));
+        eventDateInfo.setEventTimeEnd(LocalDateTime.now().plusHours(2));
 
         when(eventDateInfoRepo.findById(1L)).thenReturn(Optional.of(eventDateInfo));
         when(modelMapper.map(any(Event.class), eq(EventResponseDto.class)))
@@ -478,8 +480,6 @@ class EventServiceImplTest {
         when(eventDateInfoRepo.findByEvent(existingEvent)).thenReturn(List.of(eventDateInfo));
 
         EventResponseDto result = eventService.updateEvent(eventId, eventUpdateDto, userEmail);
-
-        log.info(result.toString());
 
         EventDateInfo updatedDateInfo = eventDateInfoRepo.findById(eventId).orElseThrow();
 
@@ -497,6 +497,4 @@ class EventServiceImplTest {
         verify(initiativeTypeRepo).findByName("Environmental");
         verify(eventLikesRepo).countLikesByEventId(eventId);
     }
-
-
 }

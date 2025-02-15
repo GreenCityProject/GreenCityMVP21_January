@@ -428,11 +428,10 @@ public class EventServiceImpl implements EventService {
                 .max(Comparator.naturalOrder())
                 .orElse(null);
 
-        // Check if ANY event date is in the past, not just the latest
-        if (eventDateInfos.stream().anyMatch(edi -> edi.getEventTimeStart() != null && edi.getEventTimeStart().isBefore(LocalDateTime.now()))) {
-            throw new BadRequestException("You cannot edit the event that has at least one day in the past");
+        if (latestEventDate != null && latestEventDate.isAfter(LocalDateTime.now())) {
+            return true;
         }
 
-        return true;
+        throw new BadRequestException("You cannot edit the event that is in the past");
     }
 }
