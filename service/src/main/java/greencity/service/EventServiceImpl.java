@@ -149,7 +149,7 @@ public class EventServiceImpl implements EventService {
 
         List<InitiativeType> initiativeTypes = eventRequestDto.getInitiativeTypes().stream()
                 .map(i -> initiativeTypeRepo.findByName(i.getName())
-                        .orElseThrow(() -> new EntityNotFoundException("Initiative type not found: " + i.getName())))
+                        .orElseThrow(() -> new NotFoundException("Initiative type not found: " + i.getName())))
                 .collect(Collectors.toList());
         savedEventInRepo.setInitiativeTypes(initiativeTypes);
 
@@ -206,7 +206,7 @@ public class EventServiceImpl implements EventService {
 
         List<InitiativeType> initiativeTypes = eventUpdateDto.getInitiativeTypes().stream()
                 .map(i -> initiativeTypeRepo.findByName(i.getName())
-                        .orElseThrow(() -> new EntityNotFoundException("Initiative type not found: " + i.getName())))
+                        .orElseThrow(() -> new NotFoundException("Initiative type not found: " + i.getName())))
                 .collect(Collectors.toList());
         existingEvent.setInitiativeTypes(initiativeTypes);
 
