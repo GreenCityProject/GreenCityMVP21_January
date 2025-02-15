@@ -8,6 +8,7 @@ import greencity.exception.exceptions.NotFoundException;
 import greencity.mapping.EventMappingContext;
 import greencity.repository.*;
 import jakarta.mail.MessagingException;
+import lombok.extern.slf4j.Slf4j;
 import org.junit.jupiter.api.BeforeEach;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.extension.ExtendWith;
@@ -25,6 +26,7 @@ import java.util.*;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.Mockito.*;
 
+@Slf4j
 @ExtendWith(MockitoExtension.class)
 class EventServiceImplTest {
 
@@ -65,6 +67,7 @@ class EventServiceImplTest {
     private EventRequestDto eventRequestDto;
     private EventResponseDto eventResponseDto;
     private InitiativeType initiativeType;
+    private EventDateInfoResponseDto eventDateInfoResponseDto;
 
     @BeforeEach
     void setUp() {
@@ -397,6 +400,7 @@ class EventServiceImplTest {
 
         Long eventId = 1L;
         EventUpdateDto eventUpdateDto = new EventUpdateDto();
+        eventUpdateDto.setAuthorEmail(userEmail);
         eventUpdateDto.setTitle("New Event Title");
         eventUpdateDto.setDescription("New Event Description");
 
@@ -410,7 +414,6 @@ class EventServiceImplTest {
         eventDateInfoUpdateDto.setLocation("Sample Location");
         eventDateInfoUpdateDto.setUrl("http://example.com");
         eventDateInfoUpdateDto.setNumOfTheDay(1);
-//        eventDateInfoUpdateDto.setId(1L);
 
         eventUpdateDto.setEventDays(List.of(eventDateInfoUpdateDto));
 
@@ -464,25 +467,32 @@ class EventServiceImplTest {
         EventDateInfo eventDateInfo = new EventDateInfo();
         eventDateInfo.setId(1L);
         eventDateInfo.setEvent(existingEvent);
+        eventDateInfo.setLocation("Sample Location");
 
         when(eventDateInfoRepo.findById(1L)).thenReturn(Optional.of(eventDateInfo));
         when(modelMapper.map(any(Event.class), eq(EventResponseDto.class)))
                 .thenReturn(new EventResponseDto());
+        when(modelMapper.map(any(EventDateInfo.class), eq(EventDateInfoResponseDto.class))).thenReturn(eventDateInfoResponseDto);
+        when(modelMapper.map(any(EventDateInfoUpdateDto.class), eq(EventDateInfo.class))).thenReturn(eventDateInfo);
         when(eventLikesRepo.countLikesByEventId(eventId)).thenReturn(150);
+        when(eventDateInfoRepo.findByEvent(existingEvent)).thenReturn(List.of(eventDateInfo));
 
         EventResponseDto result = eventService.updateEvent(eventId, eventUpdateDto, userEmail);
 
-        EventDateInfo updatedDateInfo = eventDateInfoRepo.findById(1L).orElseThrow();
+        log.info(result.toString());
+
+        EventDateInfo updatedDateInfo = eventDateInfoRepo.findById(eventId).orElseThrow();
 
         assertNotNull(result);
 
         assertEquals("New Event Title", existingEvent.getTitle());
         assertEquals("New Event Description", existingEvent.getDescription());
         assertEquals("Sample Location", updatedDateInfo.getLocation());
+        assertEquals("Environmental", existingEvent.getInitiativeTypes().get(0).getName());
 
         verify(eventRepo, times(4)).findById(eventId);
         verify(imageRepo, times(2)).findById(1L);
-        verify(eventDateInfoRepo).findById(1L);
+        verify(eventDateInfoRepo, times(2)).findById(1L);
         verify(eventDateInfoService).updateEventDateInfo(anyLong(), any(EventDateInfoUpdateDto.class));
         verify(initiativeTypeRepo).findByName("Environmental");
         verify(eventLikesRepo).countLikesByEventId(eventId);

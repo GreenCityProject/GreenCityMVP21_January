@@ -13,6 +13,7 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @Builder
+@ToString
 public class EventResponseDto {
     private Long id;
     private String title;

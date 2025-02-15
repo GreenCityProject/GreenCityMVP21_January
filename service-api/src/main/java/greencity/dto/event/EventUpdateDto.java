@@ -15,6 +15,7 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @Builder
+@ToString
 public class EventUpdateDto {
     @NotBlank(message = "Title cannot be empty")
     @Size(max = 70, message = "Event title must be up to 70 characters")
