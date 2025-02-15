@@ -25,7 +25,6 @@ public class EventResponseDto {
     private AuthorDto author;
     private ZonedDateTime creationDate;
     private List<UserProfilePictureDto> participants;
-    private List<EventCommentResponseDto> comments;
     private ImageResponseDto mainImage;
     private double rating;
     private boolean isJoined;

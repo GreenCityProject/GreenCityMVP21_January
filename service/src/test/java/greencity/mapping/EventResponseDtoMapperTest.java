@@ -57,7 +57,6 @@ public class EventResponseDtoMapperTest {
         assertEquals(1, eventResponseDto.getImages().size());
         assertEquals(event.getAuthor().getId(), eventResponseDto.getAuthor().getId());
         assertEquals(event.getAuthor().getName(), eventResponseDto.getAuthor().getName());
-        assertEquals(1, eventResponseDto.getComments().size());
         assertEquals(event.getLikes(), eventResponseDto.getLikes());
     }
 }

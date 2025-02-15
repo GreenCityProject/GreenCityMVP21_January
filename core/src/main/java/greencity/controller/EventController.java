@@ -69,7 +69,6 @@ public class EventController {
         if (result.hasErrors()) {
             return ResponseEntity.badRequest().body(result.getAllErrors());
         }
-        //eventUpdateDto.setAuthorEmail(currentUser.getName());
         return ResponseEntity.status(HttpStatus.OK).body(eventService.updateEvent(eventId, eventUpdateDto, currentUser.getName()));
     }
 }
