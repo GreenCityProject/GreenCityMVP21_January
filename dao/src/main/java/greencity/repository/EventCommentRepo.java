@@ -72,7 +72,7 @@ public interface EventCommentRepo extends JpaRepository<EventComment, Long> {
      * @return total number of comments.
      */
     @Query("SELECT COUNT(ec) FROM EventComment ec WHERE ec.event = :event")
-    long countByEvent(Event event); // I think it's gonna be useful if we want to show the total number of comments for an event on a page.
+    long countByEvent(Event event);
 
     /**
      * Method to count the total number of replies for a specific parent comment.
@@ -81,6 +81,5 @@ public interface EventCommentRepo extends JpaRepository<EventComment, Long> {
      * @return total number of replies.
      */
     @Query("SELECT COUNT(ec) FROM EventComment ec WHERE ec.parentComment = :parentComment")
-    long countRepliesByParentComment(EventComment parentComment); // Well, this is appropriate when you need to show information about
-    // the number of replies under each comment.
+    long countRepliesByParentComment(EventComment parentComment);
 }
