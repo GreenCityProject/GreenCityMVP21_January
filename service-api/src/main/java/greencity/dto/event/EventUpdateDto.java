@@ -15,7 +15,8 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @Builder
-public class EventRequestDto {
+@ToString
+public class EventUpdateDto {
     @NotBlank(message = "Title cannot be empty")
     @Size(max = 70, message = "Event title must be up to 70 characters")
     private String title;
@@ -39,7 +40,7 @@ public class EventRequestDto {
             message = "The number of event days must be between 1 and 7"
     )
     @Valid
-    private List<EventDateInfoRequestDto> eventDays;
+    private List<EventDateInfoUpdateDto> eventDays;
 
     @Size(
             min = 1,

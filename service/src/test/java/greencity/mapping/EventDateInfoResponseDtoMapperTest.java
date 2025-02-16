@@ -23,6 +23,7 @@ public class EventDateInfoResponseDtoMapperTest {
                 .isPlace(true)
                 .isOnline(false)
                 .location("Test Location")
+                .numOfDayInEvent(2)
                 .build();
 
         EventDateInfoResponseDto dto = mapper.convert(eventDateInfo);
@@ -36,5 +37,6 @@ public class EventDateInfoResponseDtoMapperTest {
         assertEquals(eventDateInfo.isOnline(), dto.isOnline());
         assertEquals(eventDateInfo.getLocation(), dto.getLocation());
         assertEquals(eventDateInfo.getUrl(), dto.getUrl());
+        assertEquals(eventDateInfo.getNumOfDayInEvent(), dto.getNumOfDayInEvent());
     }
 }

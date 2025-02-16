@@ -3,10 +3,10 @@ package greencity.service;
 import greencity.dto.event.EventResponseDto;
 import greencity.dto.event.ParticipationRequestDto;
 import greencity.dto.user.UserProfilePictureDto;
-import greencity.entity.Event;
-import greencity.entity.Participation;
-import greencity.entity.ParticipationKey;
-import greencity.entity.User;
+import greencity.entity.*;
+import greencity.exception.exceptions.BadRequestException;
+import greencity.exception.exceptions.NotFoundException;
+import greencity.repository.EventDateInfoRepo;
 import greencity.repository.EventRepo;
 import greencity.repository.ParticipationRepo;
 import greencity.repository.UserRepo;
@@ -15,7 +15,10 @@ import lombok.AllArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
 
+import java.time.LocalDateTime;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Optional;
 
 @Service
 @AllArgsConstructor
@@ -23,6 +26,7 @@ public class ParticipationServiceImpl implements ParticipationService {
     private EventRepo eventRepo;
     private UserRepo userRepo;
     private ParticipationRepo participationRepo;
+    private EventDateInfoRepo eventDateInfoRepo;
     private ModelMapper modelMapper;
 
     @Override
@@ -39,14 +43,27 @@ public class ParticipationServiceImpl implements ParticipationService {
     @Override
     public void removeParticipation(Long userId, Long eventId) {
         User user = userRepo.findById(userId)
-                .orElseThrow(() -> new EntityNotFoundException("User not found with id: " + userId));
+                .orElseThrow(() -> new NotFoundException("User not found with id: " + userId));
         Event event = eventRepo.findById(eventId)
-                .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
+                .orElseThrow(() -> new NotFoundException("Event not found with id: " + eventId));
 
-        ParticipationKey participationKey = new ParticipationKey(user, event);
-        Participation participation = participationRepo.findById(participationKey)
-                .orElseThrow(() -> new EntityNotFoundException("Participation not found"));
-        participationRepo.delete(participation);
+        List<EventDateInfo> dayInfos = eventDateInfoRepo.findByEvent(event);
+
+        if (!dayInfos.isEmpty()) {
+            Optional<LocalDateTime> eventDateLatest = eventDateInfoRepo.findByEvent(event).stream()
+                    .map(EventDateInfo::getEventTimeStart)
+                    .max(Comparator.naturalOrder());
+            if (eventDateLatest.isPresent()) {
+                if (eventDateLatest.get().isAfter(LocalDateTime.now())) {
+                    ParticipationKey participationKey = new ParticipationKey(user, event);
+                    Participation participation = participationRepo.findById(participationKey)
+                            .orElseThrow(() -> new NotFoundException("Participation not found"));
+                    participationRepo.delete(participation);
+                } else {
+                    throw new BadRequestException("You cannot remove the participation from the event that is in the past");
+                }
+            }
+        }
     }
 
     @Override

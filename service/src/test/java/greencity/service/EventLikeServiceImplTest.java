@@ -39,7 +39,7 @@ public class EventLikeServiceImplTest {
     @Test
     void countLikesTest() {
         when(eventRepo.findById(event.getId())).thenReturn(Optional.of(event));
-        when(eventLikesRepo.countLikesByEventId(event.getId())).thenReturn(1L);
+        when(eventLikesRepo.countLikesByEventId(event.getId())).thenReturn(1);
 
         long result = eventLikeService.countLikes(1L);
 

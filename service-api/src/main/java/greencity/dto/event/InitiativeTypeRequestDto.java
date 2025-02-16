@@ -9,6 +9,7 @@ import lombok.*;
 @Setter
 @EqualsAndHashCode
 @Builder
+@ToString
 public class InitiativeTypeRequestDto {
     @NotNull
     private String name;

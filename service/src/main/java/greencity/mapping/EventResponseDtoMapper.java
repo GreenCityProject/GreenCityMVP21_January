@@ -20,15 +20,6 @@ public class EventResponseDtoMapper extends AbstractConverter<Event, EventRespon
     @Override
     protected EventResponseDto convert(Event event) {
 
-        List<EventCommentResponseDto> commentDtos = event.getComments() == null ?
-                Collections.emptyList() :
-                event.getComments().stream()
-                        .map(comment -> EventCommentResponseDto.builder()
-                                .id(comment.getId())
-                                .text(comment.getText())
-                                .build())
-                        .toList();
-
         return EventResponseDto.builder()
                 .id(event.getId())
                 .title(event.getTitle())
@@ -52,11 +43,10 @@ public class EventResponseDtoMapper extends AbstractConverter<Event, EventRespon
                         .name(event.getAuthor().getName())
                         .build())
                 .creationDate(event.getCreationDate())
-                .comments(commentDtos)
                 .mainImage(event.getMainImage() != null ?
                         modelMapper.map(event.getMainImage(), ImageResponseDto.class) : null)
+                .rating(event.getRating())
+                .likes(event.getLikes())
                 .build();
-
     }
-
 }

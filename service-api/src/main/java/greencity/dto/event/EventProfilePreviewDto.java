@@ -4,6 +4,8 @@ import greencity.dto.user.AuthorDto;
 import greencity.dto.user.UserProfilePictureDto;
 import lombok.*;
 
+import java.time.LocalDate;
+import java.time.LocalDateTime;
 import java.time.ZonedDateTime;
 import java.util.List;
 
@@ -13,21 +15,17 @@ import java.util.List;
 @Setter
 @EqualsAndHashCode
 @Builder
-@ToString
-public class EventResponseDto {
+public class EventProfilePreviewDto {
     private Long id;
     private String title;
-    private String description;
-    private int duration;
-    private List<EventDateInfoResponseDto> eventDays;
+    private ZonedDateTime creationDate;
+    private LocalDate eventDate;
+    private LocalDateTime eventTimeStart;
+    private AuthorDto author;
+    private String location;
     private List<InitiativeTypeResponseDto> initiativeTypes;
     private boolean isOpen;
-    private List<ImageResponseDto> images;
-    private AuthorDto author;
-    private ZonedDateTime creationDate;
-    private List<UserProfilePictureDto> participants;
     private ImageResponseDto mainImage;
     private double rating;
-    private boolean isJoined;
-    private int likes;
+    private List<UserProfilePictureDto> participants;
 }

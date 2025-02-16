@@ -158,6 +158,13 @@ public class SecurityConfig {
                                 "/ownSecurity/changePassword")
                         .permitAll()
                         .requestMatchers(HttpMethod.GET,
+                                "/events",
+                                "/events/{id}",
+                                "/events/myEvents",
+                                "/events/myEvents/past",
+                                "/events/myEvents/live",
+                                "/events/myEvents/upcoming",
+                                "/events/myEvents/status/{status}",
                                 "/achievements",
                                 CUSTOM_SHOPPING_LIST_ITEMS,
                                 CUSTOM_SHOPPING_LIST,
@@ -227,6 +234,8 @@ public class SecurityConfig {
                                 "/notification")
                         .hasAnyRole(USER, ADMIN, MODERATOR, UBS_EMPLOYEE)
                         .requestMatchers(HttpMethod.PUT,
+                                "/events/{eventId}",
+                                "/events/search",
                                 "/habit/statistic/{id}",
                                 "/econews/update",
                                 "/friends/{senderId}/accept/{recipientId}/",
@@ -255,6 +264,7 @@ public class SecurityConfig {
                         .requestMatchers(HttpMethod.DELETE,
                                 ECONEWS_COMMENTS,
                                 "/events/comments/{eventCommentId}",
+                                "/participation/{eventId}",
                                 "/econews/{econewsId}",
                                 "/friends/{userId}/delete/{friendId}/",
                                 CUSTOM_SHOPPING_LIST_ITEMS,
