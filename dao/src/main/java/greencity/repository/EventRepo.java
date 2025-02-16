@@ -99,7 +99,7 @@ public interface EventRepo extends JpaRepository<Event, Long> {
                 SELECT e FROM Event e
                 JOIN EventDateInfo edi ON edi.event = e
                 WHERE edi.numOfDayInEvent = 1
-                ORDER BY edi.eventTimeStart DESC
+                ORDER BY edi.eventTimeStart ASC
             """)
     Page<Event> findAllSortedByStartDateDesc(Pageable pageable);
 
