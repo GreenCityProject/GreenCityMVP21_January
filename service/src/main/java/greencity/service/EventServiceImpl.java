@@ -388,7 +388,7 @@ public class EventServiceImpl implements EventService {
     @Override
     @Transactional(readOnly = true)
     public EventProfilePreviewPageable getAllEventsPageable(Pageable pageable) {
-        Page<Event> events = eventRepo.findAllSortedByStartDateDesc(pageable);
+        Page<Event> events = eventRepo.findAllSortedByStartDateAsc(pageable);
         List<Event> listOfEvents = events.getContent();
 
         List<EventProfilePreviewDto> content = listOfEvents.stream()

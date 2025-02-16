@@ -6,7 +6,9 @@ import greencity.service.EventService;
 import io.swagger.v3.oas.annotations.Parameter;
 import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
+import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.web.PageableDefault;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.validation.BindingResult;
@@ -73,7 +75,7 @@ public class EventController {
     }
 
     @GetMapping
-    public ResponseEntity<EventProfilePreviewPageable> getAllEvents(Pageable pageable) {
+    public ResponseEntity<EventProfilePreviewPageable> getAllEvents(@PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllEventsPageable(pageable));
     }
 

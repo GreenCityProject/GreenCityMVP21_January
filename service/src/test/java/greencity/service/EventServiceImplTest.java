@@ -497,4 +497,51 @@ class EventServiceImplTest {
         verify(initiativeTypeRepo).findByName("Environmental");
         verify(eventLikesRepo).countLikesByEventId(eventId);
     }
+
+    @Test
+    public void getAllEventsPageableTest() {
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Event event1 = new Event();
+        event1.setId(1L);
+        Event event2 = new Event();
+        event2.setId(2L);
+
+        EventDateInfo eventDateInfo1 = new EventDateInfo();
+        eventDateInfo1.setEvent(event1);
+        eventDateInfo1.setEventTimeStart(LocalDateTime.now().plusHours(1));
+        eventDateInfo1.setEventTimeEnd(LocalDateTime.now().plusHours(2));
+
+        EventDateInfo eventDateInfo2 = new EventDateInfo();
+        eventDateInfo2.setEvent(event2);
+        eventDateInfo2.setEventTimeStart(LocalDateTime.now().plusDays(1));
+        eventDateInfo2.setEventTimeEnd(LocalDateTime.now().plusDays(1).plusHours(2));
+
+        Page<Event> page = new PageImpl<Event>(List.of(event1, event2));
+
+        when(eventRepo.findAllSortedByStartDateAsc(pageable)).thenReturn(page);
+        when(eventDateInfoRepo.findByEvent(event1)).thenReturn(List.of(eventDateInfo1));
+        when(eventDateInfoRepo.findByEvent(event2)).thenReturn(List.of(eventDateInfo2));
+        when(participationRepo.findUsersByEventId(anyLong())).thenReturn(List.of());
+
+        when(modelMapper.map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class)))
+                .thenAnswer(invocation -> {
+                    EventMappingContext context = invocation.getArgument(0);
+                    return EventProfilePreviewDto.builder()
+                            .id(context.getEvent().getId())
+                            .title("Mapped Event " + context.getEvent().getId())
+                            .build();
+                });
+
+        EventProfilePreviewPageable result = eventService.getAllEventsPageable(pageable);
+
+        assertNotNull(result);
+        assertEquals(2, result.getContent().size());
+        assertEquals("Mapped Event 1", result.getContent().get(0).getTitle());
+
+        verify(eventRepo, times(1)).findAllSortedByStartDateAsc(pageable);
+        verify(eventDateInfoRepo, times(2)).findByEvent(any(Event.class));
+        verify(participationRepo, times(2)).findUsersByEventId(anyLong());
+        verify(modelMapper, times(2)).map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class));
+    }
 }
