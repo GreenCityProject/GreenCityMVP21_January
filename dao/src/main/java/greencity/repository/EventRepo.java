@@ -45,28 +45,28 @@ public interface EventRepo extends JpaRepository<Event, Long> {
      * Method to find all events within a specific date range.
      *
      * @param startDate start of the range.
-     * @param endDate end of the range.
+     * @param endDate   end of the range.
      * @return list of {@link Event} instances within the date range.
      */
     List<Event> findAllByCreationDateBetween(ZonedDateTime startDate, ZonedDateTime endDate);
 
     @Query("""
-    SELECT e FROM Event e 
-    WHERE (e.author.id = :userId OR EXISTS (
-        SELECT p FROM Participation p WHERE p.id.event.id = e.id AND p.id.user.id = :userId
-    ))
-    AND (
-        (:type = 'PAST' AND EXISTS (
-            SELECT d FROM EventDateInfo d WHERE d.event = e AND d.eventTimeEnd < :now
-        ))
-        OR (:type = 'LIVE' AND EXISTS (
-            SELECT d FROM EventDateInfo d WHERE d.event = e AND d.eventTimeStart <= :now AND d.eventTimeEnd >= :now
-        ))
-        OR (:type = 'UPCOMING' AND EXISTS (
-            SELECT d FROM EventDateInfo d WHERE d.event = e AND d.eventTimeStart > :now
-        ))
-    )
-    """)
+            SELECT e FROM Event e 
+            WHERE (e.author.id = :userId OR EXISTS (
+                SELECT p FROM Participation p WHERE p.id.event.id = e.id AND p.id.user.id = :userId
+            ))
+            AND (
+                (:type = 'PAST' AND EXISTS (
+                    SELECT d FROM EventDateInfo d WHERE d.event = e AND d.eventTimeEnd < :now
+                ))
+                OR (:type = 'LIVE' AND EXISTS (
+                    SELECT d FROM EventDateInfo d WHERE d.event = e AND d.eventTimeStart <= :now AND d.eventTimeEnd >= :now
+                ))
+                OR (:type = 'UPCOMING' AND EXISTS (
+                    SELECT d FROM EventDateInfo d WHERE d.event = e AND d.eventTimeStart > :now
+                ))
+            )
+            """)
     Page<Event> findUserEventsByTime(@Param("userId") Long userId,
                                      @Param("now") LocalDateTime now,
                                      @Param("type") String type,
@@ -75,12 +75,12 @@ public interface EventRepo extends JpaRepository<Event, Long> {
     List<Event> findAllByAuthorId(Long userId);
 
     @Query("""
-    SELECT e FROM Event e 
-    WHERE e.author.id = :userId 
-    OR EXISTS (
-        SELECT p FROM Participation p WHERE p.id.event.id = e.id AND p.id.user.id = :userId
-    )
-    """)
+            SELECT e FROM Event e 
+            WHERE e.author.id = :userId 
+            OR EXISTS (
+                SELECT p FROM Participation p WHERE p.id.event.id = e.id AND p.id.user.id = :userId
+            )
+            """)
     Page<Event> findAllByAuthorOrParticipant(@Param("userId") Long userId, Pageable pageable);
 
     @Query("SELECT e FROM Event e JOIN EventDateInfo edi ON edi.event.id = e.id " +
@@ -95,7 +95,11 @@ public interface EventRepo extends JpaRepository<Event, Long> {
                                                           @Param("isOnline") boolean isOnline,
                                                           Pageable pageable);
 
-
-
-
+    @Query("""
+                SELECT e FROM Event e
+                JOIN EventDateInfo edi ON edi.event = e
+                WHERE edi.numOfDayInEvent = 1
+                ORDER BY edi.eventTimeStart DESC
+            """)
+    Page<Event> findAllSortedByStartDateDesc(Pageable pageable);
 }

@@ -337,6 +337,31 @@ public class EventServiceImpl implements EventService {
         return getUserEvents(userEmail, "UPCOMING", pageable);
     }
 
+    @Override
+    @Transactional(readOnly = true)
+    public EventProfilePreviewPageable getAllEventsPageable(Pageable pageable) {
+        Page<Event> events = eventRepo.findAllSortedByStartDateDesc(pageable);
+        List<Event> listOfEvents = events.getContent();
+
+        List<EventProfilePreviewDto> content = listOfEvents.stream()
+                .map(event -> {
+                    EventDateInfo eventDateInfo = eventDateInfoRepo.findByEvent(event).stream()
+                            .min(Comparator.comparing(EventDateInfo::getEventDate)).orElse(null);
+                    List<User> participants = participationRepo.findUsersByEventId(event.getId());
+                    EventMappingContext context = new EventMappingContext(event, eventDateInfo, participants);
+                    return modelMapper.map(context, EventProfilePreviewDto.class);
+                }).toList();
+
+        return new EventProfilePreviewPageable(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
+    }
+
     private EventProfilePreviewPageable getUserEvents(String userEmail, String type, Pageable pageable) {
         User user = userRepo.findByEmail(userEmail)
                 .orElseThrow(() -> new NotFoundException("User not found: " + userEmail));

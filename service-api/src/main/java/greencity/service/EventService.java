@@ -31,4 +31,5 @@ public interface EventService {
 
     EventProfilePreviewPageable getAllUserUpcomingEvents(String userEmail, Pageable pageable);
 
+    EventProfilePreviewPageable getAllEventsPageable(Pageable pageable);
 }

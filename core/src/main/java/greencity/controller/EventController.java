@@ -71,4 +71,9 @@ public class EventController {
         }
         return ResponseEntity.status(HttpStatus.OK).body(eventService.updateEvent(eventId, eventUpdateDto, currentUser.getName()));
     }
+
+    @GetMapping
+    public ResponseEntity<EventProfilePreviewPageable> getAllEvents(Pageable pageable) {
+        return ResponseEntity.status(HttpStatus.OK).body(eventService.getAllEventsPageable(pageable));
+    }
 }
