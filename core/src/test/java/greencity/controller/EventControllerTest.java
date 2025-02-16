@@ -25,6 +25,7 @@ import org.springframework.boot.web.servlet.error.ErrorAttributes;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
 import org.springframework.test.web.servlet.MvcResult;
@@ -42,6 +43,7 @@ import java.util.Map;
 import java.util.Optional;
 
 import static greencity.ModelUtils.getPrincipal;
+import static org.assertj.core.api.AssertionsForClassTypes.assertThat;
 import static org.junit.jupiter.api.Assertions.*;
 import static org.mockito.ArgumentMatchers.any;
 import static org.mockito.Mockito.*;
@@ -623,4 +625,114 @@ class EventControllerTest {
 
         verify(eventService, times(1)).updateEvent(eq(1L), any(EventUpdateDto.class), eq(principal.getName()));
     }
+
+    @Test
+    void searchEventByTitleTest() throws Exception {
+        String title = "Upcoming Event";
+        EventProfilePreviewDto eventProfilePreviewDto = EventProfilePreviewDto.builder()
+                .id(1L)
+                .title("Upcoming Event")
+                .creationDate(ZonedDateTime.now().minusDays(2))
+                .eventDate(LocalDate.now().plusDays(5))
+                .eventTimeStart(LocalDateTime.now().plusDays(1).plusHours(2))
+                .author(new AuthorDto(1L, "John Doe"))
+                .location("Kharkiv")
+                .initiativeTypes(List.of(new InitiativeTypeResponseDto(3L, "Economic")))
+                .isOpen(true)
+                .mainImage(new ImageResponseDto(1L, "https://example.com/image.jpg"))
+                .rating(4.8)
+                .participants(List.of(new UserProfilePictureDto(1L, "Maria", "https://example.com/user1.jpg")))
+                .build();
+
+        EventProfilePreviewPageable result = new EventProfilePreviewPageable(
+                List.of(eventProfilePreviewDto),
+                0, 1, 1L, 1, true);
+
+        when(eventService.getEventsByTitle(eq(title), any(Pageable.class))).thenReturn(result);
+
+        MvcResult mvcResult = mockMvc.perform(get("/events/search")
+                        .param("title", title)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "id,desc")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+        EventProfilePreviewPageable response = objectMapper2.readValue(jsonResponse, EventProfilePreviewPageable.class);
+
+        assertEquals(1, response.getContent().size());
+        assertEquals(0, response.getPageNo());
+        assertEquals(1, response.getPageSize());
+        assertEquals(1L, response.getTotalElements());
+        assertEquals(1, response.getTotalPages());
+        assertTrue(response.isLast());
+
+        verify(eventService, times(1)).getEventsByTitle(eq(title), any(Pageable.class));
+    }
+
+    @Test
+    void searchEventByTitle_EmptyListTest() throws Exception {
+        String title = "Non-existent Event";
+
+        EventProfilePreviewPageable result = new EventProfilePreviewPageable(
+                Collections.emptyList(),
+                0, 1, 0L, 0, true);
+
+        when(eventService.getEventsByTitle(eq(title), any(Pageable.class)))
+                .thenReturn(result);
+
+        MvcResult mvcResult = mockMvc.perform(get("/events/search")
+                        .param("title", title)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "id,desc")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+        EventProfilePreviewPageable response = objectMapper2.readValue(jsonResponse, EventProfilePreviewPageable.class);
+
+        assertEquals(0, response.getContent().size());
+        assertEquals(0L, response.getTotalElements());
+        assertEquals(0, response.getTotalPages());
+        assertTrue(response.isLast());
+
+        verify(eventService, times(1)).getEventsByTitle(eq(title), any(Pageable.class));
+    }
+
+    @Test
+    void searchEventByTitle_InvalidTitleTest() throws Exception {
+        String invalidTitle = "";
+
+        EventProfilePreviewPageable result = new EventProfilePreviewPageable(
+                Collections.emptyList(),
+                0, 1, 0L, 0, true);
+
+        when(eventService.getEventsByTitle(eq(invalidTitle), any(Pageable.class)))
+                .thenReturn(result);
+
+        MvcResult mvcResult = mockMvc.perform(get("/events/search")
+                        .param("title", invalidTitle)
+                        .param("page", "0")
+                        .param("size", "1")
+                        .param("sort", "id,desc")
+                        .accept(MediaType.APPLICATION_JSON))
+                .andExpect(status().isOk())
+                .andReturn();
+
+        String jsonResponse = mvcResult.getResponse().getContentAsString();
+        EventProfilePreviewPageable response = objectMapper2.readValue(jsonResponse, EventProfilePreviewPageable.class);
+
+        assertEquals(0, response.getContent().size());
+        assertEquals(0L, response.getTotalElements());
+        assertEquals(0, response.getTotalPages());
+        assertTrue(response.isLast());
+
+        verify(eventService, times(1)).getEventsByTitle(eq(invalidTitle), any(Pageable.class));
+    }
+
+
 }
