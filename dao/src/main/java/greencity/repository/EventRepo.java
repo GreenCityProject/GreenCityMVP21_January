@@ -102,4 +102,15 @@ public interface EventRepo extends JpaRepository<Event, Long> {
                 ORDER BY edi.eventTimeStart DESC
             """)
     Page<Event> findAllSortedByStartDateDesc(Pageable pageable);
+
+    @Query("SELECT e FROM Event e " +
+            "WHERE LOWER(e.title) LIKE LOWER(CONCAT('%', :title, '%')) " +
+            "ORDER BY e.title ASC")
+    Page<Event> findByTitleContainingIgnoreCaseSortedByTitle(@Param("title") String title, Pageable pageable);
+
+    @Query("SELECT e FROM Event e " +
+            "JOIN EventDateInfo edi ON edi.event = e " +
+            "WHERE LOWER(e.title) LIKE LOWER(CONCAT('%', :title, '%')) " +
+            "ORDER BY edi.eventTimeStart ASC")
+    Page<Event> findByTitleContainingIgnoreCaseSortedByDate(@Param("title") String title, Pageable pageable);
 }

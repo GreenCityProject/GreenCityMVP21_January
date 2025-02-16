@@ -15,6 +15,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.Pageable;
+import org.springframework.data.domain.Sort;
 import org.springframework.security.access.AccessDeniedException;
 import org.springframework.stereotype.Service;
 import org.springframework.transaction.annotation.Transactional;
@@ -307,6 +308,54 @@ public class EventServiceImpl implements EventService {
         } else {
             throw new NotFoundException("Event not found");
         }
+    }
+
+    @Override
+    public EventProfilePreviewPageable getEventsByTitle(String title, Pageable pageable) {
+
+//        if (title.length() < 1 || title.length() > 30 || !title.matches("[a-zA-Z0-9\\s.'-]+")) {
+//            throw new IllegalArgumentException("Invalid title length or characters");
+//        }
+
+        Page<Event> events;
+        if (title.isEmpty()) {
+            events = eventRepo.findByTitleContainingIgnoreCaseSortedByDate(title, pageable);
+        } else {
+            events = eventRepo.findByTitleContainingIgnoreCaseSortedByTitle(title, pageable);
+        }
+
+        if (events.isEmpty()) {
+            return new EventProfilePreviewPageable(
+                    Collections.emptyList(),
+                    0,
+                    0,
+                    0,
+                    0,
+                    true
+            );
+        }
+
+        List<Event> listOfEvents = events.getContent();
+
+        List<EventProfilePreviewDto> content = listOfEvents.stream()
+                .map(event -> {
+                    EventDateInfo eventDateInfo = eventDateInfoRepo.findByEvent(event).stream()
+                            .min(Comparator.comparing(EventDateInfo::getEventTimeStart))
+                            .orElse(null);
+                    List<User> participants = participationRepo.findUsersByEventId(event.getId());
+                    EventMappingContext context = new EventMappingContext(event, eventDateInfo, participants);
+                    return modelMapper.map(context, EventProfilePreviewDto.class);
+                })
+                .toList();
+
+        return new EventProfilePreviewPageable(
+                content,
+                events.getNumber(),
+                events.getSize(),
+                events.getTotalElements(),
+                events.getTotalPages(),
+                events.isLast()
+        );
     }
 
     @Override

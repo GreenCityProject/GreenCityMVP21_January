@@ -229,6 +229,7 @@ public class SecurityConfig {
                         .hasAnyRole(USER, ADMIN, MODERATOR, UBS_EMPLOYEE)
                         .requestMatchers(HttpMethod.PUT,
                                 "/events/{eventId}",
+                                "/events/search",
                                 "/habit/statistic/{id}",
                                 "/econews/update",
                                 "/ownSecurity",

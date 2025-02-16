@@ -24,6 +24,7 @@ import java.util.Optional;
 
 import static org.junit.jupiter.api.Assertions.assertEquals;
 import static org.junit.jupiter.api.Assertions.assertTrue;
+import static org.mockito.Mockito.when;
 
 @DataJpaTest
 @TestPropertySource(properties = {
@@ -399,4 +400,80 @@ public class EventRepoTest {
         assertEquals(2, events.getTotalElements());
         assertEquals("Second event", events.getContent().get(0).getTitle());
     }
+
+    @Test
+    void testFindByTitleContainingIgnoreCaseSortedByTitle() {
+
+        Event event1 = new Event();
+        event1.setTitle("Spring Boot Basics");
+        event1.setDescription("An event about Spring Boot");
+        event1.setCreationDate(ZonedDateTime.now());
+        event1.setAuthor(author);
+        event1.setOpen(true);
+        event1.setDuration(120);
+        eventRepo.save(event1);
+
+        Event event2 = new Event();
+        event2.setTitle("Spring Boot Advanced");
+        event2.setDescription("An advanced event about Spring Boot");
+        event2.setCreationDate(ZonedDateTime.now());
+        event2.setAuthor(author);
+        event2.setOpen(true);
+        event2.setDuration(180);
+        eventRepo.save(event2);
+
+        Pageable pageable = PageRequest.of(0, 10, Sort.by(Sort.Order.asc("title")));
+
+        Page<Event> result = eventRepo.findByTitleContainingIgnoreCaseSortedByTitle("Spring Boot", pageable);
+
+        assertEquals(2, result.getContent().size());
+        assertTrue(result.getContent().get(0).getTitle().compareTo(result.getContent().get(1).getTitle()) < 0);
+    }
+
+    @Test
+    void testFindByTitleContainingIgnoreCaseSortedByDate() {
+        LocalDateTime now = LocalDateTime.now();
+
+        Event event1 = new Event();
+        event1.setTitle("Past Event");
+        event1.setDescription("Test event");
+        event1.setCreationDate(ZonedDateTime.now());
+        event1.setAuthor(author);
+        event1.setOpen(true);
+        event1.setDuration(120);
+        eventRepo.save(event1);
+
+        Event event2 = new Event();
+        event2.setTitle("Upcoming Event");
+        event2.setDescription("Test event");
+        event2.setCreationDate(ZonedDateTime.now());
+        event2.setAuthor(author);
+        event2.setOpen(true);
+        event2.setDuration(120);
+        eventRepo.save(event2);
+
+        EventDateInfo eventDateInfo1 = new EventDateInfo();
+        eventDateInfo1.setEvent(event1);
+        eventDateInfo1.setEventDate(LocalDate.now());
+        eventDateInfo1.setEventTimeStart(now.minusDays(5));
+        eventDateInfo1.setEventTimeEnd(now.minusDays(5).plusHours(2));
+        eventDateInfoRepo.save(eventDateInfo1);
+
+        EventDateInfo eventDateInfo2 = new EventDateInfo();
+        eventDateInfo2.setEvent(event2);
+        eventDateInfo2.setEventDate(LocalDate.now());
+        eventDateInfo2.setEventTimeStart(now.plusDays(5));
+        eventDateInfo2.setEventTimeEnd(now.plusDays(5).plusHours(2));
+        eventDateInfoRepo.save(eventDateInfo2);
+
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Page<Event> events = eventRepo.findByTitleContainingIgnoreCaseSortedByDate("Test event", pageable);
+
+        assertEquals(2, events.getContent().size());
+        assertEquals("Past Event", events.getContent().get(0).getTitle());
+        assertEquals("Upcoming Event", events.getContent().get(1).getTitle());
+    }
+
+
 }
