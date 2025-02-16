@@ -82,7 +82,7 @@ public class EventController {
     @GetMapping("/search")
     public ResponseEntity<EventProfilePreviewPageable> searchEventByTittle(
             @RequestParam(required = false, defaultValue = "") String title,
-            @Parameter(hidden = true) Pageable pageable) {
+            @Parameter(hidden = true) @PageableDefault(size = 10) Pageable pageable) {
         return ResponseEntity.status(HttpStatus.OK).body(eventService.getEventsByTitle(title, pageable));
     }
 }
