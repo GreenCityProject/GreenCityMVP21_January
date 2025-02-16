@@ -544,4 +544,46 @@ class EventServiceImplTest {
         verify(participationRepo, times(2)).findUsersByEventId(anyLong());
         verify(modelMapper, times(2)).map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class));
     }
+
+    @Test
+    void testGetEventsByTitle_ReturnsEmptyPageable() {
+        String title = "non-existing";
+        Pageable pageable = PageRequest.of(0, 10);
+        when(eventRepo.findByTitleContainingIgnoreCaseSortedByTitle(title, pageable))
+                .thenReturn(Page.empty());
+
+        EventProfilePreviewPageable result = eventService.getEventsByTitle(title, pageable);
+
+        assertNotNull(result);
+        assertTrue(result.getContent().isEmpty());
+    }
+
+    @Test
+    void testGetEventsByTitle_ReturnsPopulatedPageable() {
+        String title = "Test Event";
+        Pageable pageable = PageRequest.of(0, 10);
+
+        Event event = new Event();
+        event.setId(1L);
+        event.setTitle(title);
+        List<Event> events = List.of(event);
+
+        Page<Event> eventPage = new PageImpl<>(events);
+        when(eventRepo.findByTitleContainingIgnoreCaseSortedByTitle(title, pageable))
+                .thenReturn(eventPage);
+
+        EventDateInfo eventDateInfo = new EventDateInfo();
+        when(eventDateInfoRepo.findByEvent(event)).thenReturn(List.of(eventDateInfo));
+
+        when(participationRepo.findUsersByEventId(event.getId())).thenReturn(Collections.emptyList());
+
+        EventProfilePreviewDto dto = new EventProfilePreviewDto();
+        when(modelMapper.map(any(EventMappingContext.class), eq(EventProfilePreviewDto.class)))
+                .thenReturn(dto);
+
+        EventProfilePreviewPageable result = eventService.getEventsByTitle(title, pageable);
+
+        assertNotNull(result);
+        assertEquals(1, result.getContent().size());
+    }
 }

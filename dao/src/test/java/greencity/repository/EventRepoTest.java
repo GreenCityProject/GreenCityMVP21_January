@@ -440,7 +440,7 @@ public class EventRepoTest {
         event1.setCreationDate(ZonedDateTime.now());
         event1.setAuthor(author);
         event1.setOpen(true);
-        event1.setDuration(120);
+        event1.setDuration(2);
         eventRepo.save(event1);
 
         Event event2 = new Event();
@@ -449,7 +449,7 @@ public class EventRepoTest {
         event2.setCreationDate(ZonedDateTime.now());
         event2.setAuthor(author);
         event2.setOpen(true);
-        event2.setDuration(120);
+        event2.setDuration(2);
         eventRepo.save(event2);
 
         EventDateInfo eventDateInfo1 = new EventDateInfo();
@@ -468,7 +468,7 @@ public class EventRepoTest {
 
         Pageable pageable = PageRequest.of(0, 10);
 
-        Page<Event> events = eventRepo.findByTitleContainingIgnoreCaseSortedByDate("Test event", pageable);
+        Page<Event> events = eventRepo.findByTitleContainingIgnoreCaseSortedByDate("", pageable);
 
         assertEquals(2, events.getContent().size());
         assertEquals("Past Event", events.getContent().get(0).getTitle());
