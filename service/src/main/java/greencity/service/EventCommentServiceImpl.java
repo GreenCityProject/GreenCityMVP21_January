@@ -8,6 +8,7 @@ import greencity.dto.user.UserVO;
 import greencity.entity.Event;
 import greencity.entity.EventComment;
 import greencity.entity.User;
+import greencity.enums.NotificationSection;
 import greencity.repository.EventCommentRepo;
 import greencity.repository.EventRepo;
 import jakarta.persistence.EntityNotFoundException;
@@ -63,7 +64,7 @@ public class EventCommentServiceImpl implements EventCommentService {
                     event.getAuthor().getId(),
                     "New comment on your event: " + event.getTitle(),
                     "A new comment has been added to your event.",
-                    "GreenCity",
+                    NotificationSection.GreenCity.name(),
                     "/events/" + eventId));
         }
 
@@ -75,12 +76,10 @@ public class EventCommentServiceImpl implements EventCommentService {
                         mentionedUser.getId(),
                         "You were mentioned in a comment on: " + event.getTitle(),
                         "Someone mentioned you in a comment.",
-                        "GreenCity",
+                        NotificationSection.GreenCity.name(),
                         "/events/" + eventId));
             }
         }
-
-
 
         return AddEventCommentDtoResponse.builder()
                 .id(eventComment.getId())
@@ -144,7 +143,7 @@ public class EventCommentServiceImpl implements EventCommentService {
                     parentComment.getUser().getId(),
                     "Someone replied to your comment on: " + event.getTitle(),
                     "You received a reply to your comment.",
-                    "GreenCity",
+                    NotificationSection.GreenCity.name(),
                     "/events/" + event.getId()));
         }
 
