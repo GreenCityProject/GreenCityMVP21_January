@@ -635,4 +635,34 @@ public class CustomExceptionHandler extends ResponseEntityExceptionHandler {
         return new ResponseEntity<>(errorMessage, HttpStatus.BAD_REQUEST);
 
     }
+
+    @ExceptionHandler(AchievementAlreadyExistsException.class)
+    public final ResponseEntity<Object> handleAchievementAlreadyExistsException(
+
+            AchievementAlreadyExistsException ex, WebRequest request) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(getErrorAttributes(request));
+        log.trace(ex.getMessage(), ex);
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.CONFLICT);
+
+    }
+
+    @ExceptionHandler(AchievementUnlockingException.class)
+    public final ResponseEntity<Object> handleAchievementUnlockingException(
+
+            AchievementUnlockingException ex, WebRequest request) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(getErrorAttributes(request));
+        log.trace(ex.getMessage(), ex);
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+
+    }
+
+    @ExceptionHandler(NotEnoughRatingForAchievement.class)
+    public final ResponseEntity<Object> handleANotEnoughRatingForAchievement(
+
+            NotEnoughRatingForAchievement ex, WebRequest request) {
+        ExceptionResponse exceptionResponse = new ExceptionResponse(getErrorAttributes(request));
+        log.trace(ex.getMessage(), ex);
+        return new ResponseEntity<>(exceptionResponse, HttpStatus.BAD_REQUEST);
+
+    }
 }
