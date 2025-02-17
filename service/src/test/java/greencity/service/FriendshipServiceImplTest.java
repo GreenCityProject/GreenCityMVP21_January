@@ -2,6 +2,7 @@ package greencity.service;
 
 import greencity.dto.friendship.FriendCardDto;
 import greencity.dto.friendship.RequestedFriendshipDto;
+import greencity.dto.notification.NotificationRequestDto;
 import greencity.entity.Friendship;
 import greencity.entity.User;
 import greencity.enums.FriendshipStatus;
@@ -34,7 +35,7 @@ public class FriendshipServiceImplTest {
     private UserRepo userRepo;
 
     @Mock
-    private NotificationService notificationServise;
+    private NotificationService notificationService;
 
     @Mock
     private ModelMapper modelMapper;
@@ -161,7 +162,7 @@ public class FriendshipServiceImplTest {
 
 
     @Test
-    @DisplayName("Requests friendship successfully between two users")
+    @DisplayName("Requests friendship successfully and sends notification")
     void testRequestFriendshipByUserId_Positive() {
         when(friendshipRepo.findFriendshipByEitherUserId(senderId, recipientId)).thenReturn(Optional.empty());
         when(userRepo.getReferenceById(senderId)).thenReturn(user1);
@@ -171,7 +172,7 @@ public class FriendshipServiceImplTest {
 
         assertTrue(result);
         verify(friendshipRepo, times(1)).save(any(Friendship.class));
-        verify(notificationServise, times(1)).notify("New Friendship Req.");
+        verify(notificationService, times(1)).addNotification(any(NotificationRequestDto.class));
     }
 
     @Test
@@ -181,12 +182,12 @@ public class FriendshipServiceImplTest {
 
         assertFalse(result);
         verify(friendshipRepo, never()).save(any(Friendship.class));
-        verify(notificationServise, never()).notify(anyString());
+        verify(notificationService, never()).addNotification(any(NotificationRequestDto.class));
     }
 
 
     @Test
-    @DisplayName("Successfully cancels a friendship request")
+    @DisplayName("Cancels friendship request and sends notification")
     void testCancelFriendshipRequestByUserId_Positive() {
         when(friendshipRepo.findFriendshipByEitherUserId(senderId, recipientId)).thenReturn(Optional.of(friendship1));
 
@@ -194,7 +195,7 @@ public class FriendshipServiceImplTest {
 
         assertTrue(result);
         verify(friendshipRepo, times(1)).save(friendship1);
-        verify(notificationServise, times(1)).notify("Cancel Friendship Req.");
+        verify(notificationService, times(1)).addNotification(any(NotificationRequestDto.class));
     }
 
     @Test
@@ -206,12 +207,12 @@ public class FriendshipServiceImplTest {
 
         assertFalse(result);
         verify(friendshipRepo, never()).save(any(Friendship.class));
-        verify(notificationServise, never()).notify(anyString());
+        verify(notificationService, never()).addNotification(any(NotificationRequestDto.class));
     }
 
 
     @Test
-    @DisplayName("Successfully accepts a friendship request")
+    @DisplayName("Accepts friendship request and sends notification")
     void testAcceptFriendshipRequestByUserId_Positive() {
         when(friendshipRepo.findFriendshipByEitherUserId(senderId, recipientId)).thenReturn(Optional.of(friendship1));
 
@@ -219,7 +220,7 @@ public class FriendshipServiceImplTest {
 
         assertTrue(result);
         verify(friendshipRepo, times(1)).save(friendship1);
-        verify(notificationServise, times(1)).notify("Accepted Friendship Req.");
+        verify(notificationService, times(1)).addNotification(any(NotificationRequestDto.class));
     }
 
     @Test
@@ -231,12 +232,12 @@ public class FriendshipServiceImplTest {
 
         assertFalse(result);
         verify(friendshipRepo, never()).save(any(Friendship.class));
-        verify(notificationServise, never()).notify(anyString());
+        verify(notificationService, never()).addNotification(any(NotificationRequestDto.class));
     }
 
 
     @Test
-    @DisplayName("Successfully declines a friendship request")
+    @DisplayName("Declines friendship request and sends notification")
     void testDeclineFriendshipRequestByUserId_Positive() {
         when(friendshipRepo.findFriendshipByEitherUserId(senderId, recipientId)).thenReturn(Optional.of(friendship1));
 
@@ -244,7 +245,7 @@ public class FriendshipServiceImplTest {
 
         assertTrue(result);
         verify(friendshipRepo, times(1)).save(friendship1);
-        verify(notificationServise, times(1)).notify("Declined Friendship Req.");
+        verify(notificationService, times(1)).addNotification(any(NotificationRequestDto.class));
     }
 
     @Test
@@ -256,7 +257,7 @@ public class FriendshipServiceImplTest {
 
         assertFalse(result);
         verify(friendshipRepo, never()).save(any(Friendship.class));
-        verify(notificationServise, never()).notify(anyString());
+        verify(notificationService, never()).addNotification(any(NotificationRequestDto.class));
     }
 
 
@@ -326,7 +327,7 @@ public class FriendshipServiceImplTest {
 
 
     @Test
-    @DisplayName("Successfully blocks friendship requests from a user")
+    @DisplayName("Blocks friendship request and sends notification")
     void testBlockFriendshipRequestsFromUserById_Positive() {
         when(friendshipRepo.findFriendshipByEitherUserId(senderId, recipientId)).thenReturn(Optional.of(friendship1));
 
@@ -334,7 +335,7 @@ public class FriendshipServiceImplTest {
 
         assertTrue(result);
         verify(friendshipRepo, times(1)).save(friendship1);
-        verify(notificationServise, times(1)).notify("Blocked Friendship Req.");
+        verify(notificationService, times(1)).addNotification(any(NotificationRequestDto.class));
     }
 
     @Test
@@ -346,7 +347,7 @@ public class FriendshipServiceImplTest {
 
         assertFalse(result);
         verify(friendshipRepo, never()).save(any(Friendship.class));
-        verify(notificationServise, never()).notify(anyString());
+        verify(notificationService, never()).addNotification(any(NotificationRequestDto.class));
     }
 
 

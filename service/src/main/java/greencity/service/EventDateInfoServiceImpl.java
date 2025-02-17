@@ -2,10 +2,13 @@ package greencity.service;
 
 import greencity.dto.event.EventDateInfoRequestDto;
 import greencity.dto.event.EventDateInfoResponseDto;
+import greencity.dto.event.EventDateInfoUpdateDto;
 import greencity.entity.Event;
 import greencity.entity.EventDateInfo;
+import greencity.exception.exceptions.NotFoundException;
 import greencity.repository.EventDateInfoRepo;
 import greencity.repository.EventRepo;
+import jakarta.transaction.Transactional;
 import lombok.RequiredArgsConstructor;
 import org.modelmapper.ModelMapper;
 import org.springframework.stereotype.Service;
@@ -36,8 +39,24 @@ public class EventDateInfoServiceImpl implements EventDateInfoService {
     }
 
     @Override
-    public EventDateInfoResponseDto updateEventDateInfo(Long id, EventDateInfoRequestDto requestDto) {
-        return null;
+    @Transactional
+    public EventDateInfoResponseDto updateEventDateInfo(Long id, EventDateInfoUpdateDto requestDto) {
+
+        EventDateInfo existingInfo = eventDateInfoRepo.findById(id)
+                .orElseThrow(() -> new NotFoundException("EventDateInfo not found with id: " + id));
+
+        existingInfo.setEventDate(requestDto.getEventDate());
+        existingInfo.setAllDay(requestDto.getIsAllDay());
+        existingInfo.setEventTimeStart(requestDto.getEventTimeStart());
+        existingInfo.setEventTimeEnd(requestDto.getEventTimeEnd());
+        existingInfo.setPlace(requestDto.getIsPlace());
+        existingInfo.setOnline(requestDto.getIsOnline());
+        existingInfo.setLocation(requestDto.getLocation());
+        existingInfo.setUrl(requestDto.getUrl());
+
+        eventDateInfoRepo.save(existingInfo);
+
+        return modelMapper.map(existingInfo, EventDateInfoResponseDto.class);
     }
 
     @Override

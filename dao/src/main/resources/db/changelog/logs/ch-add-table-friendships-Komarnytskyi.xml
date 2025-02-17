@@ -1,0 +1,46 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="Komarnytskyi-1" author="Yurii Komarnytskyi">
+        <createTable tableName="friendships">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="friendship_request_expiration" type="TIMESTAMP"/>
+            <column name="requested_at" type="TIMESTAMP"/>
+            <column name="status" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+
+
+            <column name="friend_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+
+        </createTable>
+
+        <addForeignKeyConstraint baseTableName="friendships" baseColumnNames="friend_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_friendships_friend"/>
+
+        <addForeignKeyConstraint baseTableName="friendships" baseColumnNames="user_id"
+                                 referencedTableName="users" referencedColumnNames="id"
+                                 constraintName="fk_friendships_user"/>
+    </changeSet>
+
+    <changeSet id="add-friendship-status-constraint" author="Yurii Komarnytskyi">
+        <sql>
+            ALTER TABLE friendships
+                ADD CONSTRAINT friendships_status_check
+                    CHECK (status IN ('REQUESTED', 'ACCEPTED', 'CANCELLED', 'DECLINED', 'EXPIRED', 'BLOCKED'));
+        </sql>
+    </changeSet>
+
+
+</databaseChangeLog>

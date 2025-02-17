@@ -2,6 +2,8 @@ package greencity.service;
 
 import greencity.dto.event.EventDateInfoRequestDto;
 import greencity.dto.event.EventDateInfoResponseDto;
+import greencity.dto.event.EventDateInfoUpdateDto;
+
 import java.time.LocalDate;
 import java.util.List;
 
@@ -9,7 +11,7 @@ public interface EventDateInfoService {
 
     EventDateInfoResponseDto createEventDateInfo(Long eventId, EventDateInfoRequestDto requestDto);
 
-    EventDateInfoResponseDto updateEventDateInfo(Long id, EventDateInfoRequestDto requestDto);
+    EventDateInfoResponseDto updateEventDateInfo(Long id, EventDateInfoUpdateDto requestDto);
 
     void deleteEventDateInfo(Long id);
 

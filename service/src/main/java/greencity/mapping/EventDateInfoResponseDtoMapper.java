@@ -19,6 +19,7 @@ public class EventDateInfoResponseDtoMapper extends AbstractConverter<EventDateI
                 .isOnline(eventDateInfo.isOnline())
                 .location(eventDateInfo.getLocation())
                 .url(eventDateInfo.getUrl())
+                .numOfDayInEvent(eventDateInfo.getNumOfDayInEvent())
                 .build();
     }
 }
