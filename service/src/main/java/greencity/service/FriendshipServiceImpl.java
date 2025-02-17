@@ -280,6 +280,7 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .senderId(senderId)
                 .receiverId(receiverId)
                 .message(message)
+                .description(message)
                 .section(NotificationSection.GreenCity.name())
                 .build();
         notificationService.addNotification(notification);
