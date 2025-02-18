@@ -6,10 +6,13 @@ import greencity.dto.friendship.FriendshipVO;
 import greencity.dto.friendship.FriendshipsFilterRequestDto;
 import greencity.dto.friendship.RequestedFriendshipDto;
 import greencity.dto.notification.NotificationRequestDto;
+import greencity.entity.EcoNews;
+import greencity.entity.EcoNewsComment;
 import greencity.entity.Friendship;
 import greencity.entity.User;
 import greencity.enums.FriendshipStatus;
 import greencity.enums.NotificationSection;
+import greencity.repository.EcoNewsCommentRepo;
 import greencity.repository.FriendshipRepo;
 import greencity.repository.HabitAssignRepo;
 import greencity.repository.UserRepo;
@@ -30,6 +33,7 @@ public class FriendshipServiceImpl implements FriendshipService {
     private final UserRepo userRepo;
     private final HabitAssignRepo habitAssignRepo;
     private final NotificationService notificationService;
+    private final EcoNewsCommentRepo ecoNewsCommentRepo;
     private final ModelMapper modelMapper;
     private final Long ONE_WEEK = 1L;
     private final Function<Friendship, Long> getFriendId = friendship -> friendship.getFriend().getId();
@@ -40,11 +44,13 @@ public class FriendshipServiceImpl implements FriendshipService {
             UserRepo userRepo,
             HabitAssignRepo habitAssignRepo,
             NotificationService notificationService,
+            EcoNewsCommentRepo ecoNewsCommentRepo,
             ModelMapper modelMapper) {
         this.friendshipRepo = friendshipRepo;
         this.userRepo = userRepo;
         this.habitAssignRepo = habitAssignRepo;
         this.notificationService = notificationService;
+        this.ecoNewsCommentRepo = ecoNewsCommentRepo;
         this.modelMapper = modelMapper;
     }
 
@@ -97,17 +103,21 @@ public class FriendshipServiceImpl implements FriendshipService {
             FriendshipsFilterRequestDto friendshipsFilterRequest) {
         final int MIN_FILTERING_AMOUNT = 4;
 
-        List<FriendCardDto> friendships = friendshipRepo.getAllFriendshipsByUserId(userId).stream()
-                .map(friendship -> {
-                    FriendCardDto friendCard = modelMapper.map(friendship.getFriend(), FriendCardDto.class);
-                    friendCard.setMutualFriends(getAmountOfMutualFriends(userId, getFriendId.apply(friendship)));
-                    friendCard.setFriendshipId(Optional.ofNullable(friendship.getId()));
-                    return friendCard;
-                })
-                .toList();
+        List<FriendCardDto> friendships = new ArrayList<>(
+                friendshipRepo.getAllFriendshipsByUserId(userId).stream()
+                        .map(friendship -> {
+                            FriendCardDto friendCard = modelMapper.map(friendship.getFriend(), FriendCardDto.class);
+                            friendCard.setMutualFriends(getAmountOfMutualFriends(userId, getFriendId.apply(friendship)));
+                            friendCard.setFriendshipId(Optional.ofNullable(friendship.getId()));
+                            return friendCard;
+                        })
+                        .toList()
+        );
         if (friendshipsFilterRequest.isAnyFilteringNecessary() && friendships.size() > MIN_FILTERING_AMOUNT) {
             friendships = filterFriendCards(friendships, friendshipsFilterRequest, userId);
         }
+
+        sortFriendCards(friendships, userId);
 
         return new PageableDto<>(friendships, friendships.size(), 0, 0);
     }
@@ -300,25 +310,46 @@ public class FriendshipServiceImpl implements FriendshipService {
         notificationService.addNotification(notification);
     }
 
-    private List<FriendCardDto> filterFriendCards (List<FriendCardDto> friends, FriendshipsFilterRequestDto requestFilter, Long userId) {
+    private List<FriendCardDto> filterFriendCards (
+            List<FriendCardDto> friends,
+            FriendshipsFilterRequestDto requestFilter,
+            Long userId) {
         Double HIGHEST_RATE = friends.stream().mapToDouble(FriendCardDto::getRating).max().getAsDouble();
         Optional<String> userCity = userRepo.findById(userId).map(User::getCity);
-        return friends.stream()
-                .filter(friendCard -> {
-                    boolean recentlyAddedFriend = false;
-                    if(requestFilter.isFilterRecentlyAddedFriends()) {
-                        try {
-                            Optional<Friendship> f = friendshipRepo.findFriendshipById(friendCard.getFriendshipId().get());
-                            LocalDateTime accepted = f.get().getFriendshipRequestExpiration();
-                            LocalDateTime weekAgo = LocalDateTime.now().minusWeeks(ONE_WEEK);
-                            recentlyAddedFriend = accepted.isAfter(weekAgo) || accepted.compareTo(weekAgo) >= 0;
+        return new ArrayList<>(
+                friends.stream()
+                        .filter(friendCard -> {
+                            boolean recentlyAddedFriend = false;
+                            if(requestFilter.isFilterRecentlyAddedFriends()) {
+                                try {
+                                    Optional<Friendship> f = friendshipRepo.findFriendshipById(friendCard.getFriendshipId().get());
+                                    LocalDateTime accepted = f.get().getFriendshipRequestExpiration();
+                                    LocalDateTime weekAgo = LocalDateTime.now().minusWeeks(ONE_WEEK);
+                                    recentlyAddedFriend = accepted.isAfter(weekAgo) || accepted.compareTo(weekAgo) >= 0;
 
-                        } catch (NoSuchElementException e) {
-                        }
-                    }
-                    return  (requestFilter.isFilterByCity() && userCity.isPresent() && friendCard.getCity().equals(userCity.get()))
-                            || (requestFilter.isFilterByHighestRate() &&  friendCard.getRating() >= HIGHEST_RATE)
-                            || (recentlyAddedFriend);})
-                .toList();
+                                } catch (NoSuchElementException ignored) {
+                                }
+                            }
+                            return  (requestFilter.isFilterByCity() && userCity.isPresent() && friendCard.getCity().equals(userCity.get()))
+                                    || (requestFilter.isFilterByHighestRate() &&  friendCard.getRating() >= HIGHEST_RATE)
+                                    || (recentlyAddedFriend);})
+                        .toList()
+        );
+    }
+
+    private void sortFriendCards(List<FriendCardDto> friends, Long userId) {
+        friends.sort(Comparator
+                .comparing((FriendCardDto friend) -> {
+                    List<EcoNews> newsUserCommentedOn = new ArrayList<>(ecoNewsCommentRepo.findAllByUserId(userId).stream()
+                            .map(EcoNewsComment::getEcoNews)
+                            .toList());
+
+                    List<EcoNews> newsFriendCommentedOn = ecoNewsCommentRepo.findAllByUserId(friend.getId()).stream()
+                            .map(EcoNewsComment::getEcoNews)
+                            .toList();
+                    return newsUserCommentedOn.retainAll(newsFriendCommentedOn);
+                })
+                .thenComparing(Comparator.comparingDouble(FriendCardDto::getRating).reversed())
+        );
     }
 }
