@@ -1,6 +1,7 @@
 package greencity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
+import greencity.converters.UserArgumentResolver;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
@@ -14,43 +15,46 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.http.MediaType;
-import org.springframework.test.web.servlet.MockMvc;
-import org.springframework.test.web.servlet.setup.MockMvcBuilders;
-import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageImpl;
 import org.springframework.data.domain.PageRequest;
-import greencity.converters.UserArgumentResolver;
+import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
+import org.springframework.http.MediaType;
+import org.springframework.test.web.servlet.MockMvc;
+import org.springframework.test.web.servlet.setup.MockMvcBuilders;
 
 import java.security.Principal;
 import java.util.List;
 
 import static org.mockito.ArgumentMatchers.*;
 import static org.mockito.Mockito.when;
-import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.*;
-import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.get;
+import static org.springframework.test.web.servlet.request.MockMvcRequestBuilders.post;
 import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.jsonPath;
+import static org.springframework.test.web.servlet.result.MockMvcResultMatchers.status;
 
 @ExtendWith(MockitoExtension.class)
 class EventCommentControllerTest {
     private static final String EVENT_COMMENT_CONTROLLER_LINK = "/events/{eventId}/comments";
+    private final ObjectMapper objectMapper = new ObjectMapper();
+    private final Principal principal = () -> "test@example.com";
     private MockMvc mockMvc;
-
     @InjectMocks
     private EventCommentController eventCommentController;
-
     @Mock
     private EventCommentService eventCommentService;
-
     @Mock
     private UserService userService;
-
     @Mock
     private ModelMapper modelMapper;
 
-    private final ObjectMapper objectMapper = new ObjectMapper();
-    private final Principal principal = () -> "test@example.com";
+    private static UserVO getUserVO() {
+        return UserVO.builder()
+                .id(1L)
+                .email("test@example.com")
+                .name("Test User")
+                .build();
+    }
 
     @BeforeEach
     void setup() {
@@ -100,7 +104,6 @@ class EventCommentControllerTest {
                 .andExpect(jsonPath("$").value(5L));
     }
 
-
     @Test
     void getCommentByIdTest() throws Exception {
         EventCommentResponseDto responseDto = new EventCommentResponseDto();
@@ -117,8 +120,6 @@ class EventCommentControllerTest {
                 .andExpect(jsonPath("$.id").value(1))
                 .andExpect(jsonPath("$.text").value("Sample comment"));
     }
-
-
 
     @Test
     void getCommentsByEventTest() throws Exception {
@@ -148,16 +149,5 @@ class EventCommentControllerTest {
                 .andExpect(jsonPath("$.content[0].text").value("Comment 1"))
                 .andExpect(jsonPath("$.content[1].id").value(2))
                 .andExpect(jsonPath("$.content[1].text").value("Comment 2"));
-    }
-
-
-
-
-    private static UserVO getUserVO() {
-        return UserVO.builder()
-                .id(1L)
-                .email("test@example.com")
-                .name("Test User")
-                .build();
     }
 }

@@ -54,6 +54,31 @@ public class EventCommentServiceImplTest {
     private EventComment eventComment;
     private EventComment eventComment2;
 
+    private static User getUser() {
+        return User.builder()
+                .id(1L)
+                .email("test@example.com")
+                .name("Test User")
+                .role(Role.ROLE_USER)
+                .userStatus(UserStatus.ACTIVATED)
+                .lastActivityTime(LocalDateTime.now())
+                .verifyEmail(new VerifyEmail())
+                .dateOfRegistration(LocalDateTime.now())
+                .build();
+    }
+
+    private static UserVO getUserVO() {
+        return UserVO.builder()
+                .id(1L)
+                .email("test@example.com")
+                .name("Test User")
+                .role(Role.ROLE_USER)
+                .lastActivityTime(LocalDateTime.now())
+                .verifyEmail(new VerifyEmailVO())
+                .dateOfRegistration(LocalDateTime.now())
+                .build();
+    }
+
     @BeforeEach
     void setUp() {
         event = new Event();
@@ -252,30 +277,5 @@ public class EventCommentServiceImplTest {
                 service.getCommentById(1L, 2L));
 
         Assertions.assertEquals("Comment not found with id: 2", exception.getMessage());
-    }
-
-    private static User getUser() {
-        return User.builder()
-                .id(1L)
-                .email("test@example.com")
-                .name("Test User")
-                .role(Role.ROLE_USER)
-                .userStatus(UserStatus.ACTIVATED)
-                .lastActivityTime(LocalDateTime.now())
-                .verifyEmail(new VerifyEmail())
-                .dateOfRegistration(LocalDateTime.now())
-                .build();
-    }
-
-    private static UserVO getUserVO() {
-        return UserVO.builder()
-                .id(1L)
-                .email("test@example.com")
-                .name("Test User")
-                .role(Role.ROLE_USER)
-                .lastActivityTime(LocalDateTime.now())
-                .verifyEmail(new VerifyEmailVO())
-                .dateOfRegistration(LocalDateTime.now())
-                .build();
     }
 }
