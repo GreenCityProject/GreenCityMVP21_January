@@ -67,8 +67,9 @@ public class FriendshipController {
     })
     @PostMapping("/request/{recipientId}/")
     public ResponseEntity<FriendshipResponseDto> requestFriendship(
-            @PathVariable("recipientId") @NotNull(message = "User ID must not be null.") Long recipientId,
-            @Parameter(hidden = true) @CurrentUser UserVO userVO) {
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
+            @PathVariable("recipientId") @NotNull(message = "User ID must not be null.") Long recipientId
+            ) {
         boolean isRequested = friendshipService.requestFriendshipByUserId(userVO.getId(), recipientId);
 
         return (isRequested)
@@ -80,32 +81,37 @@ public class FriendshipController {
                     .body(new FriendshipResponseDto(false, "Friendship request already exists or cannot be sent."));
     }
 
-    /**
-     * Accepts a friendship request from a specified sender.
-     * If the recipientId does not match the currently authenticated user,
-     * a FORBIDDEN response is returned.
-     *
-     * @param senderId the ID of the user who sent the friendship request
-     * @param recipientId the ID of the user accepting the friendship request
-     * @return a ResponseEntity containing the response message and status code
-     */
+
 
     @Operation(summary = "Accept friendship request")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "406", description = HttpStatuses.NOT_ACCEPTABLE)
     })
 
-    @PutMapping("/{senderId}/accept/{recipientId}/")
+    /**
+     * Accepts a friendship request from the specified sender for the current user.
+     * This method enables the authenticated user (represented by {@code userVO})
+     * to accept a friendship request from another user whose ID is specified by {@code senderId}.
+     * If the friendship request is accepted successfully, the method returns a response with status
+     * {@code 200 OK} along with a success message. If the acceptance fails (for example, if the
+     * friendship record does not exist or is not in the REQUESTED state), it returns a response
+     * with status {@code 406 Not Acceptable} along with an error message explaining the cause
+     * of the failure.
+     *
+     * @param userVO      the current authenticated user who is accepting the friendship request.
+     *                    This parameter is injected and hidden from the API documentation.
+     * @param senderId    the ID of the user whose friendship request is being accepted.
+     *                    Must not be null, as enforced by the {@link NotNull} validation.
+     * @return a {@link ResponseEntity} containing a {@link FriendshipResponseDto}
+     *         with the result of the acceptance operation and the appropriate HTTP status.
+     */
+    @PutMapping("/accept/{senderId}/")
     public ResponseEntity<FriendshipResponseDto> acceptFriendship(
-            @PathVariable("senderId") @NotNull(message = "User ID must not be null.") Long senderId,
-            @PathVariable("recipientId") @NotNull(message = "User ID must not be null.") Long recipientId) {
-        if(isNotCurrentUser(recipientId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        boolean isAccepted = friendshipService.acceptFriendshipRequestByUserId(senderId, recipientId);
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
+            @PathVariable("senderId") @NotNull(message = "User ID must not be null.") Long senderId) {
+        boolean isAccepted = friendshipService.acceptFriendshipRequestByUserId(senderId, userVO.getId());
         return (isAccepted)
                 ? ResponseEntity.ok(new FriendshipResponseDto(true, "Friendship accepted successfully."))
                 : ResponseEntity

@@ -53,6 +53,9 @@ public interface FriendshipRepo extends JpaRepository<Friendship, Long> {
             "OR (f.user.id = :friendId AND f.friend.id = :userId)")
     Optional<Friendship> findFriendshipByEitherUserId(@Param("userId") Long userId, @Param("friendId") Long friendId);
 
+    @Query("SELECT f FROM Friendship f WHERE (f.user.id = :senderId AND f.friend.id = :recipientId) ")
+    Optional<Friendship> findFriendshipByUserIdOrderSensitive(@Param("senderId") Long senderId, @Param("recipientId") Long recipientId);
+
     /**
      * Retrieves a list of friendship requests for a specified user.
      * This method returns all pending friendship requests that have been sent to the user

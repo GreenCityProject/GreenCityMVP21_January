@@ -163,7 +163,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     @Override
     public boolean acceptFriendshipRequestByUserId(Long senderId, Long recipientId) {
-        Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderInsensitive(senderId, recipientId);
+        Optional<Friendship> friendshipOptional = friendshipRepo.findFriendshipByUserIdOrderSensitive(senderId, recipientId);
         Friendship friendship = friendshipOptional.orElseGet(Friendship::new);
         if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.ACCEPTED);
