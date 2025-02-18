@@ -3,6 +3,7 @@ package greencity.service;
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.FriendCardDto;
 import greencity.dto.friendship.FriendshipVO;
+import greencity.dto.friendship.FriendshipsFilterRequestDto;
 import greencity.dto.friendship.RequestedFriendshipDto;
 import greencity.dto.notification.NotificationRequestDto;
 import greencity.entity.Friendship;
@@ -18,10 +19,7 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDateTime;
-import java.util.ArrayList;
-import java.util.List;
-import java.util.Objects;
-import java.util.Optional;
+import java.util.*;
 import java.util.function.Function;
 import java.util.stream.Stream;
 
@@ -94,8 +92,24 @@ public class FriendshipServiceImpl implements FriendshipService {
     }
 
     @Override
-    public List<FriendCardDto> getAllFriendsByUserId(Long id) {
-        return getAllFriendCardsOfUserById(id);
+    public PageableDto<FriendCardDto> getAllFriendsByUserId(
+            Long userId,
+            FriendshipsFilterRequestDto friendshipsFilterRequest) {
+        final int MIN_FILTERING_AMOUNT = 4;
+
+        List<FriendCardDto> friendships = friendshipRepo.getAllFriendshipsByUserId(userId).stream()
+                .map(friendship -> {
+                    FriendCardDto friendCard = modelMapper.map(friendship.getFriend(), FriendCardDto.class);
+                    friendCard.setMutualFriends(getAmountOfMutualFriends(userId, getFriendId.apply(friendship)));
+                    friendCard.setFriendshipId(Optional.ofNullable(friendship.getId()));
+                    return friendCard;
+                })
+                .toList();
+        if (friendshipsFilterRequest.isAnyFilteringNecessary() && friendships.size() > MIN_FILTERING_AMOUNT) {
+            friendships = filterFriendCards(friendships, friendshipsFilterRequest, userId);
+        }
+
+        return new PageableDto<>(friendships, friendships.size(), 0, 0);
     }
 
 
@@ -284,5 +298,27 @@ public class FriendshipServiceImpl implements FriendshipService {
                 .section(NotificationSection.GreenCity.name())
                 .build();
         notificationService.addNotification(notification);
+    }
+
+    private List<FriendCardDto> filterFriendCards (List<FriendCardDto> friends, FriendshipsFilterRequestDto requestFilter, Long userId) {
+        Double HIGHEST_RATE = friends.stream().mapToDouble(FriendCardDto::getRating).max().getAsDouble();
+        Optional<String> userCity = userRepo.findById(userId).map(User::getCity);
+        return friends.stream()
+                .filter(friendCard -> {
+                    boolean recentlyAddedFriend = false;
+                    if(requestFilter.isFilterRecentlyAddedFriends()) {
+                        try {
+                            Optional<Friendship> f = friendshipRepo.findFriendshipById(friendCard.getFriendshipId().get());
+                            LocalDateTime accepted = f.get().getFriendshipRequestExpiration();
+                            LocalDateTime weekAgo = LocalDateTime.now().minusWeeks(ONE_WEEK);
+                            recentlyAddedFriend = accepted.isAfter(weekAgo) || accepted.compareTo(weekAgo) >= 0;
+
+                        } catch (NoSuchElementException e) {
+                        }
+                    }
+                    return  (requestFilter.isFilterByCity() && userCity.isPresent() && friendCard.getCity().equals(userCity.get()))
+                            || (requestFilter.isFilterByHighestRate() &&  friendCard.getRating() >= HIGHEST_RATE)
+                            || (recentlyAddedFriend);})
+                .toList();
     }
 }

@@ -1,17 +1,19 @@
 package greencity.controller;
 
+import greencity.annotations.CurrentUser;
 import greencity.constant.HttpStatuses;
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.*;
+import greencity.dto.user.UserVO;
 import greencity.exception.exceptions.WrongIdException;
 import greencity.service.FriendPageService;
 import greencity.service.FriendshipService;
 import greencity.service.UserService;
 import io.swagger.v3.oas.annotations.Operation;
+import io.swagger.v3.oas.annotations.Parameter;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
 import jakarta.validation.constraints.NotNull;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
@@ -26,7 +28,6 @@ import java.util.Optional;
 
 @RestController
 @RequestMapping("/friends")
-@Slf4j
 public class FriendshipController {
 
     private final FriendshipService friendshipService;
@@ -45,7 +46,6 @@ public class FriendshipController {
 
     /**
      * Requests a friendship from the sender to the recipient.
-     *
      * If the senderId does not match the currently authenticated user,
      * a FORBIDDEN response is returned.
      *
@@ -81,7 +81,6 @@ public class FriendshipController {
 
     /**
      * Accepts a friendship request from a specified sender.
-     *
      * If the recipientId does not match the currently authenticated user,
      * a FORBIDDEN response is returned.
      *
@@ -97,7 +96,7 @@ public class FriendshipController {
             @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "406", description = HttpStatuses.NOT_ACCEPTABLE)
     })
-    // TODO REVERSE ARGS ???
+
     @PutMapping("/{senderId}/accept/{recipientId}/")
     public ResponseEntity<FriendshipResponseDto> acceptFriendship(
             @PathVariable("senderId") @NotNull(message = "User ID must not be null.") Long senderId,
@@ -115,7 +114,6 @@ public class FriendshipController {
 
     /**
      * Cancels a friendship request sent by the sender to the recipient.
-     *
      * This method allows the user identified by the senderId to cancel
      * a previously sent friendship request to the user identified by the recipientId.
      * If the senderId does not match the currently authenticated user,
@@ -150,7 +148,6 @@ public class FriendshipController {
 
     /**
      * Deletes a friendship between the user and the specified friend.
-     *
      * If either userId or friendId does not match the currently authenticated user,
      * a FORBIDDEN response is returned.
      *
@@ -184,7 +181,6 @@ public class FriendshipController {
 
     /**
      * Checks if two users are friends.
-     *
      * If the userId does not match the currently
      * authenticated user, a FORBIDDEN response is returned.
      *
@@ -218,7 +214,6 @@ public class FriendshipController {
 
     /**
      * Blocks friendship requests from a specified user.
-     *
      * If the recipientId does not match the currently authenticated user, a FORBIDDEN response is returned.
      *
      * @param senderId the ID of the user sending the block request
@@ -251,7 +246,6 @@ public class FriendshipController {
 
     /**
      * Retrieves a list of mutual friends between the specified users.
-     *
      * If either userId or targetUserId does not match the currently authenticated user, a FORBIDDEN response is returned.
      *
      * @param userId the ID of the first user
@@ -278,7 +272,6 @@ public class FriendshipController {
 
     /**
      * Retrieves a list of friendship requests for a specified user.
-     *
      * The list will contain instances of the Friendship entity, representing the users who have requested to befriend
      * the specified user.
      *
@@ -342,6 +335,19 @@ public class FriendshipController {
 
         return  ResponseEntity.ok(friendshipService.recommendFriendsForUser(pageable, userId));
     }
+
+    @GetMapping
+    public ResponseEntity<PageableDto<FriendCardDto>> getFriendsOfUser(
+            @RequestBody(required = false) FriendshipsFilterRequestDto friendshipsFilterRequest,
+            @Parameter(hidden = true) @CurrentUser UserVO userVO) {
+        return  ResponseEntity.ok(
+                    friendshipService.getAllFriendsByUserId(
+                        userVO.getId(),
+                        friendshipsFilterRequest)
+        );
+    }
+
+
 
     protected boolean isNotCurrentUser(Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();

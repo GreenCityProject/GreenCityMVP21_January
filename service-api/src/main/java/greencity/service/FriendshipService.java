@@ -3,6 +3,7 @@ package greencity.service;
 import greencity.dto.PageableDto;
 import greencity.dto.friendship.FriendCardDto;
 import greencity.dto.friendship.FriendshipVO;
+import greencity.dto.friendship.FriendshipsFilterRequestDto;
 import greencity.dto.friendship.RequestedFriendshipDto;
 import greencity.dto.user.UserVO;
 import greencity.enums.FriendshipStatus;
@@ -13,13 +14,9 @@ import java.util.Optional;
 
 public interface FriendshipService {
 
-    /**
-     * Retrieves a list of all friends for a specified user.
-     *
-     * @param id the ID of the user for whom to retrieve friends
-     * @return a list of FriendCardDto objects representing the user's friends
-     */
-    List<FriendCardDto> getAllFriendsByUserId(Long id);
+    PageableDto<FriendCardDto> getAllFriendsByUserId(
+            Long userId,
+            FriendshipsFilterRequestDto friendshipsFilterRequest);
 
     /**
      * Retrieves a list of all friendship requests for a specified user.
