@@ -221,7 +221,7 @@ public class SecurityConfig {
                                 CUSTOM_SHOPPING_LIST_ITEMS,
                                 "/files/image",
                                 "/files/convert",
-                                "/friends/{senderId}/request/{recipientId}/",
+                                "/friends/request/{recipientId}/",
                                 HABIT_ASSIGN_ID,
                                 HABIT_ASSIGN_ID + "/custom",
                                 "/habit/assign/{habitAssignId}/enroll/**",

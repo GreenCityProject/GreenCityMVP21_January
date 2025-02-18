@@ -45,30 +45,31 @@ public class FriendshipController {
     }
 
     /**
-     * Requests a friendship from the sender to the recipient.
-     * If the senderId does not match the currently authenticated user,
-     * a FORBIDDEN response is returned.
+     * Handles the sending of a friendship request from the current user to the specified recipient.
+     * This method creates a friendship request for the user represented by {@code userVO}
+     * to the user identified by {@code recipientId}. If the request is successfully sent,
+     * it returns a response indicating success with a status of {@code 201 Created}.
+     * If the request cannot be sent (either because it already exists or for any other reason),
+     * it returns a response indicating the failure with a status of {@code 406 Not Acceptable}.
      *
-     * @param senderId the ID of the user sending the friendship request
-     * @param recipientId the ID of the user receiving the friendship request
-     * @return a ResponseEntity containing the response message and status code
+     * @param recipientId the ID of the user to whom the friendship request is being sent.
+     *                    Must not be null. A {@link NotNull} validation ensures this.
+     * @param userVO     the current user initiating the friendship request.
+     *                   This is injected and hidden from the documentation.
+     * @return a {@link ResponseEntity} containing {@link FriendshipResponseDto} with the outcome
+     *         message and status of the request.
      */
-
     @Operation(summary = "Request friendship")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "201", description = HttpStatuses.CREATED),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "406", description = HttpStatuses.NOT_ACCEPTABLE)
     })
-    @PostMapping("/{senderId}/request/{recipientId}/")
+    @PostMapping("/request/{recipientId}/")
     public ResponseEntity<FriendshipResponseDto> requestFriendship(
-            @PathVariable("senderId") @NotNull(message = "User ID must not be null.") Long senderId,
-            @PathVariable("recipientId") @NotNull(message = "User ID must not be null.") Long recipientId) {
-        if(isNotCurrentUser(senderId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        boolean isRequested = friendshipService.requestFriendshipByUserId(senderId, recipientId);
+            @PathVariable("recipientId") @NotNull(message = "User ID must not be null.") Long recipientId,
+            @Parameter(hidden = true) @CurrentUser UserVO userVO) {
+        boolean isRequested = friendshipService.requestFriendshipByUserId(userVO.getId(), recipientId);
 
         return (isRequested)
                 ? ResponseEntity
