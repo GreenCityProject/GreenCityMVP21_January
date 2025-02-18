@@ -1,5 +1,6 @@
 package greencity.service;
 
+import greencity.dto.PageableAdvancedDto;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
@@ -98,11 +99,17 @@ public class EventCommentServiceImplTest {
 
     @Test
     void getCommentsByEventTest() {
-        EventCommentResponseDto responseDto = new EventCommentResponseDto();
-        responseDto.setId(1L);
-        responseDto.setText("text1");
-        responseDto.setCreatedDate(LocalDateTime.now());
-        responseDto.setAuthor(new UserProfilePictureDto());
+        EventCommentResponseDto responseDto1 = new EventCommentResponseDto();
+        responseDto1.setId(1L);
+        responseDto1.setText("text1");
+        responseDto1.setCreatedDate(LocalDateTime.now());
+        responseDto1.setAuthor(new UserProfilePictureDto());
+
+        EventCommentResponseDto responseDto2 = new EventCommentResponseDto();
+        responseDto2.setId(2L);
+        responseDto2.setText("text2");
+        responseDto2.setCreatedDate(LocalDateTime.now());
+        responseDto2.setAuthor(new UserProfilePictureDto());
 
         when(eventRepo.findById(any(Long.class))).thenReturn(Optional.of(event));
 
@@ -124,12 +131,15 @@ public class EventCommentServiceImplTest {
                             .build();
                 });
 
-        Page<EventCommentResponseDto> result = service.getCommentsByEvent(1L, 0, 10);
+        PageableAdvancedDto<EventCommentResponseDto> result = service.getCommentsByEvent(1L, 0, 10);
 
         verify(eventCommentRepo, times(1)).findByEvent(any(Event.class), eq(pageable));
+
         Assertions.assertEquals(2, result.getTotalElements());
         Assertions.assertEquals("text1", result.getContent().get(0).getText());
+        Assertions.assertEquals(0, result.getNumber());
     }
+
 
     @Test
     void getCommentsByEventNoEventTest() {

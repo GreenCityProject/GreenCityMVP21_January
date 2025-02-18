@@ -2,6 +2,7 @@ package greencity.controller;
 
 import greencity.annotations.CurrentUser;
 import greencity.constant.HttpStatuses;
+import greencity.dto.PageableAdvancedDto;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
@@ -13,15 +14,11 @@ import io.swagger.v3.oas.annotations.media.Content;
 import io.swagger.v3.oas.annotations.media.Schema;
 import io.swagger.v3.oas.annotations.responses.ApiResponse;
 import io.swagger.v3.oas.annotations.responses.ApiResponses;
+import jakarta.validation.Valid;
 import lombok.RequiredArgsConstructor;
-import org.springframework.data.domain.Page;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
 import org.springframework.web.bind.annotation.*;
-
-import jakarta.validation.Valid;
-
-import java.util.List;
 
 /**
  * Controller for managing event comments.
@@ -38,9 +35,9 @@ public class EventCommentController {
     /**
      * Adds a comment to an event.
      *
-     * @param eventId the ID of the event
+     * @param eventId    the ID of the event
      * @param requestDto the request body containing the comment text
-     * @param user the currently authenticated user
+     * @param user       the currently authenticated user
      * @return the created comment
      */
     @Operation(summary = "Add an event comment.")
@@ -81,7 +78,7 @@ public class EventCommentController {
     /**
      * Retrieves a comment by its ID.
      *
-     * @param eventId the ID of the event
+     * @param eventId   the ID of the event
      * @param commentId the ID of the comment
      * @return the comment details
      */
@@ -101,9 +98,9 @@ public class EventCommentController {
     /**
      * Replies to a specific comment.
      *
-     * @param commentId the ID of the parent comment
+     * @param commentId  the ID of the parent comment
      * @param requestDto the request body containing the reply text
-     * @param user the currently authenticated user
+     * @param user       the currently authenticated user
      * @return the created reply comment
      */
     @Operation(summary = "Reply to a comment.")
@@ -127,22 +124,25 @@ public class EventCommentController {
      * Retrieves all comments for a specific event.
      *
      * @param eventId the ID of the event
-     * @return a list of comments
+     * @param page    the page number (default is 0)
+     * @param size    the number of items per page (default is 10)
+     * @return a pageable list of comments with pagination details
      */
     @Operation(summary = "Get all comments for an event.")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK,
-                    content = @Content(schema = @Schema(implementation = EventCommentResponseDto.class))),
+                    content = @Content(schema = @Schema(implementation = PageableAdvancedDto.class))),
             @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
     })
-
     @GetMapping
-    public ResponseEntity<Page<EventCommentResponseDto>> getCommentsByEvent(
+    public ResponseEntity<PageableAdvancedDto<EventCommentResponseDto>> getCommentsByEvent(
             @PathVariable Long eventId,
             @RequestParam(defaultValue = "0") int page,
             @RequestParam(defaultValue = "10") int size) {
 
-        return ResponseEntity.ok(eventCommentService.getCommentsByEvent(eventId, page, size));
+        PageableAdvancedDto<EventCommentResponseDto> response = eventCommentService.getCommentsByEvent(eventId, page, size);
+        return ResponseEntity.ok(response);
     }
+
 }
 

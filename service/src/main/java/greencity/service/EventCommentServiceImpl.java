@@ -1,5 +1,6 @@
 package greencity.service;
 
+import greencity.dto.PageableAdvancedDto;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
@@ -167,14 +168,28 @@ public class EventCommentServiceImpl implements EventCommentService {
     }
 
     @Override
-    public Page<EventCommentResponseDto> getCommentsByEvent(Long eventId, int page, int size) {
+    public PageableAdvancedDto<EventCommentResponseDto> getCommentsByEvent(Long eventId, int page, int size) {
         Event event = eventRepo.findById(eventId)
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
         Pageable pageable = PageRequest.of(page, size);
         Page<EventComment> eventComments = eventCommentRepo.findByEvent(event, pageable);
 
-        return eventComments.map(comment -> modelMapper.map(comment, EventCommentResponseDto.class));
+        List<EventCommentResponseDto> content = eventComments.getContent().stream()
+                .map(comment -> modelMapper.map(comment, EventCommentResponseDto.class))
+                .toList();
+
+        return new PageableAdvancedDto<>(
+                content,
+                eventComments.getTotalElements(),
+                eventComments.getNumber(),
+                eventComments.getTotalPages(),
+                eventComments.getSize(),
+                eventComments.hasPrevious(),
+                eventComments.hasNext(),
+                eventComments.isFirst(),
+                eventComments.isLast()
+        );
     }
 
     @Override

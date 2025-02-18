@@ -2,6 +2,7 @@ package greencity.controller;
 
 import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.converters.UserArgumentResolver;
+import greencity.dto.PageableAdvancedDto;
 import greencity.dto.event.AddEventCommentDtoResponse;
 import greencity.dto.event.EventCommentRequestDto;
 import greencity.dto.event.EventCommentResponseDto;
@@ -15,9 +16,6 @@ import org.mockito.InjectMocks;
 import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
-import org.springframework.data.domain.Page;
-import org.springframework.data.domain.PageImpl;
-import org.springframework.data.domain.PageRequest;
 import org.springframework.data.web.PageableHandlerMethodArgumentResolver;
 import org.springframework.http.MediaType;
 import org.springframework.test.web.servlet.MockMvc;
@@ -132,9 +130,11 @@ class EventCommentControllerTest {
         responseDto2.setText("Comment 2");
 
         List<EventCommentResponseDto> comments = List.of(responseDto1, responseDto2);
-        Page<EventCommentResponseDto> page = new PageImpl<>(comments, PageRequest.of(0, 10), comments.size());
+        PageableAdvancedDto<EventCommentResponseDto> pageableResponse = new PageableAdvancedDto<>(
+                comments, comments.size(), 0, 1, 10, false, false, true, true);
 
-        when(eventCommentService.getCommentsByEvent(anyLong(), anyInt(), anyInt())).thenReturn(page);
+        when(eventCommentService.getCommentsByEvent(anyLong(), anyInt(), anyInt()))
+                .thenReturn(pageableResponse);
 
         mockMvc.perform(get(EVENT_COMMENT_CONTROLLER_LINK, 1)
                         .param("page", "0")
@@ -142,9 +142,10 @@ class EventCommentControllerTest {
                         .contentType(MediaType.APPLICATION_JSON)
                         .accept(MediaType.APPLICATION_JSON))
                 .andExpect(status().isOk())
+                .andExpect(jsonPath("$.number").value(0))
+                .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.content").isArray())
                 .andExpect(jsonPath("$.content.length()").value(2))
-                .andExpect(jsonPath("$.totalElements").value(2))
                 .andExpect(jsonPath("$.content[0].id").value(1))
                 .andExpect(jsonPath("$.content[0].text").value("Comment 1"))
                 .andExpect(jsonPath("$.content[1].id").value(2))
