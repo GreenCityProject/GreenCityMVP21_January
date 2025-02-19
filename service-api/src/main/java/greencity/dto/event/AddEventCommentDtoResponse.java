@@ -1,6 +1,5 @@
 package greencity.dto.event;
 
-import greencity.dto.user.UserProfilePictureDto;
 import lombok.*;
 
 import java.time.LocalDateTime;
@@ -11,12 +10,9 @@ import java.time.LocalDateTime;
 @Setter
 @EqualsAndHashCode
 @Builder
-public class EventCommentResponseDto {
+public class AddEventCommentDtoResponse {
     private Long id;
     private String text;
     private LocalDateTime createdDate;
     private LocalDateTime modifiedDate;
-    private UserProfilePictureDto author;
-    private int likes;
-    private Long parentCommentId;
 }

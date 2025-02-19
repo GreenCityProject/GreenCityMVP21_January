@@ -107,7 +107,13 @@ public class SecurityConfig {
                         .requestMatchers("/swagger-resources/**", "/webjars/**", "/swagger-ui/**").permitAll()
                         .requestMatchers("/management/**",
                                 "/econews/comments/replies/{parentCommentId}")
-                        .hasAnyRole(ADMIN)
+                        .hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.POST, "/achievement")
+                        .hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.PUT, "/achievement/**")
+                        .hasRole(ADMIN)
+                        .requestMatchers(HttpMethod.DELETE, "/achievement/**")
+                        .hasRole(ADMIN)
                         .requestMatchers("/css/**",
                                 "/img/**")
                         .permitAll()
@@ -117,6 +123,7 @@ public class SecurityConfig {
                                 "/ownSecurity/verifyEmail",
                                 "/ownSecurity/updateAccessToken",
                                 "/ownSecurity/restorePassword",
+                                "/events/{eventId}/comments/count",
                                 "/factoftheday/",
                                 "/factoftheday/all",
                                 "/factoftheday/find",
@@ -207,7 +214,8 @@ public class SecurityConfig {
                                 "/habit/assign/{habitAssignId}",
                                 "/habit/tags/search",
                                 "/habit/search",
-                                "/habit/{habitId}/friends/profile-pictures", "/notification/**")
+                                "/habit/{habitId}/friends/profile-pictures", "/notification/**", "/user-achievement",
+                                "/user-achievement/**")
                         .hasAnyRole(USER, ADMIN, MODERATOR, UBS_EMPLOYEE)
                         .requestMatchers(HttpMethod.POST,
                                 "/events",
@@ -232,7 +240,7 @@ public class SecurityConfig {
                                 "/user/{userId}/habit",
                                 "/habit/custom",
                                 "/custom/shopping-list-items/{userId}/{habitId}/custom-shopping-list-items",
-                                "/notification")
+                                "/notification", "/user-achievement")
                         .hasAnyRole(USER, ADMIN, MODERATOR, UBS_EMPLOYEE)
                         .requestMatchers(HttpMethod.PUT,
                                 "/events/{eventId}",

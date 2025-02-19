@@ -107,4 +107,7 @@ public interface UserService {
      * @param criteria value which we used to filter users.
      */
     PageableDto<UserManagementVO> getAllUsersByCriteria(String criteria, String role, String status, Pageable pageable);
+
+    Optional<UserVO> findByFullName(String fullName);
+
 }
