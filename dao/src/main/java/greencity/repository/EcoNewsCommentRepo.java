@@ -7,6 +7,8 @@ import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
 
+import java.util.List;
+
 @Repository
 public interface EcoNewsCommentRepo extends JpaRepository<EcoNewsComment, Long> {
     /**
@@ -83,4 +85,6 @@ public interface EcoNewsCommentRepo extends JpaRepository<EcoNewsComment, Long> 
      */
     Page<EcoNewsComment> findAllByParentCommentIdAndDeletedFalseOrderByCreatedDateDesc(Pageable pageable,
         Long parentCommentId);
+
+    List<EcoNewsComment> findAllByUserId(Long userId);
 }
