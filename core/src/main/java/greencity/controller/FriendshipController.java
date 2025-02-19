@@ -189,30 +189,33 @@ public class FriendshipController {
     }
 
     /**
-     * Blocks friendship requests from a specified user.
-     * If the recipientId does not match the currently authenticated user, a FORBIDDEN response is returned.
+     * Blocks friendship requests from a specified user for the current user.
+     * This method allows the authenticated user (represented by {@code userVO})
+     * to block all incoming friendship requests from another user identified by {@code senderId}.
+     * If the operation is successful, it returns a response with status {@code 200 OK}
+     * along with a success message. If the blocking operation fails (such as if the
+     * friendship state is not suitable for blocking), the method returns a response
+     * with status {@code 406 Not Acceptable} and an error message indicating failure.
      *
-     * @param senderId the ID of the user sending the block request
-     * @param recipientId the ID of the user whose requests are being blocked
-     * @return a ResponseEntity containing a FriendshipResponseDto indicating
-     * whether the blocking was successful and an appropriate message.
+     * @param userVO   the current authenticated user who is executing the block operation.
+     *                 This parameter is injected and hidden from API documentation.
+     * @param senderId the ID of the sender from whom friendship requests are to be blocked.
+     *                 Must not be null, as enforced by the {@link NotNull} validation.
+     * @return a {@link ResponseEntity} containing a {@link FriendshipResponseDto}
+     *         with the outcome of the block operation and the appropriate HTTP status.
      */
 
     @Operation(summary = "Block friendship requests from User")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "406", description = HttpStatuses.NOT_ACCEPTABLE)
     })
-    @PutMapping("/{senderId}/block/{recipientId}/")
+    @PutMapping("/block/{senderId}/")
     public ResponseEntity<FriendshipResponseDto> blockFriendshipRequests(
-            @PathVariable("senderId") @NotNull(message = "User ID must not be null.") Long senderId,
-            @PathVariable("recipientId") @NotNull(message = "User ID must not be null.") Long recipientId) {
-        if(isNotCurrentUser(recipientId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        boolean isBlocked  = friendshipService.blockFriendshipRequestsFromUserById(senderId, recipientId);
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
+            @PathVariable("senderId") @NotNull(message = "User ID must not be null.") Long senderId) {
+        boolean isBlocked  = friendshipService.blockFriendshipRequestsFromUserById(senderId, userVO.getId());
         return (isBlocked)
                 ? ResponseEntity.ok(new FriendshipResponseDto(true, "Friendship request blocked successfully."))
                 : ResponseEntity
@@ -238,6 +241,7 @@ public class FriendshipController {
     })
     @GetMapping("/{userId}/mutual/{targetUserId}/")
     public ResponseEntity<List<FriendCardDto>> getMutualFriends(
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
             @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
             @PathVariable("targetUserId") @NotNull(message = "User ID must not be null.") Long targetUserId) {
         if(isNotCurrentUser(userId) && isNotCurrentUser(targetUserId)) {
@@ -264,6 +268,7 @@ public class FriendshipController {
     })
     @GetMapping("/{userId}/requested/")
     public ResponseEntity<List<RequestedFriendshipDto>> getFriendshipRequestsForUserById(
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
             @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId) {
         if(isNotCurrentUser(userId)) {
             return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
@@ -280,6 +285,7 @@ public class FriendshipController {
     })
     @GetMapping("/{userId}/friendPage/{targetUserId}/")
     public ResponseEntity<FriendPageDto> getFriendPage(
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
             @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
             @PathVariable("targetUserId") @NotNull(message = "User ID must not be null.") Long targetUserId
     ) {
@@ -303,6 +309,7 @@ public class FriendshipController {
     })
     @GetMapping("/{userId}/recommendedFriends/")
     public ResponseEntity<PageableDto<FriendCardDto>> getRecommendedFriends(
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
             @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
             Pageable pageable) {
         if(isNotCurrentUser(userId)) {
@@ -314,8 +321,8 @@ public class FriendshipController {
 
     @GetMapping
     public ResponseEntity<PageableDto<FriendCardDto>> getFriendsOfUser(
-            @RequestBody(required = false) FriendshipsFilterRequestDto friendshipsFilterRequest,
-            @Parameter(hidden = true) @CurrentUser UserVO userVO) {
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
+            @RequestBody(required = false) FriendshipsFilterRequestDto friendshipsFilterRequest) {
         return  ResponseEntity.ok(
                     friendshipService.getAllFriendsByUserId(
                         userVO.getId(),
@@ -324,7 +331,7 @@ public class FriendshipController {
     }
 
 
-
+    // TODO swagger documentation
     protected boolean isNotCurrentUser(Long id) {
         Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
         return ! (Objects.nonNull(authentication)

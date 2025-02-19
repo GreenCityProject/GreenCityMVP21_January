@@ -240,7 +240,7 @@ public class SecurityConfig {
                                 "/habit/statistic/{id}",
                                 "/econews/update",
                                 "/friends/accept/{senderId}/",
-                                "/friends/{senderId}/block/{recipientId}/",
+                                "/friends/block/{senderId}/",
                                 "/friends/cancel/{recipientId}/",
                                 "/ownSecurity",
                                 "/user/profile",
