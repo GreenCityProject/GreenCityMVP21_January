@@ -224,30 +224,30 @@ public class FriendshipController {
     }
 
     /**
-     * Retrieves a list of mutual friends between the specified users.
-     * If either userId or targetUserId does not match the currently authenticated user, a FORBIDDEN response is returned.
+     * Retrieves a list of mutual friends between the current user and a specified target user.
      *
-     * @param userId the ID of the first user
-     * @param targetUserId the ID of the second user
-     * @return a ResponseEntity containing a list of FriendCardDto representing
-     * mutual friends, if found.
+     * This method returns a list of mutual friends shared by the authenticated user
+     * (represented by {@code userVO}) and another user specified by {@code targetUserId}.
+     * The response is encapsulated in a {@link ResponseEntity} with status {@code 200 OK}
+     * containing the list of mutual friends as {@link FriendCardDto} objects.
+     *
+     * @param userVO       the current authenticated user for whom mutual friends are being retrieved.
+     *                     This parameter is injected and hidden from API documentation.
+     * @param targetUserId the ID of the user with whom to find mutual friends.
+     *                     Must not be null, conforming to the {@link NotNull} validation constraints.
+     * @return a {@link ResponseEntity} containing a {@link List} of {@link FriendCardDto} objects representing mutual friends,
+     *         along with an HTTP status of {@code 200 OK}.
      */
-
     @Operation(summary = "View a list of mutual friends")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
     })
-    @GetMapping("/{userId}/mutual/{targetUserId}/")
+    @GetMapping("/mutual/{targetUserId}/")
     public ResponseEntity<List<FriendCardDto>> getMutualFriends(
             @Parameter(hidden = true) @CurrentUser UserVO userVO,
-            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
             @PathVariable("targetUserId") @NotNull(message = "User ID must not be null.") Long targetUserId) {
-        if(isNotCurrentUser(userId) && isNotCurrentUser(targetUserId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        return  ResponseEntity.ok(friendshipService.getAllMutualFriendsByUserId(userId, targetUserId));
+        return  ResponseEntity.ok(friendshipService.getAllMutualFriendsByUserId(userVO.getId(), targetUserId));
     }
 
     /**
