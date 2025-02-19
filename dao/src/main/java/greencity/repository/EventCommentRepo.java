@@ -8,6 +8,9 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.data.jpa.repository.JpaRepository;
 import org.springframework.data.jpa.repository.Query;
 import org.springframework.stereotype.Repository;
+import org.springframework.data.domain.Page;
+import org.springframework.data.domain.Pageable;
+import org.springframework.data.jpa.repository.JpaRepository;
 
 import java.util.List;
 import java.util.Optional;
@@ -82,4 +85,16 @@ public interface EventCommentRepo extends JpaRepository<EventComment, Long> {
      */
     @Query("SELECT COUNT(ec) FROM EventComment ec WHERE ec.parentComment = :parentComment")
     long countRepliesByParentComment(EventComment parentComment);
+
+
+    /**
+     * Method to find all comments for a specific event, ordered by creation date in descending order.
+     * This ensures that the newest comments appear first in the list.
+     *
+     * @param event    the {@link Event} instance for which comments are being retrieved.
+     * @param pageable the {@link Pageable} object for pagination and sorting options.
+     * @return a {@link Page} of {@link EventComment} instances sorted by `createdDate` in descending order.
+     */
+    Page<EventComment> findByEventOrderByCreatedDateDesc(Event event, Pageable pageable);
+
 }

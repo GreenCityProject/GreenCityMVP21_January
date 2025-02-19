@@ -98,24 +98,24 @@ public class EventCommentServiceImplTest {
     }
 
     @Test
-    void getCommentsByEventTest() {
-        EventCommentResponseDto responseDto1 = new EventCommentResponseDto();
-        responseDto1.setId(1L);
-        responseDto1.setText("text1");
-        responseDto1.setCreatedDate(LocalDateTime.now());
-        responseDto1.setAuthor(new UserProfilePictureDto());
+    void getCommentsByEventSortedByNewestFirstTest() {
+        EventComment newerComment = new EventComment();
+        newerComment.setId(1L);
+        newerComment.setText("Newest Comment");
+        newerComment.setCreatedDate(LocalDateTime.now().plusMinutes(10));
 
-        EventCommentResponseDto responseDto2 = new EventCommentResponseDto();
-        responseDto2.setId(2L);
-        responseDto2.setText("text2");
-        responseDto2.setCreatedDate(LocalDateTime.now());
-        responseDto2.setAuthor(new UserProfilePictureDto());
+        EventComment olderComment = new EventComment();
+        olderComment.setId(2L);
+        olderComment.setText("Older Comment");
+        olderComment.setCreatedDate(LocalDateTime.now());
 
         when(eventRepo.findById(any(Long.class))).thenReturn(Optional.of(event));
 
         PageRequest pageable = PageRequest.of(0, 10);
-        Page<EventComment> eventCommentPage = new PageImpl<>(List.of(eventComment, eventComment2), pageable, 2);
-        when(eventCommentRepo.findByEvent(any(Event.class), eq(pageable))).thenReturn(eventCommentPage);
+        Page<EventComment> eventCommentPage = new PageImpl<>(List.of(newerComment, olderComment), pageable, 2);
+
+        when(eventCommentRepo.findByEventOrderByCreatedDateDesc(any(Event.class), eq(pageable)))
+                .thenReturn(eventCommentPage);
 
         when(modelMapper.map(any(EventComment.class), eq(EventCommentResponseDto.class)))
                 .thenAnswer(invocation -> {
@@ -133,12 +133,13 @@ public class EventCommentServiceImplTest {
 
         PageableAdvancedDto<EventCommentResponseDto> result = service.getCommentsByEvent(1L, 0, 10);
 
-        verify(eventCommentRepo, times(1)).findByEvent(any(Event.class), eq(pageable));
+        verify(eventCommentRepo, times(1)).findByEventOrderByCreatedDateDesc(any(Event.class), eq(pageable));
 
         Assertions.assertEquals(2, result.getTotalElements());
-        Assertions.assertEquals("text1", result.getContent().get(0).getText());
-        Assertions.assertEquals(0, result.getNumber());
+        Assertions.assertEquals("Newest Comment", result.getContent().get(0).getText());
+        Assertions.assertEquals("Older Comment", result.getContent().get(1).getText());
     }
+
 
 
     @Test

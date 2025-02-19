@@ -14,11 +14,13 @@ import greencity.repository.EventCommentRepo;
 import greencity.repository.EventRepo;
 import jakarta.persistence.EntityNotFoundException;
 import lombok.AllArgsConstructor;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.data.domain.Page;
 import org.springframework.data.domain.PageRequest;
 import org.springframework.data.domain.Pageable;
 import org.springframework.stereotype.Service;
+import org.jsoup.Jsoup;
 
 import java.time.LocalDateTime;
 import java.util.ArrayList;
@@ -27,6 +29,7 @@ import java.util.Optional;
 import java.util.regex.Matcher;
 import java.util.regex.Pattern;
 
+@Slf4j
 @Service
 @AllArgsConstructor
 public class EventCommentServiceImpl implements EventCommentService {
@@ -35,6 +38,7 @@ public class EventCommentServiceImpl implements EventCommentService {
     private final ModelMapper modelMapper;
     private final UserService userService;
     private final NotificationService notificationService;
+    private final EmailService emailService;
 
     @Override
     public AddEventCommentDtoResponse addComment(Long eventId, Long userId, EventCommentRequestDto requestDto) {
@@ -59,14 +63,35 @@ public class EventCommentServiceImpl implements EventCommentService {
 
         eventComment = eventCommentRepo.save(eventComment);
 
-        if (!event.getAuthor().equals(user) && !event.getAuthor().getId().equals(user.getId())) {
+        if (!event.getAuthor().getId().equals(user.getId())) {
+            sendCommentNotificationEmail(event.getAuthor(), event, eventComment);
+
+            String notificationMessage = String.format(
+                    "<img src='https://greencity.com/logo.png' alt='GreenCity Logo'/>" +
+                    "<p>Hi %s,</p>" +
+                    "<p>You've got a new comment on your event <b>%s</b>.</p>" +
+                    "<p><b>Comment by:</b> %s (%s)</p>" +
+                    "<p><b>Comment:</b> %s</p>" +
+                    "<a href='%s' style='display:inline-block;padding:10px 20px;background:#4CAF50;color:white;text-decoration:none;'>Go to comment</a>" +
+                    "<p>Sincerely yours,<br>GreenCity team</p>",
+                    event.getAuthor().getName(),
+                    event.getTitle(),
+                    user.getName(),
+                    eventComment.getCreatedDate(),
+                    requestDto.getText(),
+                    "/events/" + eventId
+            );
+
+            String plainMessage = Jsoup.parse(notificationMessage).text();
+
             notificationService.addNotification(new NotificationRequestDto(
                     user.getId(),
                     event.getAuthor().getId(),
                     "New comment on your event: " + event.getTitle(),
-                    "A new comment has been added to your event.",
+                    plainMessage,
                     NotificationSection.GreenCity.name(),
-                    "/events/" + eventId));
+                    "/events/" + eventId
+            ));
         }
 
         List<User> mentionedUsers = extractMentionedUsers(requestDto.getText());
@@ -76,9 +101,10 @@ public class EventCommentServiceImpl implements EventCommentService {
                         user.getId(),
                         mentionedUser.getId(),
                         "You were mentioned in a comment on: " + event.getTitle(),
-                        "Someone mentioned you in a comment.",
+                        String.format("User %s mentioned you in a comment: \"%s\".", user.getName(), requestDto.getText()),
                         NotificationSection.GreenCity.name(),
-                        "/events/" + eventId));
+                        "/events/" + eventId
+                ));
             }
         }
 
@@ -173,7 +199,7 @@ public class EventCommentServiceImpl implements EventCommentService {
                 .orElseThrow(() -> new EntityNotFoundException("Event not found with id: " + eventId));
 
         Pageable pageable = PageRequest.of(page, size);
-        Page<EventComment> eventComments = eventCommentRepo.findByEvent(event, pageable);
+        Page<EventComment> eventComments = eventCommentRepo.findByEventOrderByCreatedDateDesc(event, pageable);
 
         List<EventCommentResponseDto> content = eventComments.getContent().stream()
                 .map(comment -> modelMapper.map(comment, EventCommentResponseDto.class))
@@ -222,5 +248,30 @@ public class EventCommentServiceImpl implements EventCommentService {
     public long countRepliesByComment(Long commentId) {
         //This method is yet to be implemented
         return 0;
+    }
+
+    private void sendCommentNotificationEmail(User organizer, Event event, EventComment comment) {
+        String emailBody = String.format(
+                "<p>Hi %s,</p>" +
+                "<p>You've got a new comment on your event <b>%s</b>.</p>" +
+                "<p><b>Comment by:</b> %s (%s)</p>" +
+                "<p><b>Comment:</b> %s</p>" +
+                "<a href='%s' style='display:inline-block;padding:10px 20px;background:#4CAF50;color:white;text-decoration:none;'>Go to comment</a>" +
+                "<p>Sincerely yours,<br>GreenCity team</p>",
+                organizer.getName(),
+                event.getTitle(),
+                comment.getUser().getName(),
+                comment.getCreatedDate(),
+                comment.getText(),
+                "/events/" + event.getId()
+        );
+
+        String emailSubject = "📢 New Comment on Your Event: " + event.getTitle();
+
+        try {
+            emailService.sendEmail(organizer.getEmail(), emailSubject, emailBody);
+        } catch (Exception e) {
+            log.error("Failed to send comment notification email to organizer: {}", organizer.getEmail(), e);
+        }
     }
 }
