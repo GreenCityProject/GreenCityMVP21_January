@@ -16,6 +16,7 @@ import greencity.repository.EcoNewsCommentRepo;
 import greencity.repository.FriendshipRepo;
 import greencity.repository.HabitAssignRepo;
 import greencity.repository.UserRepo;
+import lombok.extern.slf4j.Slf4j;
 import org.modelmapper.ModelMapper;
 import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
@@ -56,9 +57,15 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     @Override
     public List<FriendCardDto> getAllMutualFriendsByUserId(Long userId, Long targetUserId) {
-        List<FriendCardDto> userFriends = new ArrayList<>(getAllFriendCardsOfUserById(userId));
-        List<FriendCardDto> targetUserFriends = new ArrayList<>(getAllFriendCardsOfUserById(targetUserId));
-        return (userFriends.retainAll(targetUserFriends)) ? userFriends : new ArrayList<>();
+        if (Objects.isNull(userId) || Objects.isNull(targetUserId)) {
+            return Collections.emptyList();
+        }
+
+        Set<FriendCardDto> userFriends = new HashSet<>(getAllFriendCardsOfUserById(userId));
+        Set<FriendCardDto> targetUserFriends = new HashSet<>(getAllFriendCardsOfUserById(targetUserId));
+
+        userFriends.retainAll(targetUserFriends);
+        return new ArrayList<>(userFriends);
     }
 
     // TODO  IDK what is this requirement for - System should recommend friends based on the following criteria: d. replies
