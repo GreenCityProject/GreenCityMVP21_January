@@ -1,0 +1,67 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+    <changeSet id="achievements-1-derecha" author="Mykhaylo Derecha">
+
+        <createTable tableName="achievements">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false" />
+            </column>
+            <column name="type" type="VARCHAR(255)">
+                <constraints nullable="false"/>
+            </column>
+            <column name="conditions" type="TEXT"/>
+            <column name="required_rate" type="INT"/>
+        </createTable>
+    </changeSet>
+
+    <changeSet id="achievements-2-derecha" author="Mykhaylo Derecha">
+        <insert tableName="achievements">
+            <column name="type" value="AQUAINTANCE"/>
+            <column name="conditions" value="You have completed your first task."/>
+            <column name="required_rate" value="10"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="ECO_FRIEND"/>
+            <column name="conditions" value="You have planted your first tree."/>
+            <column name="required_rate" value="25"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="CONSCIOUS"/>
+            <column name="conditions" value="You have completed a task for environmental impact."/>
+            <column name="required_rate" value="40"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="WOW"/>
+            <column name="conditions" value="You have achieved an extraordinary achievement."/>
+            <column name="required_rate" value="60"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="WELL_DONE"/>
+            <column name="conditions" value="You have completed a major milestone."/>
+            <column name="required_rate" value="80"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="TAKE_FIVE"/>
+            <column name="conditions" value="You have completed many eco tasks to make the
+            environment cleaner."/>
+            <column name="required_rate" value="110"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="GURU"/>
+            <column name="conditions" value="You have achieved mastery in your field."/>
+            <column name="required_rate" value="150"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="SENSEI"/>
+            <column name="conditions" value="You have taught many others eco-friends."/>
+            <column name="required_rate" value="170"/>
+        </insert>
+        <insert tableName="achievements">
+            <column name="type" value="SPACE"/>
+            <column name="conditions" value="You have explored a new area."/>
+            <column name="required_rate" value="200"/>
+        </insert>
+    </changeSet>
+</databaseChangeLog>

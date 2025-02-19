@@ -1,0 +1,38 @@
+<?xml version="1.0" encoding="UTF-8" standalone="no"?>
+<databaseChangeLog xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+                   xmlns="http://www.liquibase.org/xml/ns/dbchangelog"
+                   xsi:schemaLocation="http://www.liquibase.org/xml/ns/dbchangelog http://www.liquibase.org/xml/ns/dbchangelog/dbchangelog-3.4.xsd">
+
+    <changeSet id="user-achievements-1-derecha" author="Mykhaylo Derecha">
+        <createTable tableName="user_achievements">
+            <column name="id" type="BIGINT" autoIncrement="true">
+                <constraints primaryKey="true" nullable="false"/>
+            </column>
+            <column name="user_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="achievement_id" type="BIGINT">
+                <constraints nullable="false"/>
+            </column>
+            <column name="achievement_date" type="TIMESTAMP">
+                <constraints nullable="false"/>
+            </column>
+            <column name="is_active" type="BOOLEAN" defaultValue="false"/>
+        </createTable>
+
+        <addForeignKeyConstraint
+                baseTableName="user_achievements"
+                baseColumnNames="user_id"
+                referencedTableName="users"
+                referencedColumnNames="id"
+                constraintName="fk_user_achievement_user"/>
+
+        <addForeignKeyConstraint
+                baseTableName="user_achievements"
+                baseColumnNames="achievement_id"
+                referencedTableName="achievements"
+                referencedColumnNames="id"
+                constraintName="fk_user_achievement_achievement"/>
+    </changeSet>
+
+</databaseChangeLog>
