@@ -242,7 +242,7 @@ public class SecurityConfig {
                                 "/econews/update",
                                 "/friends/accept/{senderId}/",
                                 "/friends/{senderId}/block/{recipientId}/",
-                                "/friends/{senderId}/cancel/{recipientId}/",
+                                "/friends/cancel/{recipientId}/",
                                 "/ownSecurity",
                                 "/user/profile",
                                 HABIT_ASSIGN_ID + "/update-habit-duration",

@@ -150,7 +150,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     @Override
     public boolean cancelFriendshipRequestByUserId(Long senderId, Long recipientId) {
-        Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderInsensitive(senderId, recipientId);
+        Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderSensitive(senderId, recipientId);
         Friendship friendship = friendshipOptional.orElseGet(Friendship::new);
         if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.CANCELLED);
@@ -163,7 +163,7 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     @Override
     public boolean acceptFriendshipRequestByUserId(Long senderId, Long recipientId) {
-        Optional<Friendship> friendshipOptional = friendshipRepo.findFriendshipByUserIdOrderSensitive(senderId, recipientId);
+        Optional<Friendship> friendshipOptional = getFriendshipByUserIdOrderSensitive(senderId, recipientId);
         Friendship friendship = friendshipOptional.orElseGet(Friendship::new);
         if (friendshipOptional.isPresent() && friendship.getStatus() == FriendshipStatus.REQUESTED) {
             friendship.setStatus(FriendshipStatus.ACCEPTED);
@@ -244,6 +244,10 @@ public class FriendshipServiceImpl implements FriendshipService {
 
     private Optional<Friendship> getFriendshipByUserIdOrderInsensitive(Long userId, Long friendId) {
         return friendshipRepo.findFriendshipByEitherUserId(userId, friendId);
+    }
+
+    private Optional<Friendship> getFriendshipByUserIdOrderSensitive(Long userId, Long friendId) {
+        return friendshipRepo.findFriendshipByUserIdOrderSensitive(userId, friendId);
     }
 
     private List<FriendCardDto> getAllFriendCardsOfUserById(Long userId) {

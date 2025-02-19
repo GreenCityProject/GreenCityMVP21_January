@@ -120,32 +120,32 @@ public class FriendshipController {
     }
 
     /**
-     * Cancels a friendship request sent by the sender to the recipient.
-     * This method allows the user identified by the senderId to cancel
-     * a previously sent friendship request to the user identified by the recipientId.
-     * If the senderId does not match the currently authenticated user,
-     * a FORBIDDEN response is returned.
+     * Cancels a friendship request previously sent to the specified recipient by the current user.
+     * This method allows the authenticated user (represented by {@code userVO})
+     * to cancel a friendship request that was sent to another user identified by {@code recipientId}.
+     * If the cancellation is successful, it returns a response with status {@code 200 OK}
+     * along with a success message. If the cancellation fails (for example, if there was no
+     * preceding friendship request to cancel), it returns a response with status
+     * {@code 406 Not Acceptable} and an error message indicating that the cancellation has failed.
      *
-     * @param senderId the ID of the user who sent the friendship request
-     * @param recipientId the ID of the user to whom the friendship request was sent
-     * @return a ResponseEntity containing the response message and status code
+     * @param userVO      the current authenticated user who is cancelling the friendship request.
+     *                    This parameter is injected and hidden from the API documentation.
+     * @param recipientId the ID of the user to whom the friendship request was sent and is being cancelled.
+     *                    Must not be null, as enforced by the {@link NotNull} validation.
+     * @return a {@link ResponseEntity} containing a {@link FriendshipResponseDto}
+     *         with the result of the cancellation operation and the appropriate HTTP status.
      */
-
     @Operation(summary = "Cancel friendship request")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "406", description = HttpStatuses.NOT_ACCEPTABLE)
     })
-    @PutMapping("/{senderId}/cancel/{recipientId}/")
+    @PutMapping("/cancel/{recipientId}/")
     public ResponseEntity<FriendshipResponseDto> cancelFriendshipRequest(
-            @PathVariable("senderId") @NotNull(message = "User ID must not be null.") Long senderId,
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
             @PathVariable("recipientId") @NotNull(message = "User ID must not be null.") Long recipientId) {
-        if(isNotCurrentUser(senderId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        boolean isCancelled  = friendshipService.cancelFriendshipRequestByUserId(senderId, recipientId);
+        boolean isCancelled  = friendshipService.cancelFriendshipRequestByUserId(userVO.getId(), recipientId);
         return (isCancelled)
                 ? ResponseEntity.ok(new FriendshipResponseDto(true, "Friendship request cancelled successfully."))
                 : ResponseEntity
