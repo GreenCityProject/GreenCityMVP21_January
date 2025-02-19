@@ -251,29 +251,27 @@ public class FriendshipController {
     }
 
     /**
-     * Retrieves a list of friendship requests for a specified user.
-     * The list will contain instances of the Friendship entity, representing the users who have requested to befriend
-     * the specified user.
+     * Retrieves a list of friendship requests for the current authenticated user.
+     * This method fetches all friendship requests that have been received by the
+     * authenticated user (represented by {@code userVO}). The response is provided
+     * in a {@link ResponseEntity} with status {@code 200 OK}, containing a list of
+     * {@link RequestedFriendshipDto} objects, each representing a friendship request.
      *
-     * @param userId the ID of the user for whom to retrieve friendship requests
-     * @return a ResponseEntity containing a list of RequestedFriendshipDto objects
-     * representing all pending friendship requests for the specified user.
+     * @param userVO the current authenticated user for whom friendship requests are being retrieved.
+     *               This parameter is injected and hidden from API documentation.
+     * @return a {@link ResponseEntity} containing a {@link List} of
+     *         {@link RequestedFriendshipDto} objects representing the friendship requests,
+     *         along with an HTTP status of {@code 200 OK}.
      */
-
     @Operation(summary = "View a list friendship requests")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
     })
-    @GetMapping("/{userId}/requested/")
+    @GetMapping("/requests/")
     public ResponseEntity<List<RequestedFriendshipDto>> getFriendshipRequestsForUserById(
-            @Parameter(hidden = true) @CurrentUser UserVO userVO,
-            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId) {
-        if(isNotCurrentUser(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        return  ResponseEntity.ok(friendshipService.getAllFriendshipRequestsForUserById(userId));
+            @Parameter(hidden = true) @CurrentUser UserVO userVO) {
+        return  ResponseEntity.ok(friendshipService.getAllFriendshipRequestsForUserById(userVO.getId()));
     }
 
     @Operation(summary = "Get a FriendPageDto for a target user")
