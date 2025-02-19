@@ -154,30 +154,33 @@ public class FriendshipController {
     }
 
     /**
-     * Deletes a friendship between the user and the specified friend.
-     * If either userId or friendId does not match the currently authenticated user,
-     * a FORBIDDEN response is returned.
+     * Deletes an existing friendship between the current user and a specified friend.
+     * This method allows the authenticated user (represented by {@code userVO})
+     * to delete a friendship with another user identified by {@code friendId}.
+     * If the friendship is successfully deleted, the method returns a response with status
+     * {@code 200 OK} along with a success message. If the deletion fails (for example, because
+     * the friendship record does not exist or is not in an appropriate state to delete),
+     * it returns a response with status {@code 404 Not Found} and an error message indicating
+     * that the deletion could not be performed.
      *
-     * @param userId the ID of the user who wants to delete the friendship
-     * @param friendId the ID of the user to be removed from friendships
-     * @return a ResponseEntity containing the response message and status code
+     * @param userVO   the current authenticated user who is initiating the deletion of the friendship.
+     *                 This parameter is injected and hidden from the API documentation.
+     * @param friendId the ID of the friend with whom the friendship is to be deleted.
+     *                 Must not be null, as enforced by the {@link NotNull} validation.
+     * @return a {@link ResponseEntity} containing a {@link FriendshipResponseDto}
+     *         indicating the result of the deletion operation and the appropriate HTTP status.
      */
-
     @Operation(summary = "Delete friendship record")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
     })
-    @DeleteMapping("/{userId}/delete/{friendId}/")
+    @DeleteMapping("/delete/{friendId}/")
     public ResponseEntity<FriendshipResponseDto> deleteFriendship(
-            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
+            @Parameter(hidden = true) @CurrentUser UserVO userVO,
             @PathVariable("friendId") @NotNull(message = "User ID must not be null.") Long friendId) {
-        if(isNotCurrentUser(userId) || isNotCurrentUser(friendId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        boolean isDeleted = friendshipService.deleteFriendByUserId(userId, friendId);
+        boolean isDeleted = friendshipService.deleteFriendByUserId(userVO.getId(), friendId);
         return  (isDeleted)
                  ? ResponseEntity.ok(new FriendshipResponseDto(true, "Friendship deleted successfully."))
                  : ResponseEntity
