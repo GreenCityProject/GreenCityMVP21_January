@@ -18,12 +18,9 @@ import org.springframework.beans.factory.annotation.Autowired;
 import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.ResponseEntity;
-import org.springframework.security.core.Authentication;
-import org.springframework.security.core.context.SecurityContextHolder;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;
-import java.util.Objects;
 import java.util.Optional;
 
 @RestController
@@ -32,7 +29,6 @@ public class FriendshipController {
 
     private final FriendshipService friendshipService;
     private final FriendPageService friendPageService;
-    private final UserService userService;
 
     @Autowired
     public FriendshipController(
@@ -41,7 +37,6 @@ public class FriendshipController {
             UserService userService) {
         this.friendshipService = friendshipService;
         this.friendPageService = friendPageService;
-        this.userService = userService;
     }
 
     /**
@@ -274,7 +269,6 @@ public class FriendshipController {
         return  ResponseEntity.ok(friendshipService.getAllFriendshipRequestsForUserById(userVO.getId()));
     }
 
-
     /**
      * Retrieves the friend page for a specified user.
      * This method allows the authenticated user (represented by {@code userVO})
@@ -341,6 +335,27 @@ public class FriendshipController {
         return  ResponseEntity.ok(friendshipService.recommendFriendsForUser(pageable, userVO.getId()));
     }
 
+    /**
+     * Retrieves a paginated list of friends for the current authenticated user, with optional filtering.
+     * This method allows the authenticated user (represented by {@code userVO})
+     * to fetch a list of friends. The results can be filtered based on the
+     * criteria specified in the {@link FriendshipsFilterRequestDto}. The response
+     * is returned in a paginated format within a {@link ResponseEntity}
+     * with status {@code 200 OK}.
+     *
+     * @param userVO                    the current authenticated user whose friends are being retrieved.
+     *                                  This parameter is injected and hidden from API documentation.
+     * @param friendshipsFilterRequest   optional filtering criteria used to refine the list of friends.
+     *                                  If no filtering is required, this may be omitted.
+     * @return a {@link ResponseEntity} containing a {@link PageableDto}
+     *         with a list of {@link FriendCardDto} objects representing the user's friends.
+     */
+    @Operation(summary = "Get a page of friends for a target user")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
+    })
     @GetMapping
     public ResponseEntity<PageableDto<FriendCardDto>> getFriendsOfUser(
             @Parameter(hidden = true) @CurrentUser UserVO userVO,
@@ -350,15 +365,5 @@ public class FriendshipController {
                         userVO.getId(),
                         friendshipsFilterRequest)
         );
-    }
-
-
-    // TODO swagger documentation
-    protected boolean isNotCurrentUser(Long id) {
-        Authentication authentication = SecurityContextHolder.getContext().getAuthentication();
-        return ! (Objects.nonNull(authentication)
-                && authentication.isAuthenticated()
-                && Objects.nonNull(userService.findIdByEmail(authentication.getPrincipal().toString()))
-                && userService.findIdByEmail(authentication.getPrincipal().toString()).equals(id));
     }
 }
