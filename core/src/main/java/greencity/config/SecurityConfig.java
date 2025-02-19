@@ -189,7 +189,7 @@ public class SecurityConfig {
                                 "/friends/mutual/{targetUserId}/",
                                 "/friends/requests/",
                                 "/friends/friendPage/{targetUserId}/",
-                                "/friends/{userId}/recommendedFriends/",
+                                "/friends/recommendedFriends/",
                                 "/newsSubscriber/unsubscribe",
                                 "/social-networks/image",
                                 "/user",

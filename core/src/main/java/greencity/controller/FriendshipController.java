@@ -314,23 +314,31 @@ public class FriendshipController {
         }
     }
 
-    @Operation(summary = "Get a FriendPageDto for a target user")
+    /**
+     * Retrieves a paginated list of recommended friends for the current authenticated user.
+     * This method fetches recommendations for potential friends that the authenticated user
+     * (represented by {@code userVO}) may want to connect with. The results are returned in a
+     * paginated format encapsulated within a {@link ResponseEntity} with status {@code 200 OK}.
+     * The method takes a {@link Pageable} parameter to allow clients to specify pagination details
+     * such as page size and number.
+     *
+     * @param userVO   the current authenticated user for whom friend recommendations are being requested.
+     *                 This parameter is injected and hidden from API documentation.
+     * @param pageable  the pagination information that defines the size and number of the requested page.
+     * @return a {@link ResponseEntity} containing a {@link PageableDto}
+     *         with a list of {@link FriendCardDto} objects representing recommended friends.
+     */
+    @Operation(summary = "Get recommended friends for a target user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
     })
-    @GetMapping("/{userId}/recommendedFriends/")
+    @GetMapping("/recommendedFriends/")
     public ResponseEntity<PageableDto<FriendCardDto>> getRecommendedFriends(
             @Parameter(hidden = true) @CurrentUser UserVO userVO,
-            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
             Pageable pageable) {
-        if(isNotCurrentUser(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-
-        return  ResponseEntity.ok(friendshipService.recommendFriendsForUser(pageable, userId));
+        return  ResponseEntity.ok(friendshipService.recommendFriendsForUser(pageable, userVO.getId()));
     }
 
     @GetMapping
