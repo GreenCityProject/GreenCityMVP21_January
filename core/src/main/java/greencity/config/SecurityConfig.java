@@ -186,7 +186,6 @@ public class SecurityConfig {
                                 "/facts",
                                 "/facts/random/{habitId}",
                                 "/facts/dayFact/{languageId}",
-                                "/friends/{userId}/areFriends/{friendId}/",
                                 "/friends/{userId}/mutual/{targetUserId}/",
                                 "/friends/{userId}/requested/",
                                 "/friends/{userId}/friendPage/{targetUserId}/",

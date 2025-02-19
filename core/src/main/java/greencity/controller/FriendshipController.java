@@ -188,40 +188,6 @@ public class FriendshipController {
                        .body(new FriendshipResponseDto(false, "Friendship record must exist and be in REQUESTED state"));
     }
 
-
-    /**
-     * Checks if two users are friends.
-     * If the userId does not match the currently
-     * authenticated user, a FORBIDDEN response is returned.
-     *
-     * @param userId the ID of the first user
-     * @param friendId the ID of the second user
-     * @return a ResponseEntity containing a FriendshipResponseDto indicating
-     * whether the friendship exists or not and an appropriate message.
-     */
-
-    @Operation(summary = "Check if two Users are friends")
-    @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
-            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
-            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
-    })
-    @GetMapping("/{userId}/areFriends/{friendId}/")
-    public ResponseEntity<FriendshipResponseDto> checkFriendship(
-            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
-            @PathVariable("friendId") @NotNull(message = "User ID must not be null.") Long friendId) {
-        if(isNotCurrentUser(userId) && isNotCurrentUser(friendId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
-        }
-        boolean areFriends = friendshipService.areFriends(userId, friendId);
-        return  (areFriends)
-                 ? ResponseEntity.ok(new FriendshipResponseDto(true, "Friendship record exists and is in ACCEPTED state"))
-                 : ResponseEntity
-                        .status(HttpStatus.NOT_FOUND)
-                        .body(new FriendshipResponseDto(false, "Friendship record must exist and be in ACCEPTED state"));
-    }
-
     /**
      * Blocks friendship requests from a specified user.
      * If the recipientId does not match the currently authenticated user, a FORBIDDEN response is returned.
