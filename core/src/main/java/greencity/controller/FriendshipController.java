@@ -274,23 +274,39 @@ public class FriendshipController {
         return  ResponseEntity.ok(friendshipService.getAllFriendshipRequestsForUserById(userVO.getId()));
     }
 
+
+    /**
+     * Retrieves the friend page for a specified user.
+     * This method allows the authenticated user (represented by {@code userVO})
+     * to fetch the friend page for another user identified by {@code targetUserId}.
+     * If the current user attempts to access their own friend page, a {@link WrongIdException}
+     * is thrown. If the friend page is successfully assembled, the method returns a response
+     * with status {@code 200 OK} containing a {@link FriendPageDto}. If the friendship
+     * relationship is not found or an invalid ID is provided, it returns a {@code 404 Not Found} status.
+     *
+     * @param userVO       the current authenticated user trying to access the friend page.
+     *                     This parameter is injected and hidden from API documentation.
+     * @param targetUserId the ID of the user whose friend page is being retrieved.
+     *                     Must not be null, as enforced by the {@link NotNull} validation.
+     * @return a {@link ResponseEntity} containing a {@link FriendPageDto}
+     *         representing the requested friend's page, or a {@code 404 Not Found} status if
+     *         the friendship does not exist or the ID is invalid.
+     * @throws WrongIdException if the current user attempts to view their own friend page.
+     */
     @Operation(summary = "Get a FriendPageDto for a target user")
     @ApiResponses(value = {
             @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
             @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
-            @ApiResponse(responseCode = "403", description = HttpStatuses.FORBIDDEN),
             @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND)
     })
-    @GetMapping("/{userId}/friendPage/{targetUserId}/")
+    @GetMapping("/friendPage/{targetUserId}/")
     public ResponseEntity<FriendPageDto> getFriendPage(
             @Parameter(hidden = true) @CurrentUser UserVO userVO,
-            @PathVariable("userId") @NotNull(message = "User ID must not be null.") Long userId,
-            @PathVariable("targetUserId") @NotNull(message = "User ID must not be null.") Long targetUserId
-    ) {
-        if(isNotCurrentUser(userId)) {
-            return ResponseEntity.status(HttpStatus.FORBIDDEN).build();
+            @PathVariable("targetUserId") @NotNull(message = "User ID must not be null.") Long targetUserId) {
+        Optional<FriendshipVO> friendship = friendshipService.findFriendshipByParticipantsId(userVO.getId(), targetUserId);
+        if(userVO.getId().equals(targetUserId)) {
+            throw new WrongIdException("Current User cannot view him/herself in stead of a Friend. Provide Friends id.");
         }
-        Optional<FriendshipVO> friendship = friendshipService.findFriendshipByParticipantsId(userId, targetUserId);
         try {
             return ResponseEntity.ok(friendPageService.assembleFriendPage(targetUserId, friendship.map(FriendshipVO::getId)));
         } catch (WrongIdException e) {
