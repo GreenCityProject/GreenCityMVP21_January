@@ -117,6 +117,7 @@ public class SecurityConfig {
                                 "/ownSecurity/verifyEmail",
                                 "/ownSecurity/updateAccessToken",
                                 "/ownSecurity/restorePassword",
+                                "/events/{eventId}/comments/count",
                                 "/factoftheday/",
                                 "/factoftheday/all",
                                 "/factoftheday/find",

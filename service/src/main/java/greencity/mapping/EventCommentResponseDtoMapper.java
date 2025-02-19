@@ -21,7 +21,7 @@ public class EventCommentResponseDtoMapper extends AbstractConverter<EventCommen
                 .createdDate(eventComment.getCreatedDate())
                 .modifiedDate(eventComment.getModifiedDate())
                 .author(mapper.convert(eventComment.getUser()))
-                .parentCommentId(eventComment.getParentComment().getId())
+                .parentCommentId(eventComment.getParentComment() != null ? eventComment.getParentComment().getId() : null)
                 .build();
     }
 }

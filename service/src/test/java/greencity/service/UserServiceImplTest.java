@@ -29,7 +29,6 @@ import org.springframework.test.util.ReflectionTestUtils;
 
 import java.sql.Timestamp;
 import java.time.LocalDateTime;
-import java.time.Month;
 import java.util.ArrayList;
 import java.util.Date;
 import java.util.List;
@@ -52,15 +51,15 @@ class UserServiceImplTest {
     private ModelMapper modelMapper;
 
     private UserVO userVO = UserVO.builder()
-        .id(1L)
-        .name("Test Testing")
-        .email("test@gmail.com")
-        .role(Role.ROLE_USER)
-        .userStatus(ACTIVATED)
-        .emailNotification(EmailNotification.DISABLED)
-        .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
-        .dateOfRegistration(LocalDateTime.now())
-        .build();
+            .id(1L)
+            .name("Test Testing")
+            .email("test@gmail.com")
+            .role(Role.ROLE_USER)
+            .userStatus(ACTIVATED)
+            .emailNotification(EmailNotification.DISABLED)
+            .lastActivityTime(LocalDateTime.of(2020, 10, 10, 20, 10, 10))
+            .dateOfRegistration(LocalDateTime.now())
+            .build();
 
     @Test
     void findByIdTest() {
@@ -149,9 +148,9 @@ class UserServiceImplTest {
     @Test
     void testFindNotDeactivatedByEmail() {
         when(userRepo.findNotDeactivatedByEmail(TEST_EMAIL))
-            .thenReturn(Optional.of(TEST_USER));
+                .thenReturn(Optional.of(TEST_USER));
         when(modelMapper.map(Optional.of(TEST_USER), UserVO.class))
-            .thenReturn(TEST_USER_VO);
+                .thenReturn(TEST_USER_VO);
 
         Optional<UserVO> actual = userService.findNotDeactivatedByEmail(TEST_EMAIL);
 
@@ -172,7 +171,7 @@ class UserServiceImplTest {
         when(userRepo.findIdByEmail(TEST_EMAIL)).thenReturn(Optional.empty());
 
         assertThrows(WrongEmailException.class,
-            () -> userService.findIdByEmail(TEST_EMAIL));
+                () -> userService.findIdByEmail(TEST_EMAIL));
     }
 
     @Test
@@ -212,7 +211,7 @@ class UserServiceImplTest {
         when(modelMapper.map(TEST_USER, UserVO.class)).thenReturn(TEST_USER_VO);
 
         assertThrows(BadUpdateRequestException.class,
-            () -> userService.updateStatus(1L, CREATED, TEST_EMAIL));
+                () -> userService.updateStatus(1L, CREATED, TEST_EMAIL));
     }
 
     @Test
@@ -223,7 +222,7 @@ class UserServiceImplTest {
         when(modelMapper.map(TEST_USER, UserVO.class)).thenReturn(TEST_USER_VO);
 
         assertThrows(LowRoleLevelException.class,
-            () -> userService.updateStatus(2L, CREATED, TEST_EMAIL));
+                () -> userService.updateStatus(2L, CREATED, TEST_EMAIL));
     }
 
     @Test
@@ -235,15 +234,53 @@ class UserServiceImplTest {
         managementVOsList.add(userManagementVO);
         Page<UserManagementVO> page = new PageImpl<>(managementVOsList, pageable, 1);
         when(userRepo.findAllManagementVo(any(greencity.repository.options.UserFilter.class), eq(pageable)))
-            .thenReturn(page);
+                .thenReturn(page);
 
         // when
         PageableDto<UserManagementVO> allUsersByCriteria =
-            userService.getAllUsersByCriteria("Test", "ROLE_ADMIN", "ACTIVATED", pageable);
+                userService.getAllUsersByCriteria("Test", "ROLE_ADMIN", "ACTIVATED", pageable);
 
         // then
         assertTrue(allUsersByCriteria.getPage().contains(userManagementVO));
         verify(userRepo, times(1)).findAllManagementVo(any(greencity.repository.options.UserFilter.class),
-            eq(pageable));
+                eq(pageable));
     }
+
+    @Test
+    void testFindByFullName() {
+        String fullName = "John Doe";
+        User user = new User();
+        user.setId(1L);
+        user.setName(fullName);
+
+        UserVO expectedUserVO = new UserVO();
+        expectedUserVO.setId(1L);
+        expectedUserVO.setName(fullName);
+
+        when(userRepo.findByName(fullName)).thenReturn(Optional.of(user));
+        when(modelMapper.map(user, UserVO.class)).thenReturn(expectedUserVO);
+
+        Optional<UserVO> actual = userService.findByFullName(fullName);
+
+        assertTrue(actual.isPresent());
+        assertEquals(expectedUserVO, actual.get());
+
+        verify(userRepo, times(1)).findByName(fullName);
+        verify(modelMapper, times(1)).map(user, UserVO.class);
+    }
+
+    @Test
+    void testFindByFullNameNotFound() {
+        String fullName = "Non Existent User";
+
+        when(userRepo.findByName(fullName)).thenReturn(Optional.empty());
+
+        Optional<UserVO> actual = userService.findByFullName(fullName);
+
+        assertFalse(actual.isPresent());
+
+        verify(userRepo, times(1)).findByName(fullName);
+        verifyNoInteractions(modelMapper);
+    }
+
 }
