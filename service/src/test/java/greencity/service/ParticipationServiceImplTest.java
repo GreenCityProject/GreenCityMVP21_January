@@ -4,11 +4,11 @@ import greencity.dto.event.EventResponseDto;
 import greencity.dto.event.ParticipationRequestDto;
 import greencity.dto.user.AuthorDto;
 import greencity.dto.user.UserProfilePictureDto;
-import greencity.entity.Event;
-import greencity.entity.Participation;
-import greencity.entity.ParticipationKey;
-import greencity.entity.User;
+import greencity.entity.*;
 import greencity.enums.Role;
+import greencity.exception.exceptions.BadRequestException;
+import greencity.exception.exceptions.NotFoundException;
+import greencity.repository.EventDateInfoRepo;
 import greencity.repository.EventRepo;
 import greencity.repository.ParticipationRepo;
 import greencity.repository.UserRepo;
@@ -22,6 +22,7 @@ import org.mockito.Mock;
 import org.mockito.junit.jupiter.MockitoExtension;
 import org.modelmapper.ModelMapper;
 
+import java.time.LocalDate;
 import java.time.LocalDateTime;
 import java.util.List;
 import java.util.Optional;
@@ -38,6 +39,9 @@ public class ParticipationServiceImplTest {
 
     @Mock
     private ParticipationRepo participationRepo;
+
+    @Mock
+    private EventDateInfoRepo eventDateInfoRepo;
 
     @Mock
     private ModelMapper modelMapper;
@@ -111,6 +115,7 @@ public class ParticipationServiceImplTest {
     void removeParticipationTest() {
         when(userRepo.findById(any(Long.class))).thenReturn(Optional.of(user));
         when(eventRepo.findById(any(Long.class))).thenReturn(Optional.of(event));
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo().setEventTimeStart(LocalDateTime.of(2025, 3, 3, 12, 30))));
         when(participationRepo.findById(any(ParticipationKey.class))).thenReturn(Optional.of(new Participation(new ParticipationKey(user, event))));
         doNothing().when(participationRepo).delete(any(Participation.class));
 
@@ -126,10 +131,22 @@ public class ParticipationServiceImplTest {
         when(userRepo.findById(any(Long.class))).thenReturn(Optional.of(user));
         when(eventRepo.findById(any(Long.class))).thenReturn(Optional.of(event));
         when(participationRepo.findById(any(ParticipationKey.class))).thenReturn(Optional.empty());
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo().setEventDate(LocalDate.of(2025, 3, 3)).setEventTimeStart(LocalDateTime.of(2025, 3, 3, 12, 30))));
 
-        Exception exception = Assertions.assertThrows(EntityNotFoundException.class, () -> participationService.removeParticipation(1L, 1L));
+        Exception exception = Assertions.assertThrows(NotFoundException.class, () -> participationService.removeParticipation(1L, 1L));
         verify(participationRepo, times(0)).delete(any(Participation.class));
         Assertions.assertEquals("Participation not found", exception.getMessage());
+    }
+
+    @Test
+    void removeParticipationInThePastTest() {
+        when(userRepo.findById(any(Long.class))).thenReturn(Optional.of(user));
+        when(eventRepo.findById(any(Long.class))).thenReturn(Optional.of(event));
+        when(eventDateInfoRepo.findByEvent(any(Event.class))).thenReturn(List.of(new EventDateInfo().setEventTimeStart(LocalDateTime.now())));
+
+        Exception exception = Assertions.assertThrows(BadRequestException.class, () -> participationService.removeParticipation(1L, 1L));
+        verify(participationRepo, times(0)).delete(any(Participation.class));
+        Assertions.assertEquals("You cannot remove the participation from the event that is in the past", exception.getMessage());
     }
 
     @Test

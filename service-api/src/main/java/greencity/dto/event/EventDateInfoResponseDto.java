@@ -21,5 +21,6 @@ public class EventDateInfoResponseDto {
     private boolean isOnline;
     private String location;
     private String url;
+    private int numOfDayInEvent;
 
 }

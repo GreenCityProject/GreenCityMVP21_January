@@ -1,5 +1,7 @@
 package greencity.controller;
 
+import com.fasterxml.jackson.core.JsonProcessingException;
+import com.fasterxml.jackson.databind.ObjectMapper;
 import greencity.annotations.*;
 import greencity.constant.HttpStatuses;
 import greencity.constant.SwaggerExampleModel;
@@ -8,6 +10,7 @@ import greencity.dto.econews.*;
 import greencity.dto.tag.TagDto;
 import greencity.dto.tag.TagVO;
 import greencity.dto.user.UserVO;
+import greencity.exception.exceptions.LanguageNotFoundException;
 import greencity.exception.exceptions.NotFoundException;
 import greencity.service.EcoNewsService;
 import greencity.service.FileService;
@@ -24,8 +27,10 @@ import org.springframework.data.domain.Pageable;
 import org.springframework.http.HttpStatus;
 import org.springframework.http.MediaType;
 import org.springframework.http.ResponseEntity;
+import org.springframework.social.NotAuthorizedException;
 import org.springframework.validation.annotation.Validated;
 import org.springframework.web.bind.annotation.*;
+import org.springframework.web.client.HttpClientErrorException;
 import org.springframework.web.multipart.MultipartFile;
 
 import java.security.Principal;
@@ -226,8 +231,10 @@ public class EcoNewsController {
      */
     @Operation(summary = "Find all eco news by page.")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
-            @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST)
+        @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+        @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
+        @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED,
+                content = @Content(schema = @Schema(implementation = NotAuthorizedException.class)))
     })
     @GetMapping("/byUserPage")
     @ApiPageable
@@ -306,6 +313,11 @@ public class EcoNewsController {
      * @author Kovaliv Taras
      */
     @Operation(summary = "Find all eco news tags")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST,
+                    content = @Content(schema = @Schema(implementation = LanguageNotFoundException.class)))
+    })
     @GetMapping("/tags/all")
     @ApiLocale
     public ResponseEntity<List<TagDto>> findAllEcoNewsTags(@Parameter(hidden = true) @ValidLanguage Locale locale) {
@@ -319,6 +331,10 @@ public class EcoNewsController {
      * @author Mamchuk Orest
      */
     @Operation(summary = "Find count of published eco news")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST)
+    })
     @GetMapping("/count")
     public ResponseEntity<Long> findAmountOfPublishedNews(@RequestParam Long userId) {
         return ResponseEntity.status(HttpStatus.OK).body(ecoNewsService.getAmountOfPublishedNewsByUserId(userId));
@@ -375,6 +391,13 @@ public class EcoNewsController {
      * @return user liked news or not.
      */
     @Operation(summary = "Check if user liked news")
+    @ApiResponses(value = {
+            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+            @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
+            @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND,
+                    content = @Content(schema = @Schema(implementation = NotFoundException.class)))
+    })
     @GetMapping("/isLikedByUser")
     public ResponseEntity<Boolean> checkNewsIsLikedByUser(@RequestParam("econewsId") Long econewsId,
                                                           @Parameter(hidden = true) @CurrentUser UserVO user) {
@@ -388,10 +411,10 @@ public class EcoNewsController {
      */
     @Operation(summary = "Get content and source in eco news by id")
     @ApiResponses(value = {
-            @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
-            @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
-            @ApiResponse(responseCode = "401", description = HttpStatuses.FORBIDDEN),
-            @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND,
+        @ApiResponse(responseCode = "200", description = HttpStatuses.OK),
+        @ApiResponse(responseCode = "400", description = HttpStatuses.BAD_REQUEST),
+        @ApiResponse(responseCode = "401", description = HttpStatuses.UNAUTHORIZED),
+        @ApiResponse(responseCode = "404", description = HttpStatuses.NOT_FOUND,
                     content = @Content(schema = @Schema(implementation = NotFoundException.class)))
     })
     @GetMapping("/contentAndSourceForEcoNews/{id}")

@@ -192,6 +192,10 @@
     <include file="db/changelog/logs/ch-insert-into-image-Feduniak.xml"/>
     <include file="db/changelog/logs/ch-add-fix_sequence_image-Bulhakova.xml"/>
     <include file="/db/changelog/logs/ch-alter-table-event_info-Bulhakova.xml"/>
+    <include file="db/changelog/logs/ch-add-table-notifications-Derecha.xml"/>
+    <include file="db/changelog/logs/ch-alter-table-notifications-2-Derecha.xml"/>
+    <include file="db/changelog/logs/ch-alter-table-notifications-Derecha.xml"/>
+    <include file="db/changelog/logs/ch-add-table-friendships-Komarnytskyi.xml"/>
 
 
 </databaseChangeLog>

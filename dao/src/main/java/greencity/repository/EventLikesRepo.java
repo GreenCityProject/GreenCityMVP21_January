@@ -10,7 +10,6 @@ import org.springframework.data.repository.query.Param;
 import org.springframework.stereotype.Repository;
 
 import java.util.List;
-import java.util.Optional;
 
 @Repository
 public interface EventLikesRepo extends JpaRepository<EventLikes, EventLikesKey> {
@@ -22,5 +21,5 @@ public interface EventLikesRepo extends JpaRepository<EventLikes, EventLikesKey>
     List<Event> findEventsByUserId(@Param("userId") Long userId);
 
     @Query("SELECT COUNT(e) FROM EventLikes e WHERE e.id.event.id = :eventId")
-    long countLikesByEventId(@Param("eventId") Long eventId);
+    int countLikesByEventId(@Param("eventId") Long eventId);
 }
